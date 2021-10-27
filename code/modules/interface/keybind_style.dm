@@ -293,6 +293,64 @@ var/global/list/datum/keybind_style/keybind_styles = null
 //	MISC-SPECIFIC KEYBINDS
 //
 
+/datum/keybind_style/instrument_keyboard
+	name = "instrument_keyboard"
+	changed_keys = list(
+	"W" = "",
+	"A" = "",
+	"S" = "",
+	"D" = "",
+	"E" = "",
+	"Q" = "",
+	"NORTH" = "",
+	"SOUTH" = "",
+	"WEST" = "",
+	"EAST" = "",
+	"B" = "",
+	"T" = "",
+	"Y" = "",
+	"ALT+W" = "",
+	"O" = "",
+	"ALT+L" = "",
+	"ALT+T" = "",
+	"CTRL+T" = "",
+	"Z" = "",
+	"F" = "",
+	"R" = "",
+	"CTRL+A" = "",
+	"CTRL+B" = "",
+	"CTRL+D" = "",
+	"CTRL+E" = "",
+	"CTRL+F" = "",
+	"CTRL+G" = "",
+	"CTRL+H" = "",
+	"CTRL+L" = "",
+	"CTRL+N" = "",
+	"CTRL+Q" = "",
+	"CTRL+R" = "",
+	"CTRL+S" = "",
+	"CTRL+W" = "",
+	"CTRL+X" = "",
+	"CTRL+Y" = "",
+	"CTRL+Z" = "",
+	"M" = "",
+	"I" = "",
+	"K" = "",
+	"J" = "",
+	"L" = "",
+	"P" = "",
+	"F1" = "",
+	"F3" = "",
+	"CTRL+P" = "",
+	"F2" = "",
+	"SHIFT+F2" = "",
+	"G" = "",
+	"ESCAPE" = "",
+	"RETURN" = "",
+	"`" = "",
+	"~" = ""
+	)
+
 /datum/keybind_style/pod
 	name = "pod"
 	changed_keys = list(

@@ -105,10 +105,36 @@
 	proc/post_play_effect(mob/user as mob)
 		return
 
-	attack_self(mob/user as mob)
+	ui_interact(mob/user, datum/tgui/ui)
+		ui = tgui_process.try_update_ui(user, src, ui)
+		if(!ui)
+			ui = new(user, src, "MusicInstruments")
+			ui.open()
+
+	ui_data(mob/user)
 		..()
-		src.add_fingerprint(user)
-		src.play(user)
+		. = list(
+			"name" = src.name,
+			"notes" = src.notes,
+		)
+
+	ui_act(action, list/params, datum/tgui/ui, datum/ui_state/state)
+		. = ..()
+		if(.)
+			return
+		if(action == "play_note")
+			var/note_to_play = params["note"]
+			playsound(get_turf(src), sounds_instrument[note_to_play], src.volume, randomized_pitch, pitch = pitch_set)
+			. = FALSE
+		if(action == "play_keyboard_on")
+			usr.client.apply_keybind("instrument_keyboard")
+			. = FALSE
+
+	attack_self(mob/user as mob)
+		ui_interact(user)
+		//..()
+		//src.add_fingerprint(user)
+		//src.play(user)
 
 
 /* -------------------- Large Instruments -------------------- */
