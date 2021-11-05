@@ -198,11 +198,36 @@
 	icon = 'icons/obj/decoration.dmi'
 	icon_state = "jukebox"
 	item_state = "jukebox"
+	randomized_pitch = 0
 	sounds_instrument = list('sound/musical_instruments/jukebox/neosoul.ogg',
 	'sound/musical_instruments/jukebox/vintage.ogg',
 	'sound/musical_instruments/jukebox/ultralounge.ogg',
 	'sound/musical_instruments/jukebox/jazzpiano.ogg')
 	pick_random_note = 1
+
+	ui_interact(mob/user, datum/tgui/ui)
+		ui = tgui_process.try_update_ui(user, src, ui)
+		if(!ui)
+			ui = new(user, src, "Jukebox")
+			ui.open()
+
+	ui_data(mob/user)
+		..()
+
+	ui_act(action, list/params, datum/tgui/ui, datum/ui_state/state)
+		. = ..()
+		if(.)
+			return
+		if(action == "play_test")
+			var/song = params["song"]
+			playsound(src, song, src.volume, randomized_pitch, pitch = pitch_set)
+
+
+	attack_self(mob/user as mob)
+		ui_interact(user)
+		//..()
+		//src.add_fingerprint(user)
+		//src.play(user)
 
 	show_play_message(mob/user as mob)
 		return
