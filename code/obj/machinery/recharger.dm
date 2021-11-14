@@ -93,7 +93,7 @@ obj/machinery/recharger
 	var/ret = SEND_SIGNAL(G, COMSIG_CELL_CAN_CHARGE)
 
 	if(ret & CELL_UNCHARGEABLE)
-		boutput(user, "<span class='alert'>[G.name] is not compatible with \the [src]!</span>")
+		boutput(user, "<span class='alert'>[G] is not compatible with \the [src]!</span>")
 	else if(ret & CELL_CHARGEABLE)
 		user.drop_item(G)
 		G.set_loc(src)
@@ -145,7 +145,7 @@ obj/machinery/recharger
 	. += "<br> <span class='notice'> It is currently recharging:"
 	if(charge_status == STATUS_ACTIVE || charge_status == STATUS_COMPLETE)
 		var/list/charge = list();
-		if(SEND_SIGNAL(src.charging, COMSIG_CELL_CHECK_CHARGE, charge))
+		if(SEND_SIGNAL(src.charging, COMSIG_CELL_CHECK_CHARGE, charge) & CELL_RETURNED_LIST)
 			. += "<br> <span class='notice'> \The [charging.name]! Progress: [charge["charge"]]/[charge["max_charge"]]PU </span>"
 	else
 		. += "<br>Nothing! </span>"
