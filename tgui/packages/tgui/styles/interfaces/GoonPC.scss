@@ -1,0 +1,122 @@
+// Windows 95/98 color palatte
+
+.goonpc__content {
+  display: flex;
+  flex-direction: column;
+  background-color: #047e7e;
+}
+
+.goonpc__taskbar {
+  background-color: #c0c0c0;
+  height: 26px;
+  color: black;
+  font-size: 16px;
+  padding: 2px;
+  border-top: 1px solid #ffffff;
+}
+
+.goonpc__start-menu {
+  position: fixed;
+  bottom: 26px;
+  width: 200px;
+  height: 240px;
+  background: #c0c0c0;
+  color: black;
+
+  border-top: 1px solid white;
+  border-left: 1px solid white;
+  border-bottom: 1px solid black;
+  border-right: 1px solid black;
+}
+
+.goonpc__start-menu-title {
+  background: red;
+  font-size: 24px;
+}
+
+.goonpc__start-menu-title > span {
+  transform: rotate(-90deg);
+  text-align: center;
+  background-color: green;
+}
+
+.goonpc__start-menu-items {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.goonpc__start-menu-item {
+  padding: 6px;
+  color: black;
+  font-size: 18px;
+}
+.goonpc__start-menu-item > span {
+  padding-left: 6px;
+}
+
+.goonpc__start-menu-item:hover {
+  background-color: #000080;
+  color: white;
+
+  cursor: pointer;
+}
+
+.goonpc__start-menu-seperator {
+  height: 1px;
+  background: #808080;
+  border-bottom: 1px solid white;
+}
+
+.goonpc__taskbar:before {
+  content: ' ';
+  position: absolute;
+  z-index: -1;
+  top: 5px;
+  left: 5px;
+  right: 5px;
+  bottom: 5px;
+  border-top: 5px solid #ffea00;
+}
+
+.goonpc__desktop {
+  flex-grow: 1;
+  padding: 10px;
+}
+
+.goonpc__extpanel {
+  background-color: #c9c7c0;
+  color: black;
+  height: 80px;
+}
+
+.goonpc__window {
+  position: fixed;
+  top: 0;
+  left: 0;
+  background: white;
+  border: 1px solid black;
+  box-shadow: 0 0 10px black;
+}
+
+.goonpc__window-menubar {
+  background-color: #c9c7c0;
+  color: black;
+  padding: 2px;
+}
+
+.goonpc__desktop-icon {
+  margin: 8px;
+  text-align: center;
+  font-size: 24px;
+  color: black;
+  border-radius: 5px;
+}
+
+.goonpc__desktop-icon-label {
+  background: red;
+  font-size: 12px;
+  text-align: center;
+  font-family: monospace;
+  margin-bottom: 10px;
+}
