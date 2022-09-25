@@ -139,6 +139,31 @@
 		src.panel_image = image(src.icon, src.icon_panel)
 	var/lastvend = 0
 
+	ui_interact(mob/user, datum/tgui/ui)
+		ui = tgui_process.try_update_ui(user, src, ui)
+		if(!ui && use_new_interface)
+			ui = new(user, src, "VendingMachine")
+			ui.open()
+
+	ui_data(mob/user)
+		. = list(
+			"name" = src.name,
+		)
+
+	ui_act(action, list/params, datum/tgui/ui, datum/ui_state/state)
+		. = ..()
+		if(.)
+			return
+
+
+	ui_close(mob/user)
+		. = ..()
+
+	ui_status(mob/user, datum/ui_state/state)
+		. = ..()
+		if(. <= UI_CLOSE || !IN_RANGE(src, user, 1))
+			return UI_CLOSE
+
 	disposing()
 		STOP_TRACKING
 		..()
@@ -516,7 +541,10 @@
 		if (src.shock(user, 100))
 			return
 
-	if (!src.HTML)
+	ui_interact(user)
+
+	// Old html
+	/*if (!src.HTML)
 		src.generate_HTML()
 	else
 		if (src.HTML && !src.vending_HTML)
@@ -528,7 +556,7 @@
 		user.Browse(src.HTML, "window=vending;size=[window_size]")
 	else
 		user.Browse(src.HTML, "window=vending")
-	onclose(user, "vending")
+	onclose(user, "vending")*/
 
 	interact_particle(user,src)
 	return
