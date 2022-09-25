@@ -61,6 +61,34 @@
 	src.holder = holder
 	initHtml()
 
+/datum/chemicompiler_core/ui_interact(mob/user, datum/tgui/ui)
+	ui = tgui_process.try_update_ui(user, src, ui)
+	if(!ui)
+		ui = new(user, src, "NewChemiCompiler")
+		ui.open()
+
+/datum/chemicompiler_core/ui_data(mob/user)
+	. = list(
+		"sx" = src.sx,
+		"tx" = src.tx,
+		"ax" = src.ax
+	)
+
+// Replaces /datum/chemicompiler_core/Topic
+/datum/chemicompiler_core/ui_act(action, list/params, datum/tgui/ui, datum/ui_state/state)
+	. = ..()
+	if(.)
+		return
+	switch(action)
+		if("runCode")
+			var/code = params["code"]
+			runCBF(parseCBF(code, 0))
+
+/datum/chemicompiler_core/ui_close(mob/user)
+	. = ..()
+
+
+
 /datum/chemicompiler_core/Topic(href, href_list)
 	if(!topicPermissionCheck(href_list["action"]))
 		return
@@ -436,7 +464,7 @@
 
 /datum/chemicompiler_core/proc/panel()
 	set background = 1
-
+	ui_interact(src)
 	// HTML is built only once, via New() -- all subsequent updates are done using javascript. Slick.
 	usr.Browse(html, "window=chemicompiler;size=420x600")
 

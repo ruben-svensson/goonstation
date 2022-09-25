@@ -693,22 +693,10 @@
 			icon_state = "mixer0"
 			src.updateUsrDialog()
 
-datum/chemicompiler_core/stationaryCore
+/datum/chemicompiler_core/stationaryCore
 	statusChangeCallback = "statusChange"
 
-// New ChemiCompiler, uses blocky code
-/obj/machinery/newchemicompiler/
-	name = "ChemiCompiler CCS1002"
-	desc = "This device looks a little less difficult to use."
-	density = 1
-	anchored = 1
-	icon = 'icons/obj/chemical.dmi'
-	icon_state = "chemicompiler_st_off"
-	mats = 15
-	processing_tier = PROCESSING_FULL
-	deconstruct_flags = DECON_SCREWDRIVER | DECON_WRENCH | DECON_CROWBAR | DECON_WELDER | DECON_MULTITOOL
 
-// Old ChemiCompiler, uses brainfuck
 /obj/machinery/chemicompiler_stationary/
 	name = "ChemiCompiler CCS1001"
 	desc = "This device looks very difficult to use."
