@@ -98,6 +98,13 @@
 	proc/post_play_effect(mob/user as mob)
 		return
 
+	// Creates a list of notes between two notes, for example
+	// note_range("c4", "e4") returns ("c4", "c-4", "d4", d-4, "e4")
+	proc/note_range(var/from, var/to)
+		var/list/scale = list("c","c-", "d", "d-", "e", "f", "f-", "g", "g-", "a", "a-", "b")
+
+		return
+
 
 	ui_interact(mob/user, datum/tgui/ui)
 		ui = tgui_process.try_update_ui(user, src, ui)
@@ -211,11 +218,12 @@
 	use_new_interface = 1
 
 	New()
-		notes = list("c4","c-4", "d4", "d-4", "e4","f4","f-4","g4", "g-4","a4","a-4","b4","c5","c-5", "d5", "d-5", "e5","f5","f-5","g5", "g-5","a5","a-5","b5","c6","c-6", "d6", "d-6", "e6","f6","f-6","g6", "g-6","a6","a-6","b6","c7")
+		notes = src.note_range("c4", "c7")
 		sounds_instrument = list()
+
 		for (var/i in 1 to length(notes))
 			note = notes[i]
-			sounds_instrument += "sound/musical_instruments/piano/notes/[note].ogg" // [i]
+			sounds_instrument += "sound/musical_instruments/[name]/notes/[note].ogg"
 
 		..()
 
@@ -276,7 +284,7 @@
 	key_offset = 8
 
 	New()
-		notes = list("g3","g-3","a3","a-3","b3","c4","c-4", "d4", "d-4", "e4","f4","f-4","g4", "g-4","a4","a-4","b4","c5","c-5", "d5", "d-5", "e5","f5","f-5","g5", "g-5","a5","a-5","b5","c6")
+		notes = src.note_range("g3", "c6")
 		sounds_instrument = list()
 		for (var/i in 1 to length(notes))
 			note = notes[i]
@@ -557,7 +565,7 @@
 	key_offset = 5
 
 	New()
-		notes = list("e3","f3","f-3","g3","g-3","a3","a-3","b3","c4","c-4", "d4", "d-4", "e4","f4","f-4","g4", "g-4","a4","a-4","b4","c5","c-5", "d5", "d-5", "e5","f5","f-5","g5", "g-5","a5","a-5","b5","c6")
+		notes = src.note_range("e3", "c6")
 		sounds_instrument = list()
 		for (var/i in 1 to length(notes))
 			note = notes[i]
@@ -743,7 +751,7 @@
 	key_offset = 5
 
 	New()
-		notes = list("e3","f3","f-3","g3","g-3","a3","a-3","b3","c4","c-4", "d4", "d-4", "e4","f4","f-4","g4", "g-4","a4","a-4","b4","c5","c-5", "d5", "d-5", "e5","f5","f-5","g5", "g-5","a5","a-5","b5","c6")
+		notes = src.note_range("e3", "c6")
 		sounds_instrument = list()
 		for (var/i in 1 to length(notes))
 			note = notes[i]
