@@ -5,6 +5,7 @@
 	var/product_cost
 	var/product_amount
 	var/product_hidden
+	var/product_iconbase
 	var/logged_on_vend
 
 	var/static/list/product_name_cache = list(/obj/item/reagent_containers/mender/brute = "brute auto-mender", /obj/item/reagent_containers/mender/burn = "burn auto-mender")
@@ -28,6 +29,10 @@
 			src.product_name = capitalize(p_name)
 			product_name_cache[productpath] = src.product_name
 			//qdel(temp)
+
+		var/p_icon = initial(product_path.icon)
+		var/p_iconstate = initial(product_path.icon_state)
+		src.product_iconbase = icon2base64(icon(p_icon, p_iconstate))
 
 		src.product_amount = amount
 		src.product_cost = round(cost)
@@ -100,6 +105,8 @@
 	var/credit = 0 //How much money is currently in the machine?
 	var/profit = 0.9 // cogwerks: how much of a cut should the QMs get from the sale, expressed as a percent
 
+	var/uiMainColor = "#909090" // default ui color for the vending machine
+
 	var/HTML = null // guh
 	var/vending_HTML = null // buh
 	var/wire_HTML = null // duh
@@ -141,20 +148,30 @@
 
 	ui_interact(mob/user, datum/tgui/ui)
 		ui = tgui_process.try_update_ui(user, src, ui)
-		if(!ui && use_new_interface)
+		if(!ui)
 			ui = new(user, src, "VendingMachine")
 			ui.open()
 
-	ui_data(mob/user)
-		. = list(
+	ui_static_data(mob/user)
+		. = list("info" = list(), "products" = list())
+
+		for(var/datum/data/vending_product/product in src.product_list)
+			.["products"] += list(list(
+				"name" = product.product_name,
+				"amount" = product.product_amount,
+				"price" = product.product_cost,
+				"icon" = product.product_iconbase
+			))
+
+		.["info"] = list(
 			"name" = src.name,
+			"uiMainColor" = src.uiMainColor
 		)
 
 	ui_act(action, list/params, datum/tgui/ui, datum/ui_state/state)
 		. = ..()
 		if(.)
 			return
-
 
 	ui_close(mob/user)
 		. = ..()
@@ -1126,6 +1143,8 @@
 	light_g = 0.4
 	light_b = 0.4
 
+	uiMainColor="#B11C1A"
+
 	create_products()
 		..()
 		product_list += new/datum/data/vending_product(/obj/item/reagent_containers/food/snacks/candy/chocolate, 10, cost=PAY_UNTRAINED/20)
@@ -1156,6 +1175,8 @@
 	light_r =0.55
 	light_g = 1
 	light_b = 0.5
+
+	uiMainColor="#4D5147"
 
 	create_products()
 		..()
@@ -1189,6 +1210,8 @@
 	light_r =1
 	light_g = 0.88
 	light_b = 0.88
+
+	uiMainColor="#909090"
 
 	create_products()
 		..()
