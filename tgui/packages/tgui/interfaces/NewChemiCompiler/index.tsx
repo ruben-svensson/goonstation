@@ -14,6 +14,8 @@ type NewChemiCompilerData = {
 export const NewChemiCompiler = (props, context) => {
   const { act, data } = useBackend<NewChemiCompilerData>(context);
 
+  const { sx, tx, ax } = data;
+
   const [lineNumbersText, setLineNumbersText] = useLocalState(context, 'lineNumbersText', '1');
   const [codeText, setCodeText] = useLocalState(context, 'codeText', '');
 
@@ -69,9 +71,9 @@ export const NewChemiCompiler = (props, context) => {
             </Box>
           </Box>
           <Box className="newcc_slots-wrapper">
-            <Box>SX</Box>
-            <Box>TX</Box>
-            <Box>AX</Box>
+            <Box>SX: {sx}</Box>
+            <Box>TX: {tx}</Box>
+            <Box>AX: {ax}</Box>
           </Box>
           <Box className="newcc_slots-wrapper">
             <h3>Memory</h3>

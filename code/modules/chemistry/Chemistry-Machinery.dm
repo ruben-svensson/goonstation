@@ -757,7 +757,7 @@
 			boutput( user, "<span class='alert'>You can't seem to power it on!</span>" )
 			return
 		src.add_dialog(user)
-		executor.panel()
+		executor.panel(user, src)
 		onclose(user, "chemicompiler")
 		return
 

@@ -61,31 +61,7 @@
 	src.holder = holder
 	initHtml()
 
-/datum/chemicompiler_core/ui_interact(mob/user, datum/tgui/ui)
-	ui = tgui_process.try_update_ui(user, src, ui)
-	if(!ui)
-		ui = new(user, src, "NewChemiCompiler")
-		ui.open()
 
-/datum/chemicompiler_core/ui_data(mob/user)
-	. = list(
-		"sx" = src.sx,
-		"tx" = src.tx,
-		"ax" = src.ax
-	)
-
-// Replaces /datum/chemicompiler_core/Topic
-/datum/chemicompiler_core/ui_act(action, list/params, datum/tgui/ui, datum/ui_state/state)
-	. = ..()
-	if(.)
-		return
-	switch(action)
-		if("runCode")
-			var/code = params["code"]
-			runCBF(parseCBF(code, 0))
-
-/datum/chemicompiler_core/ui_close(mob/user)
-	. = ..()
 
 
 
@@ -464,7 +440,6 @@
 
 /datum/chemicompiler_core/proc/panel()
 	set background = 1
-	ui_interact(src)
 	// HTML is built only once, via New() -- all subsequent updates are done using javascript. Slick.
 	usr.Browse(html, "window=chemicompiler;size=420x600")
 
@@ -677,6 +652,7 @@
 	var/list/reservoirs = list()
 	var/datum/holder
 	var/datum/chemicompiler_core/core
+	var/datum/source = null
 	var/obj/item/reagent_containers/glass/ejection_reservoir = null
 
 /datum/chemicompiler_executor/New(datum/holder, corePath = /datum/chemicompiler_core/portableCore)
@@ -694,7 +670,38 @@
 	for(var/i=src.core.minReservoir,i<=src.core.maxReservoir,i++)
 		reservoirs[i] = null
 
-/datum/chemicompiler_executor/proc/panel()
+/datum/chemicompiler_executor/ui_interact(mob/user, datum/tgui/ui)
+	ui = tgui_process.try_update_ui(user, src.source, ui)
+	if(!ui)
+		ui = new(user, src.source, "NewChemiCompiler")
+		ui.open()
+
+/datum/chemicompiler_executor/proc/chem_ui_interact(mob/user, datum/src_object)
+	src.source = src_object
+	ui_interact(user)
+
+/datum/chemicompiler_executor/ui_data(mob/user)
+	. = list(
+		"sx" = core.sx,
+		"tx" = core.tx,
+		"ax" = core.ax
+	)
+
+// Replaces /datum/chemicompiler_core/Topic
+/datum/chemicompiler_executor/ui_act(action, list/params, datum/tgui/ui, datum/ui_state/state)
+	. = ..()
+	if(.)
+		return
+	switch(action)
+		if("runCode")
+			var/code = params["code"]
+			core.runCBF(core.parseCBF(code, 0))
+
+/datum/chemicompiler_executor/ui_close(mob/user)
+	. = ..()
+
+/datum/chemicompiler_executor/proc/panel(mob/user, datum/src_object)
+	chem_ui_interact(user, src_object)
 	core.panel()
 
 /datum/chemicompiler_executor/proc/err(errorCode)
