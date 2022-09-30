@@ -507,6 +507,7 @@
 	sounds_instrument = list('sound/musical_instruments/Vuvuzela_1.ogg')
 	volume = 80
 	pick_random_note = 1
+	var/play_count = 0
 
 	show_play_message(mob/user as mob)
 		..()
@@ -518,6 +519,7 @@
 				M.take_ear_damage(ED)
 				boutput(M, "<font size=[max(0, ED)] color='red'>BZZZZZZZZZZZZZZZZZZZ!</font>")
 		return
+
 
 	is_detonator_attachment()
 		return 1
