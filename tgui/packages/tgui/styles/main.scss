@@ -55,7 +55,11 @@
 @include meta.load-css('./interfaces/CloningConsole.scss');
 @include meta.load-css('./interfaces/CyborgModuleRewriter.scss');
 @include meta.load-css('./interfaces/GasCanister.scss');
+<<<<<<< HEAD
 @include meta.load-css('./interfaces/GoonPC.scss');
+=======
+@include meta.load-css('./interfaces/MusicInstrument.scss');
+>>>>>>> master
 @include meta.load-css('./interfaces/ListInput.scss');
 @include meta.load-css('./interfaces/Paper.scss');
 @include meta.load-css('./interfaces/PortableAtmos.scss');
