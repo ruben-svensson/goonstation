@@ -44,6 +44,8 @@
 	var/programName = null
 	var/xpos = 0
 	var/ypos = 0
+	var/win_width = 300
+	var/win_height = 300
 
 	testprogram
 		name = "Test Program"

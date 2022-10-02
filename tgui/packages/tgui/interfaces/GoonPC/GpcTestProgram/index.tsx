@@ -1,6 +1,7 @@
 import { useBackend } from '../../../backend';
 import { Window } from '../../../layouts';
 import { Box, Flex, Button } from '../../../components';
+import { WindowTitleBar } from '../WindowComponents';
 
 type GpcTestProgramData = {};
 
@@ -9,11 +10,7 @@ export const GpcTestProgram = (props, context) => {
 
   return (
     <Box position="fixed" ml={`${50}px`} mt={`${50 + 32}px`} width={30} height={20} className="goonpc__window">
-      <Flex align="center" className="goonpc__window-menubar">
-        <Flex.Item grow={1}>Test Program</Flex.Item>
-        <Button>-</Button>
-        <Button>X</Button>
-      </Flex>
+      <WindowTitleBar />
     </Box>
   );
 };
