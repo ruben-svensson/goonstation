@@ -1,0 +1,111 @@
+.koven__content {
+  background-color: #9093a1;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  border: 2px solid #373a4b;
+  border-radius: 10px;
+}
+
+.koven__panel {
+  flex-grow: 0.4;
+  background: red;
+  margin: 5px;
+}
+
+.koven__switch {
+}
+
+.koven__oven {
+  background-color: #1b1b1b;
+  border: 2px solid #373a4b;
+  border-radius: 15px;
+  margin: 5px;
+  flex-grow: 0.6;
+}
+
+.koven__lidclosed {
+  position: relative;
+  top: -100%;
+  width: 100%;
+  height: 100%;
+  background: rgb(73, 80, 74);
+  background: linear-gradient(
+    36deg,
+    rgb(41, 41, 41) 0%,
+    rgba(198, 198, 198, 1) 22%,
+    rgba(73, 80, 74, 1) 48%,
+    rgba(116, 125, 117, 1) 100%
+  );
+  /*rgb(124,114,96);
+background: linear-gradient(36deg, rgba(124,114,96,1) 0%, rgba(143,117,64,1) 22%, rgba(107,101,82,1) 48%, rgba(130,121,95,1) 100%); */
+  border-top: 7px solid rgb(240, 240, 240);
+  border-right: 7px solid rgb(151, 151, 151);
+  border-left: 7px solid rgb(104, 104, 104);
+  border-bottom: 7px solid rgb(68, 68, 68);
+  border-radius: 10px;
+  opacity: 0.4;
+  z-index: 50;
+  pointer-events: none;
+}
+
+.koven__ovencontents {
+  display: flex;
+  padding: 20px;
+  flex-direction: column;
+  justify-content: space-around;
+  font-family: monospace;
+  font-weight: bold;
+  font-size: 14px;
+  color: white;
+  padding: 10px;
+  border-radius: 10px;
+  background: rgb(37, 37, 37);
+  background: linear-gradient(
+    36deg,
+    rgb(32, 32, 32) 0%,
+    rgb(37, 37, 37) 22%,
+    rgb(39, 39, 39) 48%,
+    rgb(29, 29, 29) 100%
+  );
+
+  border-bottom: 20px solid rgb(63, 63, 63);
+  border-right: 60px solid rgb(78, 78, 78);
+  border-left: 60px solid rgb(58, 58, 58);
+  border-top: 30px solid rgb(32, 32, 32);
+
+  z-index: 0;
+
+  &:after {
+    content: '';
+    position: absolute;
+    top: -100%;
+    width: 100%;
+    height: 100%;
+
+    border-bottom: 30px solid rgb(172, 17, 17);
+    border-right: 30px solid rgb(78, 78, 78);
+    border-left: 30px solid rgb(58, 58, 58);
+    border-top: 30px solid rgb(32, 32, 32);
+  }
+}
+
+.koven__ovencontents > div {
+  display: flex;
+}
+
+.koven__ovencontents > div > span {
+  flex-grow: 1;
+  text-align: left;
+}
+
+// The visual representation of the inside of the oven
+.koven__back {
+  width: 50px;
+  height: 50px;
+  background-color: red;
+}
+
+// Simulate the visual of the fan in the oven
+.koven__back-fan {
+}

@@ -265,13 +265,38 @@ var/list/oven_recipes = list()
 		else
 			return 0
 
+	ui_interact(mob/user, datum/tgui/ui)
+		ui = tgui_process.try_update_ui(user, src, ui)
+		if(!ui)
+			ui = new(user, src, "KitchenOven")
+			ui.open()
+
+	ui_data(mob/user)
+		. = list(
+			"contents" = src.contents,
+			"working" = src.working,
+			"time" = src.time,
+			"heat" = src.heat,
+		)
+
+	ui_act(action, list/params, datum/tgui/ui, datum/ui_state/state)
+		. = ..()
+		if(.)
+			return
+
+	ui_status(mob/user, datum/ui_state/state)
+		. = ..()
+		if(. <= UI_CLOSE || !IN_RANGE(src, user, 1))
+			return UI_CLOSE
+
+
 	attack_hand(var/mob/user)
 		if (isghostdrone(user))
 			boutput(user, "<span class='alert'>\The [src] refuses to interface with you, as you are not a properly trained chef!</span>")
 			return
 
-
-		src.add_dialog(user)
+		ui_interact(user)
+		/* src.add_dialog(user)
 		var/dat = {"
 			<style type="text/css">
 table#cooktime {
@@ -349,7 +374,7 @@ table#cooktime a#start {
 			dat += {"Cooking! Please wait!"}
 
 		user.Browse(dat, "window=oven;size=400x500")
-		onclose(user, "oven")
+		onclose(user, "oven") */
 
 	attack_ai(var/mob/user as mob)
 		return attack_hand(user)
