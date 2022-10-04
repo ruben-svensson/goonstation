@@ -5,16 +5,29 @@ import { Window } from '../../layouts';
 
 // Valid chars:  ><+-[]{}()'^,$@#.~
 
-type NewChemiCompilerData = {
+type Registers = {
   sx: number;
   tx: number;
   ax: number;
 };
 
-export const NewChemiCompiler = (props, context) => {
-  const { act, data } = useBackend<NewChemiCompilerData>(context);
+type Status = {
+  dp: number;
+  ip: number;
+  running: boolean;
+  heating: boolean;
+};
 
-  const { sx, tx, ax } = data;
+type NewChemiCompilerData = {
+  registers: Registers;
+  status: Status;
+};
+
+export const NewChemiCompiler = (props, context) => {
+  const { act, data } = useBackend<any>(context);
+
+  // const { sx, tx, ax } = data.registers;
+  // const { dp, ip, running, heating } = data.status;
 
   const [lineNumbersText, setLineNumbersText] = useLocalState(context, 'lineNumbersText', '1');
   const [codeText, setCodeText] = useLocalState(context, 'codeText', '');
@@ -40,6 +53,7 @@ export const NewChemiCompiler = (props, context) => {
   return (
     <Window width={678} height={452}>
       <Window.Content className="newcc__content" fitted>
+        {JSON.stringify(data)}
         <Box className="panel newcc__operations">
           <h1>ChemiCompiler CCS1001</h1>
           <Box className="newcc__ide">
@@ -70,11 +84,7 @@ export const NewChemiCompiler = (props, context) => {
               <Box className="newcc_slot">None</Box>
             </Box>
           </Box>
-          <Box className="newcc_slots-wrapper">
-            <Box>SX: {sx}</Box>
-            <Box>TX: {tx}</Box>
-            <Box>AX: {ax}</Box>
-          </Box>
+          <Box className="newcc_slots-wrapper" />
           <Box className="newcc_slots-wrapper">
             <h3>Memory</h3>
             <Box className="newcc_slotcontainer">

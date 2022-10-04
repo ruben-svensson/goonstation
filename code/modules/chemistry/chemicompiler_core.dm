@@ -682,9 +682,21 @@
 
 /datum/chemicompiler_executor/ui_data(mob/user)
 	. = list(
-		"sx" = core.sx,
-		"tx" = core.tx,
-		"ax" = core.ax
+		"test" = "Cool",
+		"cool" = "Testing",
+	)
+
+	.["registers"] = list(
+		"sx" = src.core.sx,
+		"tx" = src.core.tx,
+		"ax" = src.core.ax,
+	)
+
+	.["status"] = list(
+		"dp" = src.core.dp,
+		"ip" = src.core.ip,
+		"running" = src.core.running,
+		"heating" = src.core.is_heating,
 	)
 
 // Replaces /datum/chemicompiler_core/Topic
