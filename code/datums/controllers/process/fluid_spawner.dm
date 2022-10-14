@@ -4,8 +4,10 @@
 var/global/ocean_reagent_id = "water"
 var/global/ocean_name = "ocean"
 var/global/datum/color/ocean_color = 0
+var/global/obj/fluid/ocean_fluid_obj = null
 
-datum/controller/process/fluid_turfs
+/// Processes fluid turfs
+/datum/controller/process/fluid_turfs
 	var/tmp/list/processing_fluid_turfs
 	var/add_reagent_amount = 500
 	var/do_light_gen = 1
@@ -37,11 +39,11 @@ datum/controller/process/fluid_turfs
 
 	setup()
 		name = "Fluid_Turfs"
-		schedule_interval = 50
+		schedule_interval = 5 SECONDS
 
 		src.processing_fluid_turfs = global.processing_fluid_turfs
 
-		SPAWN_DBG(20 SECONDS)
+		SPAWN(20 SECONDS)
 			if (total_clients() >= OSHAN_LIGHT_OVERLOAD)
 				do_light_gen = 0
 

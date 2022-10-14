@@ -2,13 +2,14 @@
 /obj/item/sticker
 	name = "sticker"
 	desc = "You stick it on something, then that thing is even better, because it has a little sparkly unicorn stuck to it, or whatever."
-	flags = FPRINT | TABLEPASS
+	flags = FPRINT | TABLEPASS | CLICK_DELAY_IN_CONTENTS | USEDELAY | NOSPLASH
 	event_handler_flags = HANDLE_STICKER | USE_FLUID_ENTER
 	icon = 'icons/misc/stickers.dmi'
 	icon_state = "bounds"
-	w_class = 1.0
+	w_class = W_CLASS_TINY
 	force = 0
 	throwforce = 0
+	vis_flags = VIS_INHERIT_DIR
 	var/dont_make_an_overlay = 0
 	var/active = 0
 	var/overlay_key
@@ -27,9 +28,9 @@
 			return
 		if (isarea(A) || istype(A, /obj/item/item_box) || istype(A, /atom/movable/screen) || istype(A, /obj/ability_button))
 			return
-		user.tri_message("<b>[user]</b> sticks [src] to [A]!",\
-		user, "You stick [src] to [user == A ? "yourself" : "[A]"]!",\
-		A, "[user == A ? "You stick" : "<b>[user]</b> sticks"] [src] to you[user == A ? "rself" : null]!")
+		user.tri_message(A, "<b>[user]</b> sticks [src] to [A]!",\
+			"You stick [src] to [user == A ? "yourself" : "[A]"]!",\
+			"[user == A ? "You stick" : "<b>[user]</b> sticks"] [src] to you[user == A ? "rself" : null]!")
 		var/pox = src.pixel_x
 		var/poy = src.pixel_y
 		DEBUG_MESSAGE("pox [pox] poy [poy]")
@@ -38,11 +39,11 @@
 				pox = text2num(params["icon-x"]) - 16 //round(A.bound_width/2)
 				poy = text2num(params["icon-y"]) - 16 //round(A.bound_height/2)
 				DEBUG_MESSAGE("pox [pox] poy [poy]")
-		src.stick_to(A, pox, poy)
+		src.stick_to(A, pox, poy, user)
 		user.u_equip(src)
 		return 1
 
-	proc/stick_to(var/atom/A, var/pox, var/poy)
+	proc/stick_to(var/atom/A, var/pox, var/poy, user)
 		if (!dont_make_an_overlay)
 			var/image/sticker = image('icons/misc/stickers.dmi', src.icon_state)
 			//sticker.layer = //EFFECTS_LAYER_BASE // I swear to fuckin god stop being under CLOTHES you SHIT
@@ -57,7 +58,7 @@
 			overlay_key = "sticker[world.timeofday]"
 			A.UpdateOverlays(sticker, overlay_key)
 			//	qdel(src) //Don't delete stickers when applied - remove them later through fire or acetone!
-			src.invisibility = 101
+			src.invisibility = INVIS_ALWAYS
 
 		else
 			src.pixel_x = pox
@@ -67,7 +68,9 @@
 		src.active = 1
 		src.set_loc(A)
 
-		playsound(get_turf(src), 'sound/items/sticker.ogg', 50, 1)
+		playsound(src, 'sound/items/sticker.ogg', 50, 1)
+		add_fingerprint(user)
+		logTheThing(LOG_STATION, user, "puts a [src]:[src.icon_state] sticker on [A] at [log_loc(A)]")
 
 	throw_impact(atom/A, datum/thrown_thing/thr)
 		..()
@@ -91,7 +94,7 @@
 			attached.ClearSpecificOverlays(overlay_key)
 			overlay_key = 0
 		active = 0
-		src.invisibility = 0
+		src.invisibility = INVIS_NONE
 		src.pixel_x = initial(pixel_x)
 		src.pixel_y = initial(pixel_y)
 		attached.visible_message("<span class='alert'><b>[src]</b> un-sticks from [attached] and falls to the floor!</span>")
@@ -113,28 +116,28 @@
 	icon = 'icons/obj/writing.dmi'
 	icon_state = "postit"
 	dont_make_an_overlay = 1
+	vis_flags = VIS_INHERIT_PLANE | VIS_INHERIT_LAYER
 	var/words = ""
 	var/max_message = 128
 
 	get_desc()
 		. = "<br><span class='notice'>It says:</span><br><blockquote style='margin: 0 0 0 1em;'>[words]</blockquote>"
 
-	attack_hand(mob/user as mob)
-		//boutput(user, "fart")
+	attack_hand(mob/user)
 		user.lastattacked = user
 		if (src.attached)
 			if (user.a_intent == INTENT_HELP)
-				boutput(user, "You peel \the [src] off of [src.attached].")
+				boutput(user, "You peel \the [src] off of \the [src.attached].")
 				src.remove_from_attached()
 				src.add_fingerprint(user)
 				user.put_in_hand_or_drop(src)
 			else
-				src.attached.attack_hand(user)
+				src.attached.Attackhand(user)
 				user.lastattacked = user
 		else
 			return ..()
 
-	attackby(obj/item/W as obj, mob/living/user as mob)
+	attackby(obj/item/W, mob/living/user)
 		user.lastattacked = user
 		if (istype(W, /obj/item/stamp))
 
@@ -172,7 +175,7 @@
 				user.show_text("All that won't fit on [src]!", "red")
 				pen.in_use = 0
 				return
-			logTheThing("station", user, null, "writes on [src] with [pen] at [showCoords(src.x, src.y, src.z)]: [t]")
+			logTheThing(LOG_STATION, user, "writes on [src] with [pen] at [log_loc(src)]: [t]")
 			t = copytext(html_encode(t), 1, MAX_MESSAGE_LEN)
 			if (src.icon_state == initial(src.icon_state))
 				var/search_t = lowertext(t)
@@ -189,7 +192,7 @@
 			return
 
 		if (src.attached)
-			src.attached.attackby(W, user)
+			src.attached.Attackby(W, user)
 			user.lastattacked = user
 		else
 			..()
@@ -324,6 +327,15 @@
 	name = "holly ornament"
 	icon_state = "holly"
 
+/obj/item/sticker/googly_eye
+	name = "googly eye sticker"
+	icon_state = "googly1"
+	random_icons = list("googly1", "googly2")
+
+	angry
+		name = "angry googly eye sticker"
+		random_icons = list("googly_angerL", "googly_angerR")
+
 /obj/item/sticker/ribbon
 	name = "award ribbon"
 	desc = "You're an award winner! You came in, uh... Well it looks like this doesn't say what place you came in, or what it's for. That's weird. But hey, it's an award for something! Maybe it was for being the #1 Farter, or maybe the #8 Ukelele Soloist. Truly, with an award as vague as this, you could be anything!"
@@ -393,6 +405,8 @@
 	var/list/skins = list("gold_star" = "gold star", "banana", "umbrella", "heart", "clover", "skull", "Larrow" = "left arrow",
 	"Rarrow" = "right arrow", "no" = "\"no\"", "moon", "smile", "rainbow", "frown", "balloon", "horseshoe", "bee")
 
+	var/pinpointer_category = TR_CAT_SPY_STICKERS_REGULAR
+
 	var/HTML = null
 
 	New()
@@ -408,7 +422,7 @@
 			src.camera = new /obj/machinery/camera (src)
 			src.camera.c_tag = src.camera_tag
 			src.camera.network = src.camera_network
-			src.camera.camera_status = 0
+			src.camera.set_camera_status(FALSE)
 			src.camera_tag = src.name
 
 		if (src.has_radio)
@@ -416,14 +430,16 @@
 				src.radio = new src.radio_path (src)
 			else
 				src.radio = new /obj/item/device/radio/spy (src)
-			SPAWN_DBG(1 DECI SECOND)
+			SPAWN(1 DECI SECOND)
 				src.radio.broadcasting = 0
 				//src.radio.listening = 0
 
 	attack_self(mob/user as mob)
 		var/choice = "Set radio"
 		if (src.has_camera)
-			choice = alert(user, "What would you like to do with [src]?",,"Set radio", "Set camera")
+			choice = tgui_alert(user, "What would you like to do with [src]?", "Configure sticker", list("Set radio", "Set camera"))
+		if (!choice)
+			return
 		if (choice == "Set radio")
 			src.set_internal_radio(user)
 		else
@@ -433,13 +449,17 @@
 		if (src.radio)
 			src.loc.open_to_sound = 0
 		if (src.camera)
-			src.camera.camera_status = 0
+			src.camera.set_camera_status(FALSE)
 			src.camera.c_tag = src.camera_tag
+		if(!isnull(pinpointer_category))
+			STOP_TRACKING_CAT(pinpointer_category)
 		..()
 
 	disposing()
 		if ((active) && (attached != null))
 			attached.open_to_sound = 0
+			if(!isnull(pinpointer_category))
+				START_TRACKING_CAT(pinpointer_category)
 		if (src.camera)
 			qdel(src.camera)
 		if (src.radio)
@@ -449,11 +469,10 @@
 	afterattack(var/atom/A as mob|obj|turf, var/mob/user as mob, reach, params)
 		if (src.camera)
 			src.camera.c_tag = "[src.camera_tag] ([A.name])"
-			src.camera.camera_status = 1.0
-			src.camera.updateCoverage()
+			src.camera.set_camera_status(TRUE)
 		if (src.radio)
-			src.radio.invisibility = 101
-		logTheThing("combat", user, A, "places a spy sticker on [constructTarget(A,"combat")] at [log_loc(user)].")
+			src.radio.invisibility = INVIS_ALWAYS
+		logTheThing(LOG_COMBAT, user, "places a spy sticker on [constructTarget(A,"combat")] at [log_loc(user)].")
 
 		..()
 
@@ -463,6 +482,8 @@
 		if (src.radio)
 			src.loc.open_to_sound = 1
 
+		if(!isnull(pinpointer_category))
+			START_TRACKING_CAT(pinpointer_category)
 
 	proc/generate_html()
 		src.HTML = {"<TT>Camera Broadcast Network:<BR>
@@ -488,7 +509,7 @@
 		if (!usr || usr.stat)
 			return
 
-		if ((get_dist(src, usr) <= 1) || (usr.loc == src.loc))
+		if ((BOUNDS_DIST(src, usr) == 0) || (usr.loc == src.loc))
 			src.add_dialog(usr)
 			switch (href_list["change_setting"])
 				if ("spynetwork")
@@ -537,21 +558,24 @@
 /obj/item/sticker/spy/radio_only/det_only
 	desc = "This sticker contains a tiny radio transmitter that handles audio. Closer inspection reveals that the frequency is locked to the Security channel."
 	radio_path = /obj/item/device/radio/spy/det_only
+	pinpointer_category = TR_CAT_SPY_STICKERS_DET
 
 /obj/item/device/camera_viewer/sticker
-	name = "Camera monitor"
+	name = "camera monitor"
 	desc = "A portable video monitor connected to a network of spy cameras."
 	icon_state = "monitor"
 	item_state = "electronic"
-	w_class = 2.0
+	w_class = W_CLASS_SMALL
 	network = "stickers"
 
 /obj/item/storage/box/spy_sticker_kit
 	name = "spy sticker kit"
 	desc = "Includes everything you need to spy on your unsuspecting co-workers!"
+	slots = 8
 	spawn_contents = list(/obj/item/sticker/spy = 5,
 	/obj/item/device/camera_viewer/sticker,
-	/obj/item/device/radio/headset)
+	/obj/item/device/radio/headset,
+	/obj/item/pinpointer/category/spysticker)
 
 /obj/item/storage/box/spy_sticker_kit/radio_only
 	spawn_contents = list(/obj/item/sticker/spy/radio_only = 5,
@@ -559,7 +583,8 @@
 
 /obj/item/storage/box/spy_sticker_kit/radio_only/detective
 	spawn_contents = list(/obj/item/sticker/spy/radio_only/det_only = 6,
-	/obj/item/device/radio/headset/detective)
+	/obj/item/device/radio/headset/detective,
+	/obj/item/pinpointer/category/spysticker/det)
 
 /obj/item/device/radio/spy
 	name = "spy radio"
@@ -571,3 +596,104 @@
 	locked_frequency = 1
 	frequency = R_FREQ_DETECTIVE
 	chat_class = RADIOCL_DETECTIVE
+
+ABSTRACT_TYPE(/obj/item/sticker/glow)
+/obj/item/sticker/glow
+	name = "glow sticker"
+	desc = "A sticker that has been engineered to self-illuminate when stuck to things."
+	dont_make_an_overlay = TRUE
+	icon_state = "glow"
+	var/datum/component/loctargeting/simple_light/light_c
+	var/col_r = 0
+	var/col_g = 0
+	var/col_b = 0
+	var/brightness = 0.6
+
+	New()
+		. = ..()
+		color = rgb(col_r*255, col_g*255, col_b*255)
+		light_c = src.AddComponent(/datum/component/loctargeting/simple_light, col_r*255, col_g*255, col_b*255, brightness*255)
+		light_c.update(0)
+
+	attack_hand(mob/user)
+		user.lastattacked = user
+		if (src.attached)
+			if (user.a_intent == INTENT_HELP)
+				boutput(user, "You peel \the [src] off of \the [src.attached].")
+				src.remove_from_attached()
+				src.add_fingerprint(user)
+				user.put_in_hand_or_drop(src)
+			else
+				src.attached.Attackhand(user)
+				user.lastattacked = user
+		else
+			return ..()
+
+	stick_to(var/atom/A, var/pox, var/poy)
+		..()
+		if (istype(src.attached, /mob) || istype(src.attached, /obj))
+			var/atom/movable/F = src.attached
+			src.layer = F.layer + 0.1
+			src.plane = F.plane
+			F.vis_contents += src
+		else if (istype(src.attached, /turf))
+			var/turf/F = src.attached
+			src.layer = F.layer + 0.1
+			src.plane = F.plane
+			F.vis_contents += src
+		light_c.update(1)
+
+	proc/remove_from_attached()
+		if (!src.attached)
+			return
+		if (istype(src.attached, /atom/movable))
+			var/atom/movable/F = src.attached
+			F.vis_contents -= src
+		else if (istype(src.attached, /turf))
+			var/turf/F = src.attached
+			F.vis_contents -= src
+
+		src.set_loc(src.attached.loc)
+		src.layer = initial(src.layer)
+		src.plane = initial(src.plane)
+		src.pixel_x = initial(src.pixel_x)
+		src.pixel_y = initial(src.pixel_y)
+		src.attached = null
+		light_c.update(0)
+
+	green
+		col_r = 0.0
+		col_g = 0.9
+		col_b = 0.1
+	white
+		col_r = 0.9
+		col_g = 0.9
+		col_b = 0.9
+	yellow
+		col_r = 0.9
+		col_g = 0.8
+		col_b = 0.1
+	blue
+		col_r = 0.1
+		col_g = 0.1
+		col_b = 0.9
+	purple
+		col_r = 0.6
+		col_g = 0.1
+		col_b = 0.9
+	pink
+		col_r = 0.9
+		col_g = 0.5
+		col_b = 0.9
+	cyan
+		col_r = 0.1
+		col_g = 0.9
+		col_b = 0.9
+	oranange
+		col_r = 0.9
+		col_g = 0.6
+		col_b = 0.1
+	red
+		col_r = 0.9
+		col_g = 0.1
+		col_b = 0.0

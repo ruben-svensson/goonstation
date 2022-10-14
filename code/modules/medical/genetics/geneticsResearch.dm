@@ -46,7 +46,7 @@ var/datum/geneticsResearchManager/genResearch = new()
 		//I could just change this quietly, but this.
 		//THIS FUCKING ABOMINATION stays here as a memory of someone's shame.
 		//researchTreeTiered = bubblesort(researchTreeTiered)
-		researchTreeTiered = sortList(researchTreeTiered)
+		sortList(researchTreeTiered, /proc/cmp_text_asc)
 		return
 
 	proc/isResearched(var/type)
@@ -163,7 +163,9 @@ var/datum/geneticsResearchManager/genResearch = new()
 	var/hidden = 0 // Is this one accessible by players?
 	var/htmlIcon = null
 
+	// Note: Parent should be called LAST to ensure any updates are forwarded as static data where applicable
 	proc/onFinish()
+		SHOULD_CALL_PARENT(TRUE)
 		for_by_tcl(computer, /obj/machinery/computer/genetics)
 			for (var/datum/tgui/ui as anything in tgui_process.get_uis(computer))
 				computer.update_static_data(null, ui)
@@ -213,11 +215,10 @@ var/datum/geneticsResearchManager/genResearch = new()
 		return
 
 	onFinish()
-		..()
 		if (global_instance.research_level < EFFECT_RESEARCH_DONE)
 			global_instance.research_level = max(global_instance.research_level, EFFECT_RESEARCH_DONE)
 			genResearch.mutations_researched++
-		return
+		..()
 
 // TIER ONE
 // researchTime = 600 is one minute, keep that in mind
@@ -247,10 +248,10 @@ var/datum/geneticsResearchManager/genResearch = new()
 	tier = 1
 
 	onFinish()
-		..()
 		genResearch.mut_research_cost = 10
 		genResearch.mut_research_time = 450
 		genResearch.see_secret = 1
+		..()
 
 /datum/geneticsResearchEntry/improvedcooldowns
 	name = "Biotic Cooling Mechanisms"
@@ -261,8 +262,8 @@ var/datum/geneticsResearchManager/genResearch = new()
 	tier = 1
 
 	onFinish()
-		..()
 		genResearch.equipment_cooldown_multiplier -= 0.5
+		..()
 
 /datum/geneticsResearchEntry/genebooth
 	name = "Gene Booth"
@@ -282,9 +283,9 @@ var/datum/geneticsResearchManager/genResearch = new()
 	requiredMutRes = list("early_secret_access")
 
 	onFinish()
-		..()
 		genResearch.cost_discount += 0.15
 		genResearch.time_discount += 0.15
+		..()
 
 /datum/geneticsResearchEntry/complex_saver
 	name = "Complex DNA Mutation Storage"
@@ -295,8 +296,8 @@ var/datum/geneticsResearchManager/genResearch = new()
 	requiredMutRes = list("early_secret_access")
 
 	onFinish()
-		..()
 		genResearch.max_save_slots += 5
+		..()
 
 /datum/geneticsResearchEntry/complex_max_materials
 	name = "Complex Material Storage"
@@ -307,8 +308,8 @@ var/datum/geneticsResearchManager/genResearch = new()
 	requiredMutRes = list("early_secret_access")
 
 	onFinish()
-		..()
 		genResearch.max_material += 50
+		..()
 
 // TIER TWO
 
@@ -338,8 +339,8 @@ var/datum/geneticsResearchManager/genResearch = new()
 	requiredResearch = list(/datum/geneticsResearchEntry/rademitter)
 
 	onFinish()
-		..()
 		genResearch.emitter_radiation -= 45
+		..()
 
 /datum/geneticsResearchEntry/rad_coolant
 	name = "Emitter Coolant System"
@@ -360,8 +361,8 @@ var/datum/geneticsResearchManager/genResearch = new()
 	requiredResearch = list(/datum/geneticsResearchEntry/reclaimer)
 
 	onFinish()
-		..()
 		genResearch.max_save_slots += 3
+		..()
 
 /datum/geneticsResearchEntry/rad_precision
 	name = "Precision Radiation Emitters"
@@ -381,21 +382,21 @@ var/datum/geneticsResearchManager/genResearch = new()
 	requiredResearch = list(/datum/geneticsResearchEntry/reclaimer)
 
 	onFinish()
-		..()
 		genResearch.max_material += 50
+		..()
 
 /datum/geneticsResearchEntry/bio_rad_dampers
 	name = "Biotic Radiation Dampeners"
-	desc = "Applies genetic research to completley eliminate all harmful radiation from the emitters."
+	desc = "Applies genetic research to completely eliminate all harmful radiation from the emitters."
 	researchTime = 2500
 	researchCost = 100
 	tier = 3
 	requiredResearch = list(/datum/geneticsResearchEntry/rad_dampers)
-	requiredMutRes = list("food_rad_resist","radioactive")
+	requiredMutRes = list("rad_resist","radioactive")
 
 	onFinish()
-		..()
 		genResearch.emitter_radiation -= 30
+		..()
 
 // TIER FOUR
 
@@ -408,8 +409,8 @@ var/datum/geneticsResearchManager/genResearch = new()
 	requiredResearch = list(/datum/geneticsResearchEntry/saver)
 
 	onFinish()
-		..()
 		genResearch.max_save_slots += 2
+		..()
 
 ///////////////////////////////////
 // Things related to DNA samples //
@@ -424,12 +425,24 @@ var/datum/geneticsResearchManager/genResearch = new()
 	var/datum/computer/file/genetics_scan/scan = new /datum/computer/file/genetics_scan()
 	scan.subject_name = C.real_name
 	scan.subject_uID = C.bioHolder.Uid
+	scan.subject_stability = C.bioHolder.genetic_stability
+	scan.scanned_at = TIME
 
-	for(var/ID in C.bioHolder.effectPool)
-		var/datum/bioEffect/BE = C.bioHolder.GetEffectFromPool(ID)
-		var/datum/bioEffect/MUT = new BE.type(scan)
-		MUT.dnaBlocks.blockList = BE.dnaBlocks.blockList
-		MUT.dnaBlocks.blockListCurr = BE.dnaBlocks.blockListCurr
-		scan.dna_pool += MUT
+	scan.dna_active = list()
+	scan.dna_pool = list()
+
+	for (var/bioEffectId in C.bioHolder.effects)
+		var/datum/bioEffect/BE = C.bioHolder.GetEffect(bioEffectId)
+		var/datum/bioEffect/scannedBE = new BE.type(scan)
+		// copy necessary information
+		// currently only name, for chromosome presence
+		scannedBE.name = BE.name
+		scan.dna_active += scannedBE
+	for (var/bioEffectId in C.bioHolder.effectPool)
+		var/datum/bioEffect/BE = C.bioHolder.GetEffectFromPool(bioEffectId)
+		var/datum/bioEffect/scannedBE = new BE.type(scan)
+		scannedBE.dnaBlocks.blockList = BE.dnaBlocks.blockList
+		scannedBE.dnaBlocks.blockListCurr = BE.dnaBlocks.blockListCurr
+		scan.dna_pool += scannedBE
 
 	return scan

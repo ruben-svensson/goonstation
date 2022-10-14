@@ -4,8 +4,8 @@
 	icon = 'icons/obj/objects.dmi'
 	icon_state = "itemspawn"
 	density = 0
-	anchored = 1.0
-	invisibility = 101
+	anchored = 1
+	invisibility = INVIS_ALWAYS
 	layer = 99
 	var/amt2spawn = 0
 	var/min_amt2spawn = 0
@@ -15,9 +15,10 @@
 	var/list/rare_items2spawn = list() // things that only rarely appear, independent of how big or small the main item list is
 	var/list/guaranteed = list() // things that will always spawn from this - set to a number to spawn that many of the thing
 
+	// TODO: initialize
 	New()
 		..()
-		SPAWN_DBG(1 DECI SECOND)
+		SPAWN(1 DECI SECOND)
 			src.spawn_items()
 			sleep(10 SECONDS)
 			qdel(src)
@@ -26,7 +27,7 @@
 		if (islist(src.guaranteed) && length(src.guaranteed))
 			for (var/obj/new_item in src.guaranteed)
 				if (!ispath(new_item))
-					logTheThing("debug", src, null, "has a non-path item in its guaranteed list, [new_item]")
+					logTheThing(LOG_DEBUG, src, "has a non-path item in its guaranteed list, [new_item]")
 					DEBUG_MESSAGE("[src] has a non-path item in its guaranteed list, [new_item]")
 					continue
 				var/amt = 1
@@ -36,11 +37,11 @@
 					closet_check_spawn(new_item)
 
 		if (!islist(src.items2spawn) || !length(src.items2spawn))
-			logTheThing("debug", src, null, "has an invalid items2spawn list")
+			logTheThing(LOG_DEBUG, src, "has an invalid items2spawn list")
 			return
 		if (rare_chance)
 			if (!islist(src.rare_items2spawn) || !length(src.rare_items2spawn))
-				logTheThing("debug", src, null, "has an invalid rare_items2spawn list")
+				logTheThing(LOG_DEBUG, src, "has an invalid rare_items2spawn list")
 				return
 		if (amt2spawn == 0)
 			amt2spawn = rand(min_amt2spawn, max_amt2spawn)
@@ -53,14 +54,14 @@
 				if (rare_items2spawn)
 					item_list = rare_items2spawn
 				else
-					logTheThing("debug", src, null, "has an invalid rare spawn list, [rare_items2spawn]")
+					logTheThing(LOG_DEBUG, src, "has an invalid rare spawn list, [rare_items2spawn]")
 					DEBUG_MESSAGE("[src] has an invalid rare spawn list, [rare_items2spawn]")
 					continue
 			else
 				item_list = items2spawn
 			var/obj/new_item = pick(item_list)
 			if (!ispath(new_item))
-				logTheThing("debug", src, null, "has a non-path item in its spawn list, [new_item]")
+				logTheThing(LOG_DEBUG, src, "has a non-path item in its spawn list, [new_item]")
 				DEBUG_MESSAGE("[src] has a non-path item in its spawn list, [new_item]")
 				continue
 
@@ -77,8 +78,7 @@
 	icon_state = "rand_snacks"
 	min_amt2spawn = 1
 	max_amt2spawn = 1
-	items2spawn = list(/obj/item/reagent_containers/food/snacks/candy,
-	/obj/item/reagent_containers/food/snacks/candy/chocolate,
+	items2spawn = list(/obj/item/reagent_containers/food/snacks/candy/chocolate,
 	/obj/item/reagent_containers/food/snacks/candy/nougat,
 	/obj/item/reagent_containers/food/snacks/candy/butterscotch,
 	/obj/item/reagent_containers/food/snacks/sandwich/meat_h,
@@ -538,7 +538,7 @@
 	/obj/item/paper_bin,
 	/obj/decal/cleanable/generic,
 	/obj/item/reagent_containers/food/drinks/mug/random_color,
-	/obj/item/postit_stack,
+	/obj/item/item_box/postit,
 	/obj/item/staple_gun/red)
 
 	one
@@ -604,7 +604,7 @@
 	/obj/item/paper,
 	/obj/decal/cleanable/generic,
 	/obj/item/reagent_containers/food/drinks/mug/random_color,
-	/obj/item/postit_stack,
+	/obj/item/item_box/postit,
 	/obj/item/staple_gun/red)
 
 	one
@@ -670,7 +670,7 @@
 	/obj/item/paper,
 	/obj/decal/cleanable/generic,
 	/obj/item/reagent_containers/food/drinks/mug/random_color,
-	/obj/item/postit_stack,
+	/obj/item/item_box/postit,
 	/obj/item/staple_gun/red)
 
 	one
@@ -791,13 +791,12 @@
 	/obj/item/clothing/mask/gas,
 	/obj/item/clothing/mask/medical,
 	/obj/item/clothing/mask/surgical,
-	/obj/item/clothing/shoes,
+	/obj/item/clothing/shoes/black,
 	/obj/item/coin,
 	/obj/item/device/infra_sensor,
 	/obj/item/device/radio,
 	/obj/item/device/timer,
 	/obj/item/folder,
-	/obj/item/hairball,
 	/obj/item/hand_labeler,
 	/obj/item/light/bulb/neutral,
 	/obj/item/light/tube/neutral,
@@ -841,6 +840,7 @@
 	/obj/item/storage/toolbox/emergency,
 	/obj/item/tank/air,
 	/obj/item/tank/emergency_oxygen,
+	/obj/item/tank/mini_oxygen,
 	/obj/item/weldingtool,
 	/obj/item/wrench)
 
@@ -921,7 +921,7 @@
 		/obj/item/material_piece/plasmastone,
 		/obj/item/material_piece/uqill,
 		/obj/item/material_piece/koshmarite,
-		/obj/item/material_piece/gold,
+		/obj/item/stamped_bullion,
 		/obj/item/raw_material/cotton,
 		/obj/item/raw_material/miracle,
 		/obj/item/raw_material/uqill,
@@ -936,14 +936,14 @@
 	icon = 'icons/obj/objects.dmi'
 	icon_state = "podspawn"
 	density = 0
-	anchored = 1.0
-	invisibility = 101
+	anchored = 1
+	invisibility = INVIS_ALWAYS
 	layer = 99
 	var/obj/machinery/vehicle/pod2spawn = null
 
 	New()
 		..()
-		SPAWN_DBG(1 DECI SECOND)
+		SPAWN(1 DECI SECOND)
 			src.set_up()
 			sleep(1 SECOND)
 			qdel(src)
@@ -1097,8 +1097,7 @@
 	/obj/item/parts/robot_parts/leg/right/treads,
 	/obj/item/parts/robot_parts/leg/left/treads,
 	/obj/item/organ/eye/cyber/prodoc,
-	/obj/item/organ/eye/cyber/nightvision,
-	/obj/item/organ/eye/cyber/sechud)
+	/obj/item/organ/eye/cyber/nightvision)
 
 /obj/random_item_spawner/critter
 	name = "random critter spawner"
@@ -1342,7 +1341,7 @@
 		/obj/item/clothing/under/gimmick/fake_waldo,
 		/obj/item/clothing/under/gimmick/johnny,
 		/obj/item/clothing/under/gimmick/police,
-		/obj/item/clothing/under/gimmick/blackstronaut,
+		/obj/item/clothing/under/gimmick/donk,
 		/obj/item/clothing/under/gimmick/duke,
 		/obj/item/clothing/under/gimmick/mj_clothes,
 		/obj/item/clothing/under/gimmick/viking,
@@ -1362,7 +1361,7 @@
 		/obj/item/clothing/under/gimmick/dolan,
 		/obj/item/clothing/under/gimmick/jetson,
 		/obj/item/clothing/under/gimmick/princess,
-		/obj/item/clothing/under/gimmick/cosby,
+		/obj/item/clothing/under/gimmick/sweater,
 		/obj/item/clothing/under/gimmick/chaps,
 		/obj/item/clothing/under/gimmick/vault13,
 		/obj/item/clothing/under/gimmick/murph,
@@ -1378,7 +1377,8 @@
 		/obj/item/clothing/under/gimmick/hakama/random,
 		/obj/item/clothing/under/gimmick/eightiesmens,
 		/obj/item/clothing/under/gimmick/eightieswomens,
-		/obj/item/clothing/under/gimmick/ziggy)
+		/obj/item/clothing/under/gimmick/ziggy,
+		/obj/item/clothing/under/gimmick/jcdenton)
 
 	one
 		amt2spawn = 1
@@ -1426,8 +1426,7 @@
 	icon_state = "rand_mask"
 	min_amt2spawn = 5
 	max_amt2spawn = 10
-	items2spawn = list(/obj/item/clothing/mask/hunter,
-						/obj/item/clothing/mask/owl_mask,
+	items2spawn = list(/obj/item/clothing/mask/owl_mask,
 						/obj/item/clothing/mask/smile,
 						/obj/item/clothing/mask/batman,
 						/obj/item/clothing/mask/clown_hat,
@@ -1435,7 +1434,6 @@
 						/obj/item/clothing/mask/balaclava,
 						/obj/item/clothing/mask/spiderman,
 						/obj/item/clothing/mask/horse_mask,
-						/obj/item/clothing/mask/gas/inquis,
 						/obj/item/clothing/mask/gas/plague,
 						/obj/item/clothing/mask/skull,
 						/obj/item/clothing/mask/niccage,
@@ -1492,6 +1490,30 @@
 	lots
 		min_amt2spawn = 5
 		max_amt2spawn = 7
+
+/obj/random_item_spawner/pizza
+	name = "random pizza spawner"
+	icon_state = "rand_pizza"
+	min_amt2spawn = 2
+	max_amt2spawn = 2
+	rare_chance = 1
+	items2spawn = list(/obj/item/reagent_containers/food/snacks/pizza/bad,
+						/obj/item/reagent_containers/food/snacks/pizza/pepperbad,
+						/obj/item/reagent_containers/food/snacks/pizza/mushbad)
+	rare_items2spawn = list(/obj/item/reagent_containers/food/drinks/bottle/soda/softsoft_pizza)
+
+/obj/random_item_spawner/cola
+	name = "random cola spawner"
+	icon_state = "rand_pizza"
+	min_amt2spawn = 2
+	max_amt2spawn = 2
+	rare_chance = 2
+	items2spawn = list(/obj/item/reagent_containers/food/drinks/cola,
+						/obj/item/reagent_containers/food/drinks/cola/random,
+						/obj/item/reagent_containers/food/drinks/peach,
+						/obj/item/reagent_containers/food/drinks/bottle/soda/orange,
+						/obj/item/reagent_containers/food/drinks/bottle/soda/grones)
+	rare_items2spawn = list(/obj/item/reagent_containers/food/drinks/bottle/soda/softsoft_pizza)
 
 /obj/random_item_spawner/hat
 	name = "random hat spawner"
@@ -1601,29 +1623,30 @@
 	icon_state = "rand_shoes"
 	min_amt2spawn = 5
 	max_amt2spawn = 10
-	items2spawn = list(/obj/item/clothing/shoes/cleats,
+	items2spawn = list(/obj/item/clothing/shoes/bootsblk,
+						/obj/item/clothing/shoes/bootsblu,
 						/obj/item/clothing/shoes/cowboy,
 						/obj/item/clothing/shoes/cyborg,
 						/obj/item/clothing/shoes/dress_shoes,
+						/obj/item/clothing/shoes/heels/dancin,
 						/obj/item/clothing/shoes/flippers,
 						/obj/item/clothing/shoes/fuzzy,
-						/obj/item/clothing/shoes/galoshes,
 						/obj/item/clothing/shoes/gogo,
 						/obj/item/clothing/shoes/heels,
-						/obj/item/clothing/shoes/jetpack,
 						/obj/item/clothing/shoes/macho,
-						/obj/item/clothing/shoes/magnetic,
 						/obj/item/clothing/shoes/mj_shoes,
+						/obj/item/clothing/shoes/mjblack,
+						/obj/item/clothing/shoes/mjwhite,
 						/obj/item/clothing/shoes/moon,
 						/obj/item/clothing/shoes/rocket,
 						/obj/item/clothing/shoes/rollerskates,
 						/obj/item/clothing/shoes/sailormoon,
-						/obj/item/clothing/shoes/sandal,
 						/obj/item/clothing/shoes/swat,
 						/obj/item/clothing/shoes/thong,
 						/obj/item/clothing/shoes/tourist,
 						/obj/item/clothing/shoes/utenashoes,
 						/obj/item/clothing/shoes/virtual,
+						/obj/item/clothing/shoes/witchfinder,
 						/obj/item/clothing/shoes/ziggy)
 
 	one
@@ -1801,7 +1824,7 @@
 			closet_check_spawn()
 
 	closet_check_spawn(var/new_x,var/new_y)
-		var/obj/item/K = new /obj/item/device/key/chompskey
+		var/obj/item/K = new /obj/item/device/key/generic/chompskey
 
 		if(new_x && new_y)
 			K.set_loc(locate(new_x,new_y,src.z))
@@ -1839,7 +1862,7 @@
 /obj/random_item_spawner/organs/bloody
 	New()
 		. = ..()
-		SPAWN_DBG(1 DECI SECOND) //sync with the organs spawn
+		SPAWN(1 DECI SECOND) //sync with the organs spawn
 			make_cleanable(/obj/decal/cleanable/blood/gibs, src.loc)
 
 	one_to_three

@@ -27,7 +27,7 @@
 					src.recharging = 1
 					user.set_loc(S.loc)
 					showswirl(user.loc)
-					SPAWN_DBG(recharge)
+					SPAWN(recharge)
 						S.recharging = 0
 						src.recharging = 0
 				return
@@ -39,8 +39,8 @@
 	icon_state = "locator"
 	item_state = "electronic"
 	density = 0
-	anchored = 0.0
-	w_class = 2.0
+	anchored = 0
+	w_class = W_CLASS_SMALL
 
 	attack_self(mob/user as mob)
 		for(var/obj/submachine/syndicate_teleporter/S in get_turf(src))

@@ -1,16 +1,12 @@
 /obj/machinery/nanofab/refining
 	name = "Nano-fabricator (Refining)"
 	blueprints = list(/datum/matfab_recipe/coilsmall,
-	/datum/matfab_recipe/coillarge,
-	/datum/matfab_recipe/arrowhead,
 	/datum/matfab_recipe/spear,
 	/datum/matfab_recipe/arrow,
 	/datum/matfab_recipe/bow,
 	/datum/matfab_recipe/quiver,
 	/datum/matfab_recipe/lens,
-	/datum/matfab_recipe/gears,
 	/datum/matfab_recipe/tripod,
-	/datum/matfab_recipe/aplates,
 	/datum/matfab_recipe/glasses,
 	/datum/matfab_recipe/jumpsuit,
 	/datum/matfab_recipe/glovesins,
@@ -23,16 +19,15 @@
 	/datum/matfab_recipe/sheet,
 	/datum/matfab_recipe/cell_small,
 	/datum/matfab_recipe/cell_large,
-	/datum/matfab_recipe/simple/insbody,
-	/datum/matfab_recipe/simple/insneck,
-	/datum/matfab_recipe/simple/insmouth,
-	/datum/matfab_recipe/simple/insbell,
-	/datum/matfab_recipe/simple/insbag,
-	/datum/matfab_recipe/simple/insrod,
 	/datum/matfab_recipe/infusion,
+	/datum/matfab_recipe/spacesuit)
+	/*
+	Note: the following items were removed from the refining nanofab due to the unfinished state of matsci and the resulting lack of any use for those:
 	/datum/matfab_recipe/fuel_rod,
 	/datum/matfab_recipe/fuel_rod_4,
-	/datum/matfab_recipe/spacesuit)
+	/datum/matfab_recipe/gears,
+	/datum/matfab_recipe/aplates
+	*/
 
 /obj/machinery/nanofab/mining
 	name = "Nano-fabricator (Mining)"
@@ -63,7 +58,7 @@
 /// Material science fabricator
 /obj/machinery/nanofab
 	name = "Nano-fabricator"
-	desc = "'Nano' means it's high-tech stuff."
+	desc = "A more complicated sibling to the manufacturers, this machine can make things that inherit material properties."// this isnt super good but it's better than what it was
 	icon = 'icons/obj/manufacturer.dmi'
 	icon_state = "fab2-on"
 	anchored = 1
@@ -97,11 +92,11 @@
 			recipes.Add(new R())
 		..()
 
-	attack_hand(mob/user as mob)
+	attack_hand(mob/user)
 		user.Browse(buildHtml(), "window=nfab;size=550x650;title=Nano-fabricator;fade_in=0;can_resize=0", 1)
 		return
 
-	MouseDrop(over_object, src_location, over_location)
+	mouse_drop(over_object, src_location, over_location)
 		if(over_object == src)
 			boutput(usr, "<span class='notice'>You reset the output location of [src]!</span>")
 			src.output_target = src.loc
@@ -111,11 +106,11 @@
 			boutput(usr, "<span class='alert'>Only living mobs are able to set the output target for [src].</span>")
 			return
 
-		if(get_dist(over_object,src) > 1)
+		if(BOUNDS_DIST(over_object, src) > 0)
 			boutput(usr, "<span class='alert'>[src] is too far away from the target!</span>")
 			return
 
-		if(get_dist(over_object,usr) > 1)
+		if(BOUNDS_DIST(over_object, usr) > 0)
 			boutput(usr, "<span class='alert'>You are too far away from the target!</span>")
 			return
 
@@ -144,7 +139,7 @@
 		if (!src.output_target)
 			return src.loc
 
-		if (get_dist(src.output_target,src) > 1)
+		if (BOUNDS_DIST(src.output_target, src) > 0)
 			src.output_target = null
 			return src.loc
 
@@ -245,7 +240,7 @@
 		return jointext(html, "")
 
 	Topic(href, href_list)
-		if(get_dist(usr, src) > 1 || usr.z != src.z) return
+		if(BOUNDS_DIST(usr, src) > 0 || usr.z != src.z) return
 
 		if(href_list["tab"])
 			tab = href_list["tab"]

@@ -3,9 +3,9 @@
 	icon = 'icons/obj/artifacts/artifactsitem.dmi'
 	desc = "You have no idea what this thing is!"
 	artifact = 1
-	module_research_no_diminish = 1
 	mat_changename = 0
 	mat_changedesc = 0
+	can_recycle = FALSE
 
 	New(var/loc, var/forceartiorigin)
 		..()
@@ -13,7 +13,7 @@
 		if (forceartiorigin)
 			AS.validtypes = list("[forceartiorigin]")
 		src.artifact = AS
-		SPAWN_DBG(0)
+		SPAWN(0)
 			src.ArtifactSetup()
 
 		var/capacity = rand(5,20)
@@ -86,8 +86,11 @@
 		if (prob(3))
 			reagents.add_reagent("liquid spacetime", 25)
 			usedCapacity += 25
+		if (prob(3))
+			reagents.add_reagent("rat_spit", 5)
+			usedCapacity += 5
 		if (prob(1))
-			reagents.add_reagent("fuzz", 5) // THE MOST DANGEROUS
+			reagents.add_reagent("rat_venom", 5) // THE MOST DANGEROUS
 			usedCapacity += 5
 		if (prob(3))
 			reagents.add_reagent("loose_screws", 25)
@@ -143,10 +146,13 @@
 		if (prob(3))
 			reagents.add_reagent("madness_toxin", 10)
 			usedCapacity += 10
+		if (prob(3))
+			reagents.add_reagent("propellant", 50)
+			usedCapacity += 50
 		reagents.add_reagent("saltpetre", max((capacity-usedCapacity) / 2, 0))
 		//reagents.add_reagent("water", max((capacity-usedCapacity) / 2, 0)) // Was diluting the fliptonium, can't have that
 
-	attackby(obj/item/W as obj, mob/user as mob)
+	attackby(obj/item/W, mob/user)
 		if (src.Artifact_attackby(W,user))
 			..()
 
@@ -159,13 +165,13 @@
 /datum/artifact/watercan
 	associated_object = /obj/item/reagent_containers/glass/wateringcan/artifact
 	type_name = "Beaker"
+	type_size = ARTIFACT_SIZE_MEDIUM
 	rarity_weight = 350
 	validtypes = list("martian","wizard","precursor")
 	min_triggers = 0
 	max_triggers = 0
+	no_activation = TRUE
 	react_xray = list(2,90,15,11,"HOLLOW")
-	module_research = list("medicine" = 5, "science" = 5, "miniaturization" = 15)
-	module_research_insight = 3
 
 
 	New()

@@ -1,25 +1,12 @@
 /atom/movable/screen/ability/topBar/critter
 	clicked(params)
-		var/datum/targetable/critter/spell = owner
-		if (!istype(spell))
+		if (!istype(owner, /datum/targetable/critter))
 			return
-		if (!spell.holder)
+		if (!owner.holder)
 			return
 		if (!isturf(usr.loc))
 			return
-		if (spell.targeted && usr.targeting_ability == owner)
-			usr.targeting_ability = null
-			usr.update_cursor()
-			return
-		if (spell.targeted)
-			if (world.time < spell.last_cast)
-				return
-			usr.targeting_ability = owner
-			usr.update_cursor()
-		else
-			SPAWN_DBG(0)
-				spell.handleCast()
-		return
+		..()
 
 /datum/abilityHolder/critter
 	usesPoints = 0
@@ -82,10 +69,10 @@
 
 	castcheck()
 		if (incapacitationCheck())
-			boutput(holder.owner, __red("Not while incapacitated."))
+			boutput(holder.owner, "<span class='alert'>Not while incapacitated.</span>")
 			return 0
 		if (disabled)
-			boutput(holder.owner, __red("You cannot use that ability at this time."))
+			boutput(holder.owner, "<span class='alert'>You cannot use that ability at this time.</span>")
 			return 0
 		return 1
 

@@ -48,8 +48,7 @@ export const BioEffect = (props, context) => {
     equipmentCooldown,
     saveSlots,
     savedMutations,
-    haveSubject,
-    subjectStat,
+    subject,
     boothCost,
     injectorCost,
     precisionEmitter,
@@ -57,6 +56,7 @@ export const BioEffect = (props, context) => {
   } = data;
   const {
     gene,
+    showSequence,
     isSample,
     isPotential,
     isActive,
@@ -79,7 +79,7 @@ export const BioEffect = (props, context) => {
   const dnaGood = dna.every(pair => !pair.style);
   const dnaGoodExceptLocks = dna.every(pair =>
     !pair.style || pair.marker === "locked");
-
+  let activeOrStorage = isActive || isStorage; // haha, what a dumb way to reduce arrow function complexity
   return (
     <Section
       title={name}
@@ -205,7 +205,7 @@ export const BioEffect = (props, context) => {
             Check Stability
           </Button>
         )}
-        {haveDevice(equipmentCooldown, "Reclaimer") && isPotential && !!canReclaim && (
+        {haveDevice(equipmentCooldown, "Reclaimer") && activeOrStorage && !!canReclaim && (
           <Button
             disabled={onCooldown(equipmentCooldown, "Reclaimer")}
             icon="times"
@@ -214,7 +214,7 @@ export const BioEffect = (props, context) => {
             Reclaim
           </Button>
         )}
-        {boothCost >= 0 && research >= 2 && (isActive || isStorage) && (
+        {boothCost >= 0 && research >= 2 && (activeOrStorage) && (
           <Button
             disabled={materialCur < boothCost}
             icon="person-booth"
@@ -227,7 +227,7 @@ export const BioEffect = (props, context) => {
           && isPotential && !!canScramble && (
           <Button
             icon="radiation"
-            disabled={onCooldown(equipmentCooldown, "Emitter") || subjectStat >= 0}
+            disabled={onCooldown(equipmentCooldown, "Emitter") || subject.stat > 0}
             color="bad"
             onClick={() => act("precisionemitter", { ref })}>
             Scramble Gene
@@ -251,7 +251,7 @@ export const BioEffect = (props, context) => {
           </Button>
         )}
         {research >= 2 && !!canInject && injectorCost >= 0
-          && (isActive || isStorage) && (
+          && (activeOrStorage) && (
           <Button
             disabled={onCooldown(equipmentCooldown, "Injectors") || materialCur < injectorCost}
             icon="syringe"
@@ -260,7 +260,7 @@ export const BioEffect = (props, context) => {
             Injector
           </Button>
         )}
-        {(isActive || isStorage) && !!toSplice && (
+        {(activeOrStorage) && !!toSplice && (
           <Button
             disabled={!!spliceError}
             icon="map-marker-alt"
@@ -270,7 +270,7 @@ export const BioEffect = (props, context) => {
             Splice
           </Button>
         )}
-        {isStorage && (
+        {isStorage && subject && (
           <Button
             icon="check"
             onClick={() => act("addstored", { ref })}
@@ -278,7 +278,7 @@ export const BioEffect = (props, context) => {
             Add to Occupant
           </Button>
         )}
-        {isStorage && haveSubject && (
+        {isStorage && (
           <Button
             icon="trash"
             onClick={() => act("deletegene", { ref })}
@@ -287,7 +287,9 @@ export const BioEffect = (props, context) => {
         <Box inline />
       </Box>
       <Description text={desc} />
-      <DNASequence {...props} />
+      {showSequence && (
+        <DNASequence {...props} />
+      )}
     </Section>
   );
 };
@@ -358,6 +360,7 @@ export const GeneList = (props, context) => {
         <BioEffect
           key={ag.ref}
           gene={ag}
+          showSequence
           {...rest} />
       )}
     </Fragment>

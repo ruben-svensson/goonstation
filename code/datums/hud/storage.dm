@@ -28,7 +28,7 @@
 		master = null
 		..()
 
-	clicked(id, mob/user, params)
+	relay_click(id, mob/user, params)
 		switch (id)
 			if ("boxes")
 				if (params && islist(src.obj_locs))
@@ -107,10 +107,10 @@
 
 //idk if i can even use the params of mousedrop for this
 /*
-	MouseDrop(var/atom/movable/screen/hud/H, atom/over_object, src_location, over_location, over_control, params)
+	mouse_drop(var/atom/movable/screen/hud/H, atom/over_object, src_location, over_location, over_control, params)
 		var/obj/item/I = src.obj_locs[H.screen_loc]
 		if (I)
-			I.MouseDrop(over_object, src_location, over_location, over_control, params)
+			I.mouse_drop(over_object, src_location, over_location, over_control, params)
 */
 	proc/update(mob/user = usr)
 		var x = 1
@@ -176,7 +176,7 @@
 		if(isitem(master))
 			var/obj/item/I = master
 			I.tooltip_rebuild = 1
-		master.update_icon()
+		master.UpdateIcon()
 
 	proc/add_item(obj/item/I, mob/user = usr)
 		update(user)

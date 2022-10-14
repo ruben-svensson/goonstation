@@ -5,17 +5,32 @@
 #else
 	icon_state = "intercom-map"
 #endif
-	anchored = 1.0
+	anchored = 1
 	plane = PLANE_NOSHADOW_ABOVE
-	mats = 0
+	mats = 3
+	deconstruct_flags = DECON_SCREWDRIVER | DECON_WRENCH | DECON_WIRECUTTERS | DECON_MULTITOOL
 	chat_class = RADIOCL_INTERCOM
 	var/number = 0
 	rand_pos = 0
 	desc = "A wall-mounted radio intercom, used to communicate with the specified frequency. Usually turned off except during emergencies."
 	hardened = 0
 
+/obj/item/device/radio/intercom/proc/update_pixel_offset_dir(obj/item/AM, old_dir, new_dir)
+	src.pixel_x = 0
+	src.pixel_y = 0
+	switch(new_dir)
+		if(NORTH)
+			src.pixel_y = -21
+		if(SOUTH)
+			src.pixel_y = 24
+		if(EAST)
+			src.pixel_x = -21
+		if(WEST)
+			src.pixel_x = 21
+
 /obj/item/device/radio/intercom/New()
 	. = ..()
+	RegisterSignal(src, COMSIG_ATOM_DIR_CHANGED, .proc/update_pixel_offset_dir)
 	if(src.icon_state == "intercom") // if something overrides the icon we don't want this
 		var/image/screen_image = image(src.icon, "intercom-screen")
 		screen_image.color = src.device_color
@@ -26,39 +41,31 @@
 		screen_image.alpha = 180
 		src.UpdateOverlays(screen_image, "screen")
 		if(src.pixel_x == 0 && src.pixel_y == 0)
-			switch(src.dir)
-				if(NORTH)
-					pixel_y = -21
-				if(SOUTH)
-					pixel_y = 24
-				if(EAST)
-					pixel_x = -21
-				if(WEST)
-					pixel_x = 21
+			update_pixel_offset_dir(src,null,src.dir)
+
+/obj/item/device/radio/intercom/ui_state(mob/user)
+	return tgui_default_state
 
 /obj/item/device/radio/intercom/attack_ai(mob/user as mob)
 	src.add_fingerprint(user)
-	SPAWN_DBG(0)
+	SPAWN(0)
 		attack_self(user)
 
-/obj/item/device/radio/intercom/attack_hand(mob/user as mob)
+/obj/item/device/radio/intercom/attack_hand(mob/user)
 	src.add_fingerprint(user)
-	SPAWN_DBG(0)
+	SPAWN(0)
 		attack_self(user)
 
 /obj/item/device/radio/intercom/send_hear()
 	if (src.listening)
 		return hearers(7, src.loc)
 
-/obj/item/device/radio/intercom/putt
-	name = "Colosseum Intercommunicator"
-	frequency = R_FREQ_INTERCOM_COLOSSEUM
-	broadcasting = 1
-	device_color = "#aa5c00"
-	protected_radio = 1
-
-	initialize()
-		set_frequency(frequency)
+/obj/item/device/radio/intercom/showMapText(var/mob/target, var/mob/sender, receive, msg, secure, real_name, lang_id, textLoc)
+	if (!isAI(sender) || isdead(sender) || (frequency == R_FREQ_DEFAULT))
+		..() // we also want the AI to be able to tune to any intercom and have maptext, but not the main radio (1459) because of spam
+		return
+	var/maptext = generateMapText(msg, textLoc, style = "color:#7F7FE2;", alpha = 255)
+	target.show_message(type = 2, just_maptext = TRUE, assoc_maptext = maptext)
 
 // -------------------- VR --------------------
 /obj/item/device/radio/intercom/virtual
@@ -159,12 +166,62 @@
 	initialize()
 		set_frequency(frequency)
 
+/obj/item/device/radio/intercom/syndicate
+	name = "Syndicate Intercom"
+	frequency = R_FREQ_SYNDICATE
+	broadcasting = TRUE
+	device_color = "#820A16"
+	hardened = TRUE
+
+	initialize()
+		if(istype(ticker.mode, /datum/game_mode/nuclear))
+			var/datum/game_mode/nuclear/N = ticker.mode
+			if(N.agent_radiofreq)
+				set_frequency(N.agent_radiofreq)
+		else
+			set_frequency(frequency)
+
+// -------------------- DetNet --------------------
+/obj/item/device/radio/intercom/detnet
+	name = "DetNet Intercom (General)"
+	locked_frequency = TRUE
+	device_color = RADIOC_STANDARD
+	layer = 3.2
+
+	initialize()
+		set_frequency(frequency)
+
+/obj/item/device/radio/intercom/detnet/security
+	name = "DetNet Intercom (Security)"
+	frequency = R_FREQ_SECURITY
+	secure_frequencies = list("g" = R_FREQ_SECURITY)
+	secure_classes = list("g" = R_FREQ_SECURITY)
+	device_color = RADIOC_SECURITY
+	layer = 3.1
+
+	initialize()
+		set_frequency(frequency)
+		set_secure_frequencies(src)
+
+/obj/item/device/radio/intercom/detnet/detective
+	name = "DetNet Intercom (???)"
+	frequency = R_FREQ_DETECTIVE
+	secure_frequencies = list("d" = R_FREQ_DETECTIVE)
+	secure_classes = list("d" = R_FREQ_DETECTIVE)
+	device_color = RADIOC_DETECTIVE
+	layer = 3
+
+	initialize()
+		set_frequency(frequency)
+		set_secure_frequencies(src)
+// ------------------------------------------------
 
 ////// adventure area intercoms
 
 /obj/item/device/radio/intercom/adventure/owlery
 	name = "Owlery Intercom"
 	frequency = R_FREQ_INTERCOM_OWLERY
+	locked_frequency = TRUE
 	broadcasting = 0
 	device_color = "#3344AA"
 
@@ -174,6 +231,7 @@
 /obj/item/device/radio/intercom/adventure/syndcommand
 	name = "Suspicious Intercom"
 	frequency = R_FREQ_INTERCOM_SYNDCOMMAND
+	locked_frequency = TRUE
 	broadcasting = 1
 	device_color = "#BB3333"
 

@@ -43,7 +43,7 @@
 				var/index = 0
 				var/group = null
 				if (initlist.len > 1)
-					index = max( round(text2num(initlist[2])), 1)
+					index = max( round(text2num_safe(initlist[2])), 1)
 
 					if (initlist.len > 2)
 						group = initlist[3]
@@ -77,7 +77,7 @@
 				var/index = 0
 				var/group = null
 				if (initlist.len > 1)
-					index = max( round(text2num(initlist[2])), 1)
+					index = max( round(text2num_safe(initlist[2])), 1)
 
 					if (initlist.len > 2)
 						group = initlist[3]
@@ -176,14 +176,14 @@
 				if (!check_read_permission(emailRec, useracc))
 					continue
 
-				if ((emailRec.fields.len >= 2) && lowertext(emailRec.fields[2]) == "*all")
+				if ((length(emailRec.fields) >= 2) && lowertext(emailRec.fields[2]) == "*all")
 					mailList += emailRec
 					continue
 
 				if (length(groupTargets))
 					var/success = 0
 					for (var/groupMember in groupTargets)
-						if (emailRec.fields.len >= 2 && (lowertext(groupMember) ==  lowertext(emailRec.fields[2])))
+						if (length(emailRec.fields) >= 2 && (lowertext(groupMember) ==  lowertext(emailRec.fields[2])))
 							mailList += emailRec
 							success = 1
 							break

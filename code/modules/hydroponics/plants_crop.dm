@@ -52,6 +52,7 @@ ABSTRACT_TYPE(/datum/plant/crop)
 	endurance = 0
 	genome = 10
 	commuts = list(/datum/plant_gene_strain/growth_fast,/datum/plant_gene_strain/health_poor)
+	mutations = list(/datum/plantmutation/oat/salt)
 
 /datum/plant/crop/rice
 	name = "Rice"
@@ -66,6 +67,13 @@ ABSTRACT_TYPE(/datum/plant/crop)
 	endurance = 0
 	genome = 8
 	commuts = list(/datum/plant_gene_strain/yield,/datum/plant_gene_strain/health_poor)
+
+	HYPinfusionP(var/obj/item/seed/S,var/reagent)
+		..()
+		var/datum/plantgenes/DNA = S.plantgenes
+		if (!DNA) return
+		if (reagent == "insulin")
+			DNA.mutation = HY_get_mutation_from_path(/datum/plantmutation/rice/ricein)
 
 /datum/plant/crop/beans
 	name = "Bean"
@@ -95,6 +103,7 @@ ABSTRACT_TYPE(/datum/plant/crop)
 	endurance = 0
 	vending = 1
 	genome = 8
+	mutations = list(/datum/plantmutation/peas/ammonia)
 	commuts = list(/datum/plant_gene_strain/immunity_toxin,/datum/plant_gene_strain/metabolism_slow)
 
 /datum/plant/crop/corn
@@ -108,7 +117,7 @@ ABSTRACT_TYPE(/datum/plant/crop)
 	harvests = 3
 	endurance = 2
 	genome = 10
-	mutations = list(/datum/plantmutation/corn/clear)
+	mutations = list(/datum/plantmutation/corn/clear, /datum/plantmutation/corn/pepper)
 	commuts = list(/datum/plant_gene_strain/photosynthesis,/datum/plant_gene_strain/splicing/bad)
 	assoc_reagents = list("cornstarch")
 
@@ -126,7 +135,6 @@ ABSTRACT_TYPE(/datum/plant/crop)
 	genome = 7
 	special_proc = 1
 	assoc_reagents = list("synthflesh")
-	mutations = list(/datum/plantmutation/synthmeat/butt,/datum/plantmutation/synthmeat/limb,/datum/plantmutation/synthmeat/brain,/datum/plantmutation/synthmeat/heart,/datum/plantmutation/synthmeat/eye)
 	commuts = list(/datum/plant_gene_strain/yield,/datum/plant_gene_strain/unstable)
 
 	HYPinfusionP(var/obj/item/seed/S,var/reagent)
@@ -135,6 +143,31 @@ ABSTRACT_TYPE(/datum/plant/crop)
 		if (!DNA) return
 		if (reagent == "nanites" && (DNA.mutation && istype(DNA.mutation,/datum/plantmutation/synthmeat/butt)))
 			DNA.mutation = HY_get_mutation_from_path(/datum/plantmutation/synthmeat/butt/buttbot)
+		switch(reagent)
+			if("anti_fart")
+				DNA.mutation = HY_get_mutation_from_path(/datum/plantmutation/synthmeat/butt)
+			if("synthflesh")
+				DNA.mutation = HY_get_mutation_from_path(/datum/plantmutation/synthmeat/limb)
+			if("mannitol")
+				DNA.mutation = HY_get_mutation_from_path(/datum/plantmutation/synthmeat/brain)
+			if("blood")
+				DNA.mutation = HY_get_mutation_from_path(/datum/plantmutation/synthmeat/heart)
+			if("oculine")
+				DNA.mutation = HY_get_mutation_from_path(/datum/plantmutation/synthmeat/eye)
+			if("salbutamol")
+				DNA.mutation = HY_get_mutation_from_path(/datum/plantmutation/synthmeat/lung)
+			if("poo")
+				DNA.mutation = HY_get_mutation_from_path(/datum/plantmutation/synthmeat/appendix)
+			if("sugar")
+				DNA.mutation = HY_get_mutation_from_path(/datum/plantmutation/synthmeat/pancreas)
+			if("ethanol")
+				DNA.mutation = HY_get_mutation_from_path(/datum/plantmutation/synthmeat/liver)
+			if("urine")
+				DNA.mutation = HY_get_mutation_from_path(/datum/plantmutation/synthmeat/kidney)
+			if("proconvertin")
+				DNA.mutation = HY_get_mutation_from_path(/datum/plantmutation/synthmeat/spleen)
+			if("charcoal")
+				DNA.mutation = HY_get_mutation_from_path(/datum/plantmutation/synthmeat/stomach)
 
 /datum/plant/crop/sugar
 	name = "Sugar"
@@ -222,6 +255,21 @@ ABSTRACT_TYPE(/datum/plant/crop)
 	mutations = list(/datum/plantmutation/tree/money, /datum/plantmutation/tree/rubber,/datum/plantmutation/tree/sassafras, /datum/plantmutation/tree/dog,/datum/plantmutation/tree/paper)
 	commuts = list(/datum/plant_gene_strain/metabolism_fast,/datum/plant_gene_strain/metabolism_slow,/datum/plant_gene_strain/resistance_drought)
 
+	HYPinfusionP(var/obj/item/seed/S,var/reagent)
+		..()
+		var/datum/plantgenes/DNA = S.plantgenes
+		if (!DNA) return
+		switch (reagent)
+			if ("radium")
+				DNA.mutation = HY_get_mutation_from_path(/datum/plantmutation/tree/glowstick)
+			if ("paper")
+				DNA.mutation = HY_get_mutation_from_path(/datum/plantmutation/tree/paper)
+			if ("wolfsbane")
+				DNA.mutation = HY_get_mutation_from_path(/datum/plantmutation/tree/dog)
+			if ("spaceglue")
+				DNA.mutation = HY_get_mutation_from_path(/datum/plantmutation/tree/rubber)
+
+
 /datum/plant/crop/coffee
 	name = "Coffee"
 	seedcolor = "#302013"
@@ -233,4 +281,6 @@ ABSTRACT_TYPE(/datum/plant/crop)
 	harvests = 5
 	endurance = 0
 	genome = 6
+	assoc_reagents = list("coffee")
 	commuts = list(/datum/plant_gene_strain/immunity_toxin,/datum/plant_gene_strain/metabolism_slow)
+	mutations = list(/datum/plantmutation/coffee/mocha, /datum/plantmutation/coffee/latte)

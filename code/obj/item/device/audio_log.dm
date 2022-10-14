@@ -3,11 +3,11 @@
 	desc = "A small audio tape.  You could make some rad mix-tapes with this!"
 	icon = 'icons/obj/items/device.dmi'
 	icon_state = "recordertape"
-	w_class = 1.0
+	w_class = W_CLASS_TINY
 	mats = 3
 
 	var/log_line = 1 //Which line of the log it's on.
-	var/max_lines = 60
+	var/max_lines = 100
 	var/list/messages = list()
 	var/list/speakers = list()
 
@@ -70,12 +70,12 @@
 
 
 /obj/item/device/audio_log
-	name = "Audio log"
+	name = "audio log"
 	desc = "A fairly spartan recording device."
 	icon_state = "recorder"
 	uses_multiple_icon_states = 1
 	item_state = "electronic"
-	w_class = 2.0
+	w_class = W_CLASS_SMALL
 	var/obj/item/audio_tape/tape = null
 	var/mode = 0 //1 recording, 2 playing back
 	var/max_lines = 60
@@ -142,7 +142,7 @@
 								"You weren't there! You didn't see what I-",
 								"Your tone is not appreciated.  If you are unable to control yourself I suggest you leave.",
 								"In fact, I insist.  Our business is concluded-",
-								"Speak with me face to face you son of a bitch!",
+								"Speak with me face to face you son of a gun!",
 								"So you can murder me with whatever plague you have engineered in my labs? Using MY funds?",
 								"If you are not willing to leave I will have security escort you out, with neither suit nor shuttle to shield you.",
 								"Think carefully, Bruce.")
@@ -160,7 +160,7 @@
 		desc = "A wall-mounted audio log device."
 		max_lines = 30
 
-		attack_hand(mob/user as mob)
+		attack_hand(mob/user)
 			return attack_self(user)
 
 		updateSelfDialog()
@@ -170,7 +170,7 @@
 		..()
 		if (user.stat || user.restrained() || user.lying)
 			return
-		if ((user.contents.Find(src) || user.contents.Find(src.master) || get_dist(src, user) <= 1 && istype(src.loc, /turf)))
+		if ((user.contents.Find(src) || user.contents.Find(src.master) || BOUNDS_DIST(src, user) == 0 && istype(src.loc, /turf)))
 			src.add_dialog(user)
 
 			var/dat = "<TT><b>Audio Logger</b><br>"
@@ -194,7 +194,7 @@
 
 		return
 
-	attackby(obj/item/I as obj, mob/user as mob)
+	attackby(obj/item/I, mob/user)
 		if (istype(I, /obj/item/audio_tape))
 			if (src.tape)
 				boutput(user, "There is already a tape loaded.")
@@ -214,12 +214,12 @@
 
 	MouseDrop_T(obj/item/W as obj, mob/user as mob)
 		if (istype(W, /obj/item/audio_tape) && in_interact_range(src, user) && in_interact_range(W, user))
-			return src.attackby(W, user)
+			return src.Attackby(W, user)
 		return ..()
 
 	New()
 		..()
-		SPAWN_DBG(1 SECOND)
+		SPAWN(1 SECOND)
 			if (!src.tape)
 				src.tape = new /obj/item/audio_tape(src)
 			if (src.audiolog_messages && length(src.audiolog_messages))
@@ -287,6 +287,9 @@
 		if (real_name)
 			speaker_name = real_name
 
+		if (speaker.vdisfigured)
+			speaker_name = "Unknown"
+
 		if(ishuman(speaker) && speaker.wear_mask && speaker.wear_mask.vchange)//istype(speaker.wear_mask, /obj/item/clothing/mask/gas/voice))
 			if(speaker:wear_id)
 				speaker_name = speaker:wear_id:registered
@@ -308,7 +311,7 @@
 			processing_items.Remove(src)
 			src.updateSelfDialog()
 			if(src.self_destruct)
-				SPAWN_DBG(2 SECONDS)
+				SPAWN(2 SECONDS)
 					src.explode()
 			return
 
@@ -318,7 +321,7 @@
 			processing_items.Remove(src)
 			src.updateSelfDialog()
 			if(src.self_destruct)
-				SPAWN_DBG(2 SECONDS)
+				SPAWN(2 SECONDS)
 					src.explode()
 			return
 		var/separator = findtext(speak_message,"|")
@@ -327,7 +330,7 @@
 			processing_items.Remove(src)
 			src.updateSelfDialog()
 			if(src.self_destruct)
-				SPAWN_DBG(2 SECONDS)
+				SPAWN(2 SECONDS)
 					src.explode()
 			return
 

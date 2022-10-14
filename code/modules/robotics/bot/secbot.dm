@@ -91,17 +91,13 @@
 	var/mode = 0
 
 	var/auto_patrol = 0		// set to make bot automatically patrol
-	var/beacon_freq = 1445		// navigation beacon frequency
-	var/control_freq = 1447		// bot control frequency
-	var/tacticool = 0 // Do we shit up our report with useless lingo?
-	var/badge_number = null // what dumb thing are we calling ourself today?
-	var/badge_number_length = 2 // How long is that dumb thing supposed to be?
-	var/badge_number_length_forcemax = 0 // always make it that long
+	var/beacon_freq = FREQ_NAVBEACON		// navigation beacon frequency
+	var/control_freq = FREQ_BOT_CONTROL		// bot control frequency
 
-	var/turf/patrol_target	// this is turf to navigate to (location of beacon)
-	var/new_destination		// pending new destination (waiting for beacon response)
-	var/destination			// destination description tag
-	var/next_destination	// the next destination in the patrol route
+	var/tmp/turf/patrol_target	// this is turf to navigate to (location of beacon)
+	var/tmp/new_destination		// pending new destination (waiting for beacon response)
+	var/tmp/destination			// destination description tag
+	var/tmp/next_destination	// the next destination in the patrol route
 
 	var/move_patrol_step_delay = PATROL_SPEED	// multiplies how slowly the bot moves on patrol
 	var/move_summon_step_delay = SUMMON_SPEED	// same, but for summons. Lower is faster.
@@ -112,8 +108,8 @@
 	var/blockcount = 0		//number of times retried a blocked path
 	var/awaiting_beacon	= 0	// count of pticks awaiting a beacon response
 
-	var/nearest_beacon			// the nearest beacon's tag
-	var/turf/nearest_beacon_loc	// the nearest beacon's location
+	var/tmp/nearest_beacon			// the nearest beacon's tag
+	var/tmp/turf/nearest_beacon_loc	// the nearest beacon's location
 
 	var/attack_per_step = 0 // Tries to attack every step. 1 = 75% chance to attack, 2 = 25% chance to attack
 	/// One WEEOOWEEOO at a time, please
@@ -130,7 +126,12 @@
 	var/cuff_threat_threshold = 5
 	/// Obey the threat threshold. Otherwise, just cuff em
 	var/warn_minor_crime = 0
-
+	/// How long has the bot been sitting in the time-out locker? (process cycles spent inside a locked/welded storage object)
+	var/container_cool_off_counter = 0
+	/// When the bot's been stuck in a locker this long, they'll forget who they were mad at
+	/// Note, this is in process() calls, not seconds, so it could vary quite a bit
+	var/container_cool_off_max = 30
+	var/added_to_records = FALSE
 	/// Set a bot to guard an area, and they'll go there and mill around
 	var/area/guard_area
 	/// Arrest anyone who arent security / heads if they're in this area?
@@ -156,9 +157,11 @@
 			our_baton.dispose()
 			our_baton = null
 		target = null
-		radio_controller.remove_object(src, FREQ_PDA)
-		radio_controller.remove_object(src, "[control_freq]")
-		radio_controller.remove_object(src, "[beacon_freq]")
+
+		#ifdef I_AM_ABOVE_THE_LAW
+		STOP_TRACKING_CAT(TR_CAT_DELETE_ME)
+		#endif
+
 		..()
 
 /obj/machinery/bot/secbot/autopatrol
@@ -170,7 +173,6 @@
 	idcheck = 1
 	auto_patrol = 1
 	report_arrests = 1
-	tacticool = 1
 	move_arrest_step_delay = ARREST_SPEED * 0.9 // beepsky has some experience chasing crimers
 	loot_baton_type = /obj/item/baton/beepsky
 	is_beepsky = IS_BEEPSKY_AND_HAS_HIS_SPECIAL_BATON
@@ -208,11 +210,16 @@
 	desc = "A little security robot, apparently carved out of a pumpkin.  He looks...spooky?"
 	icon = 'icons/misc/halloween.dmi'
 
+/obj/machinery/bot/secbot/neon
+	name = "Beepsky (Mall Edition)"
+	desc = "This little security robot appears to have been redesigned to appeal to civilians. How colourful!"
+	icon = 'icons/misc/walp_decor.dmi'
+
 /obj/machinery/bot/secbot/brute
 	name = "Komisarz Beepinarska"
 	desc = "This little security robot seems to have a particularly large chip on its... shoulder? ...head?"
 	our_baton_type = /obj/item/baton/classic
-	loot_baton_type = /obj/item/baton/classic
+	loot_baton_type = null
 	stun_type = "harm_classic"
 	emagged = 2
 	control_freq = 0
@@ -220,12 +227,6 @@
 	demag()
 		//Nope
 		return
-
-/obj/machinery/bot/secbot/stamina_test
-	name = "test secbot"
-	desc = "stamina test"
-	our_baton_type = /obj/item/baton/stamina
-	loot_baton_type = /obj/item/baton/stamina
 
 /obj/item/secbot_assembly
 	name = "helmet/signaler assembly"
@@ -236,7 +237,7 @@
 	var/is_dead_beepsky = 0
 	var/build_step = 0
 	var/created_name = "Securitron" //To preserve the name if it's a unique securitron I guess
-	var/beacon_freq = 1445 //If it's running on another beacon circuit I guess
+	var/beacon_freq = FREQ_NAVBEACON //If it's running on another beacon circuit I guess
 	var/hat = null
 
 
@@ -247,22 +248,23 @@
 		if (!src.our_baton || !istype(src.our_baton))
 			src.our_baton = new our_baton_type(src)
 
-
-		if (src.tacticool || prob(20))
-			make_tacticool()
-
 		add_simple_light("secbot", list(255, 255, 255, 0.4 * 255))
 		chargepic = image('icons/effects/electile.dmi', "6c")
 		START_TRACKING
 		src.chatspam_cooldown = (1 SECOND) + (length(by_type[/obj/machinery/bot/secbot]) * 2) // big hordes of bots can really jam up the chat
 
-		SPAWN_DBG(0.5 SECONDS)
-			if(radio_controller)
-				radio_controller.add_object(src, "[control_freq]")
-				radio_controller.add_object(src, "[beacon_freq]")
+		SPAWN(0.5 SECONDS)
 			if(src.hat)
 				bothat = image('icons/obj/bots/aibots.dmi', "hat-[src.hat]")
 				UpdateOverlays(bothat, "secbot_hat")
+
+		MAKE_DEFAULT_RADIO_PACKET_COMPONENT("control", control_freq)
+		MAKE_DEFAULT_RADIO_PACKET_COMPONENT("beacon", beacon_freq)
+		MAKE_SENDER_RADIO_PACKET_COMPONENT("pda", FREQ_PDA)
+
+		#ifdef I_AM_ABOVE_THE_LAW
+		START_TRACKING_CAT(TR_CAT_DELETE_ME)
+		#endif
 
 	speak(var/message, var/sing, var/just_float)
 		if (src.emagged >= 2)
@@ -275,10 +277,10 @@
 		if (src.attack_per_step && prob(src.attack_per_step == 2 ? 25 : 75))
 			if (oldloc != NewLoc)
 				if (mode == SECBOT_AGGRO && target)
-					if (IN_RANGE(src, src.target, 1))
+					if ((BOUNDS_DIST(src, src.target) == 0))
 						src.baton_attack(src.target, 1)
 
-	attack_hand(mob/user as mob, params)
+	attack_hand(mob/user, params)
 		var/dat
 
 		dat += {"
@@ -298,7 +300,7 @@
 			Guard Lockdown: <A href='?src=\ref[src];operation=lockdown'>[src.guard_area_lockdown ? "On" : "Off"]</A><BR>
 			<A href='?src=\ref[src];operation=guardhere'>Guard Here</A>"}
 
-		if (user.client.tooltipHolder)
+		if (user.client?.tooltipHolder)
 			user.client.tooltipHolder.showClickTip(src, list(
 				"params" = params,
 				"title" = "Securitron v2.0 controls",
@@ -320,6 +322,7 @@
 				remove_simple_light("secbot")
 			src.KillPathAndGiveUp(KPAGU_CLEAR_ALL)
 			src.updateUsrDialog()
+			logTheThing(LOG_STATION, usr, "turns [src] [src.on ? "on" : "off"] at [log_loc(src)].")
 
 		switch(href_list["operation"])
 			if ("idcheck")
@@ -409,7 +412,7 @@
 			if(user)
 				src.oldtarget_name = user.name
 				ON_COOLDOWN(src, "[SECBOT_LASTTARGET_COOLDOWN]-[src.oldtarget_name]", src.last_target_cooldown)
-			logTheThing("station", user, null, "emagged a [src] at [log_loc(src)].")
+			logTheThing(LOG_STATION, user, "emagged a [src] at [log_loc(src)].")
 			return 1
 		return 0
 
@@ -437,31 +440,33 @@
 			src.explode()
 		return
 
-	attackby(obj/item/W as obj, mob/user as mob)
-		if (istype(W, /obj/item/device/pda2) && W:ID_card)
-			W = W:ID_card
-		if (istype(W, /obj/item/card/id))
-			if (src.allowed(user))
+	attackby(obj/item/I, mob/M)
+		if (istype(I, /obj/item/device/pda2) && I:ID_card)
+			I = I:ID_card
+		if (istype(I, /obj/item/card/id))
+			if (src.allowed(M))
 				src.locked = !src.locked
-				boutput(user, "Controls are now [src.locked ? "locked." : "unlocked."]")
+				boutput(M, "Controls are now [src.locked ? "locked." : "unlocked."]")
 				src.updateUsrDialog()
 			else
-				boutput(user, "<span class='alert'>Access denied.</span>")
+				boutput(M, "<span class='alert'>Access denied.</span>")
 
-		else if (isscrewingtool(W))
+		else if (isscrewingtool(I))
 			if (src.health < initial(health))
 				src.health = initial(health)
-				src.visible_message("<span class='alert'>[user] repairs [src]!</span>", "<span class='alert'>You repair [src].</span>")
+				src.visible_message("<span class='alert'>[M] repairs [src]!</span>", "<span class='alert'>You repair [src].</span>")
 		else
-			switch(W.hit_type)
+			switch(I.hit_type)
 				if (DAMAGE_BURN)
-					src.health -= W.force * 0.75
+					src.health -= I.force * 0.75
 				else
-					src.health -= W.force * 0.5
+					src.health -= I.force * 0.5
 			if (src.health <= 0)
+				if (src.z == Z_LEVEL_STATION) // I only care about station secbots
+					logTheThing(LOG_COMBAT, M, "destroyed secbot [src.emagged ? "(emagged)" : ""] [src] with [I] at [log_loc(src)]")
 				src.explode()
-			else if (W.force) // Prioritize your safety, cant kill crime if you're dead!
-				src.EngageTarget(user, 1, 1)
+			else if (I.force) // Prioritize your safety, cant kill crime if you're dead!
+				src.EngageTarget(M, 1, 1)
 			..()
 
 	bullet_act(var/obj/projectile/P)
@@ -476,6 +481,10 @@
 			src.health -= damage
 
 		if (src.health <= 0)
+			if (src.z == Z_LEVEL_STATION) // I only care about station secbots
+				if (ismob(P.shooter))
+					var/mob/living/M = P.shooter
+					logTheThing(LOG_COMBAT, M, "destroyed secbot [src.emagged ? "(emagged)" : ""] [src] at [log_loc(src)]. <b>Projectile:</b> <I>[P.name]</I>[P.proj_data && P.proj_data.type ? ", <b>Type:</b> [P.proj_data.type]" : ""]")
 			src.explode()
 			return
 
@@ -488,10 +497,10 @@
 	//Generally we want to explode() instead of just deleting the securitron.
 	ex_act(severity)
 		switch(severity)
-			if(1.0)
+			if(1)
 				src.explode()
 				return
-			if(2.0)
+			if(2)
 				src.health -= 15
 				if (src.health <= 0)
 					src.explode()
@@ -510,21 +519,14 @@
 	explode()
 		if (report_arrests)
 			var/bot_location = get_area(src)
-			var/datum/radio_frequency/transmit_connection = radio_controller.return_frequency(FREQ_PDA)
 			var/datum/signal/pdaSignal = get_free_signal()
-			var/message2send
-			if (src.tacticool)
-				message2send = "Notification: Tactical law intervention agent [src] codename [src.badge_number] status KIA in [bot_location]!"
-			else
-				message2send = "Notification: [src] destroyed in [bot_location]! Officer down!"
+			var/message2send = "Notification: [src] destroyed in [bot_location]! Officer down!"
 			pdaSignal.data = list("address_1"="00000000", "command"="text_message", "sender_name"="SECURITY-MAILBOT", "group"=list(MGD_SECURITY, MGA_DEATH), "sender"="00000000", "message"="[message2send]")
-			pdaSignal.transmission_method = TRANSMISSION_RADIO
-			if(transmit_connection != null)
-				transmit_connection.post_signal(src, pdaSignal)
+			SEND_SIGNAL(src, COMSIG_MOVABLE_POST_RADIO_PACKET, pdaSignal, null, "pda")
 
 		if(src.exploding) return
 		src.exploding = 1
-		playsound(src.loc, "sound/impact_sounds/Machinery_Break_1.ogg", 40, 1)
+		playsound(src.loc, 'sound/impact_sounds/Machinery_Break_1.ogg', 40, 1)
 		for(var/mob/O in hearers(src, null))
 			O.show_message("<span class='alert'><B>[src] blows apart!</B></span>", 1)
 		var/turf/Tsec = get_turf(src)
@@ -542,7 +544,7 @@
 		// Not charged when dropped (ran on Beepsky's internal battery or whatever).
 		if (istype(loot_baton_type, /obj/item/baton)) // Now we can drop *any* baton!
 			var/obj/item/baton/B = new loot_baton_type(Tsec)
-			B.status = 0
+			B.is_active = FALSE
 			B.process_charges(-INFINITY)
 			if (src.is_beepsky == IS_BEEPSKY_AND_HAS_HIS_SPECIAL_BATON || src.is_beepsky == IS_NOT_BEEPSKY_BUT_HAS_HIS_SPECIAL_BATON)	// Holding Beepsky's baton doesnt make you him, but it does mean you're holding his baton
 				B.name = "Beepsky's stun baton"
@@ -551,41 +553,16 @@
 			new loot_baton_type(Tsec)
 
 		if (prob(50))
-			new /obj/item/parts/robot_parts/arm/left(Tsec)
+			new /obj/item/parts/robot_parts/arm/left/standard(Tsec)
 
 		elecflash(src, radius=1, power=3, exclude_center = 0)
 		qdel(src)
-
-	/// Makes the bot considerably dorkier. Gives them a dorky codename and makes them say dorky things on arrest
-	proc/make_tacticool()
-		src.tacticool = 1
-		src.badge_number = generate_dorkcode(src.badge_number_length, src.badge_number_length_forcemax)
-
-	/// Generates some kind of awful codename
-	proc/generate_dorkcode(var/num_of_em = 1, var/force_max = 0)
-		var/how_many_dorkcodes = force_max ? num_of_em : rand(1, num_of_em)
-		while(how_many_dorkcodes >= 1)
-			how_many_dorkcodes--
-			switch(pick(1,5))
-				if (1)
-					. += pick_string("agent_callsigns.txt", "nato")
-				if (2)
-					. += pick_string("agent_callsigns.txt", "birds")
-				if (3)
-					. += pick_string("agent_callsigns.txt", "mammals")
-				if (4)
-					. += pick_string("agent_callsigns.txt", "colors")
-				if (5)
-					. += pick_string("shittybill.txt", "nouns")
-			. += "-"
-		. += "[rand(1,99)]-"
-		. += "[rand(1,99)]"
 
 	/// Makes the bot able to baton people, then makes them unable to baton people after a while
 	proc/charge_baton()
 		src.baton_charged = TRUE
 		UpdateOverlays(chargepic, "secbot_charged")
-		SPAWN_DBG(src.baton_charge_duration)
+		SPAWN(src.baton_charge_duration)
 			src.baton_charged = FALSE
 			UpdateOverlays(null, "secbot_charged")
 
@@ -599,29 +576,32 @@
 
 			// No need for unnecessary hassle, just make it ignore charges entirely for the time being.
 			if (src.our_baton && istype(src.our_baton))
-				if (src.our_baton.uses_electricity == 0)
-					src.our_baton.uses_electricity = 1
-				if (src.our_baton.uses_charges != 0)
-					src.our_baton.uses_charges = 0
+				src.our_baton.cost_normal = 0
 			else
 				src.our_baton = new src.our_baton_type(src)
 
 			while (stuncount > 0 && src.target)
 				// they moved while we were sleeping, abort
-				if(!IN_RANGE(src, src.target, 1))
+				if(!(BOUNDS_DIST(src, src.target) == 0))
 					src.icon_state = "secbot[src.on][(src.on && src.emagged >= 2) ? "-wild" : null]"
 					src.weeoo()
 					src.process()
 					return
 
 				stuncount--
-				src.our_baton.do_stun(src, M, src.stun_type, 2)
+				if (check_target_immunity(M))
+					src.visible_message("<span class='alert'><B>[src] tries to stun [M] with the [src.our_baton] but the attack bounces off uselessly!</B></span>")
+					playsound(src, 'sound/impact_sounds/Generic_Swing_1.ogg', 25, 1, -1)
+				else
+					src.our_baton.do_stun(src, M, src.stun_type, 2)
 				if (!stuncount && maxstuns-- <= 0)
 					src.KillPathAndGiveUp(KPAGU_CLEAR_PATH)
 				if (stuncount > 0)
 					sleep(BATON_DELAY_PER_STUN)
 
-			SPAWN_DBG(0.2 SECONDS)
+			if (isnull(target))
+				return
+			SPAWN(0.2 SECONDS)
 				src.icon_state = "secbot[src.on][(src.on && src.emagged >= 2) ? "-wild" : null]"
 			if (src.target.getStatusDuration("weakened"))
 				src.anchored = 1
@@ -671,7 +651,7 @@
 				src.doing_something = 1
 				if(!src.path)
 					src.speak("ERROR 99-28: COULD NOT FIND PATH TO SUMMON TARGET. ABORTING.")
-					src.KillPathAndGiveUp(KPAGU_CLEAR_PATH)	// switch back to what we should be
+					src.KillPathAndGiveUp(KPAGU_RETURN_TO_PATROL)	// switch back to what we should be
 
 			/// On guard duty, returning from distraction
 			if(SECBOT_GUARD_IDLE)
@@ -714,10 +694,7 @@
 		if(get_area(get_turf(src)) == src.guard_area) // oh good we're here
 			if(src.mode == SECBOT_GUARD_START)
 				if(!src.guard_start_no_announce && !ON_COOLDOWN(global, "[SECBOT_CHATSPAM_COOLDOWN]-guardarrived", src.chatspam_cooldown))
-					if(src.tacticool)
-						src.speak("UNIT [src.badge_number] ON THE SCENE. INITIATING 'CRIME SEEK AND DESTROY' SEQUENCE.")
-					else
-						src.speak("Destination reached. Patrolling area.", just_float = 1)
+					src.speak("Destination reached. Patrolling area.", just_float = 1)
 				src.mode = SECBOT_GUARD
 
 		if(!moving && !ON_COOLDOWN(src, SECBOT_GUARDMOVE_COOLDOWN, src.guard_mill_cooldown))
@@ -725,7 +702,7 @@
 			if(src.mode == SECBOT_GUARD_START && !src.guard_start_no_announce && !ON_COOLDOWN(global, "[SECBOT_CHATSPAM_COOLDOWN]-guardcalc", src.chatspam_cooldown))
 				src.speak("Calculating path to [src.guard_area]...", just_float = 1)
 			if(length(T) >= 1)
-				SPAWN_DBG(0)
+				SPAWN(0)
 					for(var/i in 1 to 10) // Not every turf is accessible to the bot. But some might!
 						T = (pick(T))
 						src.navigate_to(T, src.bot_move_delay)
@@ -759,6 +736,12 @@
 			src.KillPathAndGiveUp(kpagu)
 			return
 
+		// If the target is or goes invisible, give up, securitrons don't have thermal vision! :p
+		if((src.target.invisibility > INVIS_NONE)  && (!src.is_beepsky))
+			speak("?!", just_float = 1)
+			src.KillPathAndGiveUp(kpagu)
+			return
+
 		/// Tango hidden inside something or someone? Welp, can't hit them through a locker, so may as well give up!
 		if(src.target?.loc && !isturf(src.target.loc))
 			speak("?", just_float = 1)
@@ -775,10 +758,30 @@
 		if(src.moving || src.cuffing || src.baton_charging)
 			return
 
+		/// We inside something?
+		if(istype(src.loc, /obj/storage))
+			var/obj/storage/C = src.loc
+			if(C.locked || C.welded)
+				src.weeoo()
+				if(prob(50 + (src.emagged * 15)))
+					for(var/mob/M in hearers(C, null))
+						M.show_text("<font size=[max(0, 5 - GET_DIST(get_turf(src), M))]>THUD, thud!</font>")
+					playsound(C, 'sound/impact_sounds/Wood_Hit_1.ogg', 15, 1, -3)
+					animate_storage_thump(C)
+				src.container_cool_off_counter++
+				if(src.container_cool_off_counter >= src.container_cool_off_max) // Give him some time to cool off
+					src.KillPathAndGiveUp(kpagu)
+					src.container_cool_off_counter = 0
+				return // please stop zapping people from inside lockers
+			else
+				C.open() // just nudge it open, you goof
+
+		src.container_cool_off_counter = 0
+
 		/// Tango!
 		if(src.target)
 			/// Tango in batonning distance?
-			if (IN_RANGE(src, src.target, 1))
+			if ((BOUNDS_DIST(src, src.target) == 0))
 				/// Are they good and downed, and are we allowed to cuff em?
 				if(!src.arrest_type && src.target?.getStatusDuration("weakened") >= 3 SECONDS)
 					if(!src.warn_minor_crime || ((src.warn_minor_crime || src.guard_area_lockdown) && src.threatlevel >= src.cuff_threat_threshold))
@@ -789,12 +792,12 @@
 						return
 				/// No? Well, make em good and downed then
 				else
-					SPAWN_DBG(0)
+					SPAWN(0)
 						src.baton_attack(src.target) // has while-sleeps, proc happens as part of process(), stc
 			/// Tango in charging distance?
 			else if(IN_RANGE(src, src.target, 13)) // max perp-seek distance of 13
 				/// Charge em!
-				navigate_to(src.target, src.move_arrest_step_delay, max_dist = 200) // but they can go anywhere in that 13 tiles
+				navigate_to(src.target, src.move_arrest_step_delay, max_dist = 30) // but they can go anywhere in that 13 tiles
 				if(!src.path || length(src.path) < 1)
 					speak("...?", just_float = 1)
 					src.KillPathAndGiveUp(kpagu)
@@ -846,26 +849,17 @@
 
 		if(pda_help && !ON_COOLDOWN(src, SECBOT_HELPME_COOLDOWN, src.helpme_cooldown))
 			// HELPMEPLZ
-			var/datum/radio_frequency/frequency = radio_controller.return_frequency(FREQ_PDA)
-			if(frequency)
-				var/message2send
-				if (src.tacticool)
-					var/turf/LT_loc = get_turf(src)
-					message2send = "ALERT: Tactical law operation agent [src] [src.badge_number] under attack by [src.target]! Requesting backup in [get_area(src)] at grid reference [LT_loc.x][prob(50)?"-niner":""] mark [LT_loc.y][prob(50)?"-niner":""]!"
-					src.speak(message2send)
-				else
-					message2send ="ALERT: Unit under attack by [src.target] in [get_area(src)]. Requesting backup."
+			var/message2send ="ALERT: Unit under attack by [src.target] in [get_area(src)]. Requesting backup."
 
-				var/datum/signal/signal = get_free_signal()
-				signal.source = src
-				signal.data["sender"] = src.botnet_id
-				signal.data["command"] = "text_message"
-				signal.data["sender_name"] = src
-				signal.data["group"] = list(MGD_SECURITY, MGA_ARREST)
-				signal.data["address_1"] = "00000000"
-				signal.data["message"] = message2send
-				signal.transmission_method = TRANSMISSION_RADIO
-				frequency.post_signal(src, signal)
+			var/datum/signal/signal = get_free_signal()
+			signal.source = src
+			signal.data["sender"] = src.botnet_id
+			signal.data["command"] = "text_message"
+			signal.data["sender_name"] = src
+			signal.data["group"] = list(MGD_SECURITY, MGA_ARREST)
+			signal.data["address_1"] = "00000000"
+			signal.data["message"] = message2send
+			SEND_SIGNAL(src, COMSIG_MOVABLE_POST_RADIO_PACKET, signal, null, "pda")
 
 		src.KillPathAndGiveUp(KPAGU_CLEAR_PATH)
 		src.target = C
@@ -884,9 +878,9 @@
 		process()	// ensure bot quickly responds to a perp
 
 	proc/YellAtPerp()
+		var/saything = pick('sound/voice/bcriminal.ogg', 'sound/voice/bjustice.ogg', 'sound/voice/bfreeze.ogg')
 		src.point(src.target, 1)
 		src.speak("Level [src.threatlevel] infraction alert!")
-		var/saything = pick('sound/voice/bcriminal.ogg', 'sound/voice/bjustice.ogg', 'sound/voice/bfreeze.ogg')
 		switch(saything)
 			if('sound/voice/bcriminal.ogg')
 				src.speak("CRIMINAL DETECTED.")
@@ -894,15 +888,15 @@
 				src.speak("PREPARE FOR JUSTICE.")
 			if('sound/voice/bfreeze.ogg')
 				src.speak("FREEZE. SCUMBAG.")
-		playsound(src.loc, saything, 50, 0)
+		playsound(src, saything, 50, 0)
 
 	proc/weeoo()
 		if(weeooing)
 			return
-		SPAWN_DBG(0)
+		SPAWN(0)
 			weeooing = 1
 			var/weeoo = 10
-			playsound(src.loc, "sound/machines/siren_police.ogg", 50, 1)
+			playsound(src, 'sound/machines/siren_police.ogg', 50, 1)
 			while (weeoo)
 				add_simple_light("secbot", list(255 * 0.9, 255 * 0.1, 255 * 0.1, 0.8 * 255))
 				sleep(0.3 SECONDS)
@@ -974,6 +968,10 @@
 		if(istype(perp.mutantrace, /datum/mutantrace/abomination))
 			threatcount += 5
 
+		if(perp.traitHolder.hasTrait("immigrant") && perp.traitHolder.hasTrait("jailbird"))
+			if(isnull(data_core.security.find_record("name", perp.name)))
+				threatcount += 5
+
 		//Agent cards lower threat level
 		if((istype(perp.wear_id, /obj/item/card/id/syndicate)))
 			threatcount -= 2
@@ -983,22 +981,11 @@
 			return threatcount
 
 		if (src.check_records) // bot is set to actively compare security records
-			var/see_face = 1
-			if (istype(perp.wear_mask) && !perp.wear_mask.see_face)
-				see_face = 0
-			else if (istype(perp.head) && !perp.head.see_face)
-				see_face = 0
-			else if (istype(perp.wear_suit) && !perp.wear_suit.see_face)
-				see_face = 0
+			var/perpname = perp.face_visible() ? perp.real_name : perp.name
 
-			var/perpname = see_face ? perp.real_name : perp.name
-
-			for (var/datum/data/record/E as anything in data_core.general)
-				if (E.fields["name"] == perpname)
-					for (var/datum/data/record/R as anything in data_core.security)
-						if ((R.fields["id"] == E.fields["id"]) && (R.fields["criminal"] == "*Arrest*"))
-							threatcount = 7
-							break
+			for (var/datum/db_record/R as anything in data_core.security.find_records("name", perpname))
+				if(R["criminal"] == "*Arrest*")
+					threatcount = 7
 					break
 
 		return threatcount
@@ -1010,7 +997,7 @@
 			src.look_for_perp()
 
 		/// If we happen to be chasing someone and get in batonning range, let's stop and maybe try to hit them
-		if(src.target && IN_RANGE(src, src.target, 1))
+		if(src.target && (BOUNDS_DIST(src, src.target) == 0))
 			return TRUE
 
 	KillPathAndGiveUp(var/give_up = KPAGU_CLEAR_PATH)
@@ -1032,13 +1019,20 @@
 
 	/// Sends the bot on to a patrol target. Or Summon target, if that's what patrol_target is set to
 	proc/move_the_bot(var/delay = 3)
+		. = FALSE
 		if(loc == patrol_target) // We where we want to be?
 			at_patrol_target() // Find somewhere else to go!
 			look_for_perp()
-		else if (patrol_target) // valid path
+			. = TRUE
+		else if (patrol_target && (frustration >= 3 || isnull(src.bot_mover) || get_turf(src.bot_mover.the_target) != get_turf(patrol_target)))
 			navigate_to(patrol_target, delay)
-		else	// no path, so calculate new one
-			mode = SECBOT_START_PATROL
+			if(src.bot_mover && !src.bot_mover.disposed)
+				. = TRUE
+		else if(patrol_target)
+			. = TRUE
+		if(!.)
+			if(!ON_COOLDOWN(src, "find new path after failure", 15 SECONDS))
+				find_patrol_target() // find next beacon I guess!
 
 	/// finds a new patrol target
 	proc/find_patrol_target()
@@ -1046,7 +1040,11 @@
 		if(awaiting_beacon)			// awaiting beacon response
 			awaiting_beacon++
 			if(awaiting_beacon > 5)	// wait 5 secs for beacon response
-				find_nearest_beacon()	// then go to nearest instead
+				if(text2num(new_destination) && prob(66))
+					new_destination = "[1 + text2num(new_destination)]"
+					send_status()
+				else
+					find_nearest_beacon()	// then go to nearest instead
 				return 0
 			else
 				return 1
@@ -1063,9 +1061,9 @@
 	proc/find_nearest_beacon()
 		nearest_beacon = null
 		new_destination = "__nearest__"
-		post_signal(beacon_freq, "findbeacon", "patrol")
+		post_signal_multiple("beacon", list("findbeacon" = "patrol", "address_tag" = "patrol"))
 		awaiting_beacon = 1
-		SPAWN_DBG(1 SECOND)
+		SPAWN(1 SECOND)
 			awaiting_beacon = 0
 			if(nearest_beacon)
 				set_destination(nearest_beacon)
@@ -1085,7 +1083,7 @@
 	// beacons will return a signal giving their locations
 	proc/set_destination(var/new_dest)
 		new_destination = new_dest
-		post_signal(beacon_freq, "findbeacon", "patrol")
+		post_signal_multiple("beacon", list("findbeacon" = new_dest || "patrol", "address_tag" = new_dest || "patrol"))
 		awaiting_beacon = 1
 
 	// receive a radio signal
@@ -1123,7 +1121,7 @@
 						src.speak("!", just_float = 1)
 						src.proc_available = 0
 						src.process()
-						SPAWN_DBG(3 SECONDS)
+						SPAWN(3 SECONDS)
 							src.proc_available = 1
 					else
 						src.speak("...", just_float = 1)
@@ -1152,11 +1150,11 @@
 
 		// if looking for nearest beacon
 		else if(new_destination == "__nearest__")
-			var/dist = get_dist(src,signal.source.loc)
+			var/dist = GET_DIST(src,signal.source.loc)
 			if(nearest_beacon)
 
 				// note we ignore the beacon we are located at
-				if(dist>1 && dist<get_dist(src,nearest_beacon_loc))
+				if(dist>1 && dist<GET_DIST(src,nearest_beacon_loc))
 					nearest_beacon = signal_beacon
 					nearest_beacon_loc = signal.source.loc
 					return
@@ -1196,18 +1194,12 @@
 
 	// send a radio signal with multiple data key/values
 	proc/post_signal_multiple(var/freq, var/list/keyval)
-
-		var/datum/radio_frequency/frequency = radio_controller.return_frequency("[freq]")
-
-		if(!frequency) return
-
 		var/datum/signal/signal = get_free_signal()
 		signal.source = src
-		signal.transmission_method = 1
+		signal.data["sender"] = src.botnet_id
 		for(var/key in keyval)
 			signal.data[key] = keyval[key]
-			//boutput(world, "sent [key],[keyval[key]] on [freq]")
-		frequency.post_signal(src, signal)
+		SEND_SIGNAL(src, COMSIG_MOVABLE_POST_RADIO_PACKET, signal, null, freq)
 
 	// signals bot status etc. to controller
 	proc/send_status()
@@ -1229,6 +1221,8 @@
 			)
 
 		var/say_thing = pick(voice_lines)
+		if(say_thing == 'sound/voice/binsultbeep.ogg' && prob(90))
+			say_thing = 'sound/voice/bsecureday.ogg'
 		switch(say_thing)
 			if('sound/voice/bgod.ogg')
 				src.speak("GOD MADE TOMORROW FOR THE CROOKS WE DON'T CATCH TO-DAY.")
@@ -1249,7 +1243,7 @@
 				for(var/j in 1 to rand(2,5))
 					qbert += "[pick("!","?")]"
 				src.speak("[qbert]")
-		playsound(get_turf(src), say_thing, 50, 0, 0, 1)
+		playsound(src, say_thing, 50, 0, 0, 1)
 		ON_COOLDOWN(src, "[SECBOT_LASTTARGET_COOLDOWN]-[src.target?.name]", src.last_target_cooldown)
 
 //secbot handcuff bar thing
@@ -1258,7 +1252,7 @@
 	interrupt_flags = INTERRUPT_MOVE | INTERRUPT_ACT | INTERRUPT_STUNNED | INTERRUPT_ACTION
 	id = "secbot_cuff"
 	icon = 'icons/obj/items/items.dmi'
-	icon_state = "handcuff"
+	icon_state = "buddycuff"
 	var/obj/machinery/bot/secbot/master
 
 	New(var/obj/machinery/bot/secbot/the_bot)
@@ -1267,7 +1261,7 @@
 
 	onUpdate()
 		..()
-		if (!IN_RANGE(master, master.target, 1) || !master.target || master.target.hasStatus("handcuffed") || master.moving)
+		if (src.failchecks())
 			master.weeoo()
 			interrupt(INTERRUPT_ALWAYS)
 			return
@@ -1275,17 +1269,17 @@
 	onStart()
 		..()
 		master.cuffing = 1
-		if (!IN_RANGE(master, master.target, 1) || !master.target || master.target.hasStatus("handcuffed") || master.moving)
+		if (src.failchecks())
 			master.weeoo()
 			interrupt(INTERRUPT_ALWAYS)
 			return
 
-		playsound(master, "sound/weapons/handcuffs.ogg", 30, 1, -2)
+		playsound(master, 'sound/weapons/handcuffs.ogg', 30, 1, -2)
 		master.visible_message("<span class='alert'><B>[master] is trying to put handcuffs on [master.target]!</B></span>")
 		if(master.is_beepsky == IS_BEEPSKY_AND_HAS_HIS_SPECIAL_BATON || master.is_beepsky == IS_BEEPSKY_BUT_HAS_SOME_GENERIC_BATON)
 			duration = round(duration * 0.75)
 			master.visible_message("<span class='alert'><B>...vigorously!</B></span>")
-			playsound(master, "sound/misc/winding.ogg", 30, 1, -2)
+			playsound(master, 'sound/misc/winding.ogg', 30, 1, -2)
 
 	onInterrupt()
 		..()
@@ -1298,21 +1292,17 @@
 
 		master.cuffing = 0
 
-		if (get_dist(master, master.target) <= 1)
+		if (BOUNDS_DIST(master, master.target) == 0)
 			if (!master.target || master.target.hasStatus("handcuffed"))
 				return
 
 			var/uncuffable = 0
-			if (ishuman(master.target))
-				var/mob/living/carbon/human/H = master.target
-				if(!H.limbs.l_arm || !H.limbs.r_arm)
-					uncuffable = 1
 
 			if (!isturf(master.target.loc))
 				uncuffable = 1
 
 			if(ishuman(master.target) && !uncuffable)
-				master.target.handcuffs = new /obj/item/handcuffs(master.target)
+				master.target.handcuffs = new /obj/item/handcuffs/guardbot(master.target)
 				master.target.setStatus("handcuffed", duration = INFINITE_STATUS)
 
 			if(!uncuffable)
@@ -1325,15 +1315,8 @@
 					LT_loc = get_turf(master)
 
 					//////PDA NOTIFY/////
-				var/datum/radio_frequency/frequency = radio_controller.return_frequency(FREQ_PDA)
-				if(!frequency) return FALSE
 
-				var/message2send
-				if (master.tacticool)
-					message2send = "Notification: Tactical law operation agent [master] [master.badge_number] reporting grandslam on tango [last_target] for suspected [rand(10,99)]-[rand(1,999)] \"[pick_string("shittybill.txt", "drugs")]-[pick_string("shittybill.txt", "insults")]\" \
-					in [bot_location] at grid reference [LT_loc.x][prob(50)?"-niner":""] mark [LT_loc.y][prob(50)?"-niner":""]. Unit requesting law enforcement personnel for further suspect prosecution. [master.badge_number] over and out."
-				else
-					message2send ="Notification: [last_target] detained by [master] in [bot_location] at coordinates [LT_loc.x], [LT_loc.y]."
+				var/message2send ="Notification: [last_target] detained by [master] in [bot_location] at coordinates [LT_loc.x], [LT_loc.y]."
 
 				var/datum/signal/signal = get_free_signal()
 				signal.source = src
@@ -1343,8 +1326,7 @@
 				signal.data["group"] = list(MGD_SECURITY, MGA_ARREST)
 				signal.data["address_1"] = "00000000"
 				signal.data["message"] = message2send
-				signal.transmission_method = TRANSMISSION_RADIO
-				frequency.post_signal(src, signal)
+				SEND_SIGNAL(src.master, COMSIG_MOVABLE_POST_RADIO_PACKET, signal, null, "pda")
 
 			switch(master.mode)
 				if(SECBOT_AGGRO)
@@ -1354,10 +1336,18 @@
 				else
 					master.KillPathAndGiveUp(KPAGU_CLEAR_ALL)
 
+	proc/failchecks()
+		if (!(BOUNDS_DIST(master, master.target) == 0))
+			return 1
+		if (!master.target || master.target.hasStatus("handcuffed") || master.moving)
+			return 1
+		if (!isturf(master.loc) || !isturf(master.target?.loc)) // Most often, inside a locker
+			return 1 // cant cuff people through lockers... and not enough room to cuff if both are in that locker
+
 //secbot stunner bar thing
 /datum/action/bar/icon/secbot_stun
 	duration = 10
-	interrupt_flags = INTERRUPT_MOVE | INTERRUPT_ACT | INTERRUPT_STUNNED | INTERRUPT_ACTION
+	interrupt_flags = 0 //THE SECURITRON STOPS FOR NOTHING
 	id = "secbot_cuff"
 	icon = 'icons/obj/items/weapons.dmi'
 	icon_state = "stunbaton_active"
@@ -1386,19 +1376,19 @@
 		master.baton_charging = 1
 		master.visible_message("<span class='alert'><B>[master] is energizing its prod, preparing to zap [master.target]!</B></span>")
 		if(master.is_beepsky == IS_BEEPSKY_AND_HAS_HIS_SPECIAL_BATON || master.is_beepsky == IS_BEEPSKY_BUT_HAS_SOME_GENERIC_BATON || master.emagged >= 2)
-			playsound(master, "sound/machines/ArtifactBee2.ogg", 30, 1, -2)
-			duration = round(duration * 0.60)
+			playsound(master, 'sound/machines/ArtifactBee2.ogg', 30, 1, -2)
+			duration = round(duration * 0.6)
 		else
-			playsound(master, "sound/effects/electric_shock_short.ogg", 30, 1, -2)
+			playsound(master, 'sound/effects/electric_shock_short.ogg', 30, 1, -2)
 
 	onEnd()
 		..()
 		master.baton_charging = 0
-		if(IN_RANGE(master, master.target, 1))
+		if((BOUNDS_DIST(master, master.target) == 0))
 			master.baton_attack(master.target, 1)
 		else
 			master.charge_baton()
-		SPAWN_DBG(0)
+		SPAWN(0)
 			master.weeoo()
 
 //Secbot Construction
@@ -1419,7 +1409,7 @@
 		qdel(src)
 
 
-/obj/item/secbot_assembly/attackby(obj/item/W as obj, mob/user as mob)
+/obj/item/secbot_assembly/attackby(obj/item/W, mob/user)
 	if ((isweldingtool(W)) && (!src.build_step))
 		if(W:try_weld(user, 1))
 			src.build_step++
@@ -1454,6 +1444,7 @@
 				boutput(user, "You give the [src] [W] and connect a cable in the arm to the baton's parallel port, completing the Securitron! Beep boop.")
 				var/obj/machinery/bot/secbot/S = new /obj/machinery/bot/secbot(get_turf(src))
 				S.beacon_freq = src.beacon_freq
+				get_radio_connection_by_id(S, "beacon").update_frequency(S.beacon_freq)
 				S.hat = src.hat
 				S.name = src.created_name		// We get an upgraded securitron
 				S.loot_baton_type = W.type	// So we can drop it all over again.
@@ -1477,6 +1468,7 @@
 				boutput(user, "You give the [src] a stun baton, completing the Securitron! Beep boop.")
 				var/obj/machinery/bot/secbot/S = new /obj/machinery/bot/secbot(get_turf(src))
 				S.beacon_freq = src.beacon_freq
+				get_radio_connection_by_id(S, "beacon").update_frequency(S.beacon_freq)
 				S.hat = src.hat
 				S.name = src.created_name
 				S.is_beepsky = IS_NOT_BEEPSKY_AND_HAS_SOME_GENERIC_BATON // You're still not Beepsky
@@ -1487,7 +1479,7 @@
 
 	else if (istype(W, /obj/item/rods) && src.build_step == 3)
 		var/obj/item/rods/R = W
-		if (!R.consume_rods(1))
+		if (!R.change_stack_amount(-1))
 			boutput(user, "You need a non-zero amount of rods. How did you even do that?")
 		else
 			src.build_step++
@@ -1510,6 +1502,7 @@
 			boutput(user, "You add the wires to the rod, completing the Securitron! Beep boop.")
 			var/obj/machinery/bot/secbot/S = new /obj/machinery/bot/secbot(get_turf(src))
 			S.beacon_freq = src.beacon_freq
+			get_radio_connection_by_id(S, "beacon").update_frequency(S.beacon_freq)
 			S.hat = src.hat
 			S.name = src.created_name
 			qdel(src)

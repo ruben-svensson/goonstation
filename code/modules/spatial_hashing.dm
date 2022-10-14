@@ -1,24 +1,23 @@
 //this is designed for sounds - but maybe could be adapted for more collision / range checking stuff in the future
 
+#define GET_NEARBY(A,range) ((A.z <= 0 || A.z > length(spatial_z_maps)) ? null : spatial_z_maps[A.z].get_nearby(A,range))
 
-#define GET_NEARBY(A,range) spatial_z_maps[A.z].get_nearby(A,range)
+#define CELL_POSITION(X,Y) (clamp(((round(X / cellsize)) + (round(Y / cellsize)) * cellwidth) + 1, 1, length(hashmap)))
 
-#define CELL_POSITION(X,Y) clamp(((round(X / cellsize)) + (round(Y / cellsize)) * cellwidth) + 1,1,hashmap.len)
+#define ADD_BUCKET(X,Y) (. |= CELL_POSITION(X, Y))
+#define SPATIAL_HASHMAP_CELL_SIZE 30
 
-#define ADD_BUCKET(X,Y) do{\
-var/cellposition = CELL_POSITION(X,Y);\
-buckets_holding_atom[cellposition] = 1;\
-} while (false)
-
+/// The global spatial Z map list, used for our spatial hashing
 var/global/list/datum/spatial_hashmap/spatial_z_maps = init_spatial_maps()
 
 /proc/init_spatial_maps()
 	. = new /list(world.maxz)
-	for (var/zlevel = 1; zlevel <= world.maxz; zlevel++)
-		.[zlevel] = new/datum/spatial_hashmap(world.maxx,world.maxy,60,zlevel)
+	for (var/zlevel in 1 to world.maxz)
+		.[zlevel] = new/datum/spatial_hashmap(world.maxx, world.maxy, SPATIAL_HASHMAP_CELL_SIZE, zlevel)
 
 /proc/init_spatial_map(zlevel)
-	spatial_z_maps[zlevel] = new/datum/spatial_hashmap(world.maxx,world.maxy,60,zlevel)
+	spatial_z_maps.len = world.maxz
+	spatial_z_maps[zlevel] = new/datum/spatial_hashmap(world.maxx, world.maxy, SPATIAL_HASHMAP_CELL_SIZE, zlevel)
 
 /datum/spatial_hashmap
 	var/list/list/hashmap
@@ -42,16 +41,14 @@ var/global/list/datum/spatial_hashmap/spatial_z_maps = init_spatial_maps()
 	var/tmp/turf/T = null
 
 
-
-	New(w,h,cs,z)
+	New(w, h, cs, z)
 		..()
 		cols = w / cs
 		rows = h / cs
 
-		hashmap = list()
-		hashmap.len = cols * rows
+		hashmap = new /list(cols * rows)
 
-		for (var/i = 1; i <= cols*rows; i++)
+		for (var/i in 1 to cols*rows)
 			hashmap[i] = list()
 
 		width = w
@@ -59,9 +56,6 @@ var/global/list/datum/spatial_hashmap/spatial_z_maps = init_spatial_maps()
 		cellsize = cs
 
 		cellwidth = width/cellsize
-
-		buckets_holding_atom = list()
-		buckets_holding_atom.len = length(hashmap)
 
 		my_z = z
 	/* unused, could be useful later idk
@@ -77,13 +71,13 @@ var/global/list/datum/spatial_hashmap/spatial_z_maps = init_spatial_maps()
 
 	proc/update()
 		last_update = world.time
-		for (var/i = 1; i <= cols*rows; i++) //clean
+		for (var/i in 1 to cols*rows) //clean
 			hashmap[i].len = 0
 		for (var/client/C) //register
 			if (C.mob)
 				T = get_turf(C.mob)
-				if (T && T.z == my_z)
-					hashmap[CELL_POSITION(T.x,T.y)] += C.mob
+				if (T?.z == my_z)
+					hashmap[CELL_POSITION(T.x, T.y)] += C.mob
 				//a formal spatial map implementation would place an atom into any bucket its bounds occupy (register proc instead of the above line). We don't need that here
 				//register(C.mob)
 				//C.mob.maptext = "[CELL_POSITION(C.mob.x,C.mob.y)]" //lazy debug to see what cell we are being placed in
@@ -94,6 +88,10 @@ var/global/list/datum/spatial_hashmap/spatial_z_maps = init_spatial_maps()
 		//usually in this kinda collision detection code you'd want to map the corners of a square....
 		//but this is for our sounds system, where the shapes of collision actually resemble a diamond
 		//so : sample 8 points around the edges of the diamond shape created by our atom
+
+		. = list()
+
+		ADD_BUCKET(A.x, A.y)
 
 		//N,W,E,S
 		min_x = A.x - atomboundsize
@@ -114,15 +112,6 @@ var/global/list/datum/spatial_hashmap/spatial_z_maps = init_spatial_maps()
 		ADD_BUCKET(min_x,max_y)
 		ADD_BUCKET(max_x,min_y)
 		ADD_BUCKET(max_x,max_y)
-
-		//why do the list stuff this way? i dont want to do `find element` checks on the buckets list, but it must not hold duplicate values.
-		//track collided cell IDs by flipping an index of the list from 0 to 1 in ADD_BUCKET.
-		.= list()
-		for (var/i in 1 to buckets_holding_atom.len)
-			if (buckets_holding_atom[i])
-				.+= i
-			buckets_holding_atom[i] = null
-
 
 		//lazy debug to see what cells we are searching in
 		/*

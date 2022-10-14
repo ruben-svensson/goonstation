@@ -7,13 +7,13 @@
 	icon_state = "magtractor"
 	opacity = 0
 	density = 0
-	anchored = 0.0
+	anchored = 0
 	flags = FPRINT | TABLEPASS| CONDUCT | EXTRADELAY
-	force = 10.0
-	throwforce = 10.0
+	force = 10
+	throwforce = 10
 	throw_speed = 1
 	throw_range = 5
-	w_class = 3.0
+	w_class = W_CLASS_NORMAL
 	m_amt = 50000
 	mats = 12
 	stamina_damage = 15
@@ -53,10 +53,10 @@
 		src.holder = null
 		src.verbs -= /obj/item/magtractor/proc/toggleHighPower
 
-	attackby(obj/item/W as obj, mob/user as mob)
+	attackby(obj/item/W, mob/user)
 		if (!W) return 0
 
-		if (get_dist(get_turf(src), get_turf(W)) > 1)
+		if (BOUNDS_DIST(get_turf(src), get_turf(W)) > 0)
 			out(user, "<span class='alert'>\The [W] is too far away!</span>")
 			return 0
 
@@ -64,13 +64,13 @@
 			out(user, "<span class='alert'>\The [src] is already holding \the [src.holding]!</span>")
 			return 0
 
-		if (W.anchored || W.w_class >= 4) //too bulky for backpacks, too bulky for this
+		if (W.anchored || W.w_class >= W_CLASS_BULKY) //too bulky for backpacks, too bulky for this
 			out(user, "<span class='notice'>\The [src] can't possibly hold that heavy an item!</span>")
 			return 0
 
 		if (istype(W, /obj/item/magtractor))
 			var/turf/T = get_ranged_target_turf(user, turn(user.dir, 180), 7)
-			playsound(user.loc, "sound/impact_sounds/Metal_Hit_Heavy_1.ogg", 50, 1)
+			playsound(user.loc, 'sound/impact_sounds/Metal_Hit_Heavy_1.ogg', 50, 1)
 			user.visible_message("<span class='combat bold'>\The [src]'s magnets violently repel as they counter a similar magnetic field!</span>")
 			user.throw_at(T, 7, 10)
 			user.changeStatus("stunned", 2 SECONDS)
@@ -93,12 +93,12 @@
 
 		if (!src.holding)
 			if (!isitem(A)) return 0
-			if (get_dist(get_turf(src), get_turf(A)) > 1)
+			if (BOUNDS_DIST(get_turf(src), get_turf(A)) > 0)
 				out(user, "<span class='alert'>\The [A] is too far away!</span>")
 				return 0
 			var/obj/item/target = A
 
-			if (target.anchored || target.w_class == 4) //too bulky for backpacks, too bulky for this
+			if (target.anchored || target.w_class == W_CLASS_BULKY) //too bulky for backpacks, too bulky for this
 				out(user, "<span class='notice'>\The [src] can't possibly hold that heavy an item!</span>")
 				return 0
 
@@ -197,7 +197,7 @@
 
 		src.holding = W
 		src.processHeld = 1
-		src.w_class = 4.0 //bulky
+		src.w_class = W_CLASS_BULKY //bulky
 		src.useInnerItem = 1
 		src.icon_state = "magtractor-active"
 
@@ -213,7 +213,7 @@
 		src.UpdateOverlays(I, "magField")
 		src.updateHeldOverlay(W)
 
-		playsound(src.loc, "sound/machines/ping.ogg", 50, 1)
+		playsound(src.loc, 'sound/machines/ping.ogg', 50, 1)
 
 		for (var/obj/ability_button/magtractor_drop/abil in src)
 			abil.icon_state = "mag_drop1"
@@ -232,7 +232,7 @@
 		if (isitem(src.holding) && usr)
 			src.holding.dropped(usr)
 		src.working = 1
-		src.w_class = 3.0 //normal
+		src.w_class = W_CLASS_NORMAL //normal
 		src.useInnerItem = 0
 		var/turf/T = get_turf(src)
 
@@ -260,5 +260,9 @@
 		src.processHeld = 0
 
 		return 1
+
+	Exited(Obj, newloc) // handles the held item going byebye
+		if(Obj == src.holding  && src.holder)
+			actions.stopId("magpickerhold", src.holder)
 
 /obj/item/magtractor/abilities = list(/obj/ability_button/magtractor_toggle, /obj/ability_button/magtractor_drop)

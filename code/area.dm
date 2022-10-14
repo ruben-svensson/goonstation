@@ -38,8 +38,14 @@ ABSTRACT_TYPE(/area) // don't instantiate this directly dummies, use /area/space
 	// some semi-random turf in the area to guide spy thieves
 	var/turf/spyturf = null
 
+	// To help decided objective difficulty for spy thieves
+	var/spy_secure_area = 0
+
 	/// for escape checks
 	var/is_centcom = 0
+
+	/// Don't combat/explosion log this area (for VR and other gimmicks)
+	var/dont_log_combat = FALSE
 
 	level = null
 	#ifdef UNDERWATER_MAP
@@ -110,11 +116,15 @@ ABSTRACT_TYPE(/area) // don't instantiate this directly dummies, use /area/space
 	var/workplace = 0
 
 	var/list/obj/critter/registered_critters = list()
-	var/list/obj/critter/registered_mob_critters = list()
+	var/list/mob/living/critter/registered_mob_critters = list()
+	var/list/mob/living/mobs_not_in_global_mobs_list
 	var/waking_critters = 0
 
 	// this chunk zone is for Area Ambience
+
+	/// Set to a sound you want to loop in an area
 	var/sound_loop = null
+	/// Volume for [sound_loop]
 	var/sound_loop_vol = 50
 	var/sound_fx_1 = null
 	var/sound_fx_2 = null
@@ -192,7 +202,7 @@ ABSTRACT_TYPE(/area) // don't instantiate this directly dummies, use /area/space
 					if( !(isliving(enteringM) || iswraith(enteringM)) ) continue
 					//Wake up a bunch of lazy darn critters
 					if (isliving(enteringM))
-						wake_critters()
+						wake_critters(enteringM)
 
 					//If it's a real fuckin player
 					if (enteringM.ckey && enteringM.client)
@@ -209,6 +219,7 @@ ABSTRACT_TYPE(/area) // don't instantiate this directly dummies, use /area/space
 							src.population |= enteringM.mind
 							if (!src.active)
 								src.active = 1
+								SEND_SIGNAL(src, COMSIG_AREA_ACTIVATED)
 
 						//Dumb fucking medal fuck
 						if (src.name == "Space" && istype(A, /obj/vehicle/segway))
@@ -223,10 +234,12 @@ ABSTRACT_TYPE(/area) // don't instantiate this directly dummies, use /area/space
 		if (ismob(A))
 			var/mob/M = A
 			if (M?.client)
-				if (sound_loop)
-					SPAWN_DBG(1 DECI SECOND)
+				if (sound_loop || sound_group)
+					SPAWN(1 DECI SECOND)
 						var/area/mobarea = get_area(M)
-						if (M?.client && (mobarea?.sound_group != src?.sound_group) && !mobarea.sound_loop)
+						// If the area we are exiting has a sound loop but the new area doesn't
+						// we should stop the ambience or it will play FOREVER causing player insanity
+						if (M?.client && (mobarea?.sound_group != src.sound_group || isnull(src.sound_group)) && !mobarea?.sound_loop)
 							M.client.playAmbience(src, AMBIENCE_LOOPING, 0) //pass 0 to cancel
 
 		if ((isliving(A) || iswraith(A)) || locate(/mob) in A)
@@ -249,6 +262,7 @@ ABSTRACT_TYPE(/area) // don't instantiate this directly dummies, use /area/space
 								src.population -= exitingM.mind
 							if (src.active && src.population.len == 0) //Only if this area is now empty
 								src.active = 0
+								SEND_SIGNAL(src, COMSIG_AREA_DEACTIVATED)
 
 						//Put whatever you want here. See Entering above.
 
@@ -285,7 +299,7 @@ ABSTRACT_TYPE(/area) // don't instantiate this directly dummies, use /area/space
 				return null
 		return R
 
-	/*
+	/**
 	 * returns a list of objects matching type in an area
 	 */
 	proc/get_type(var/type)
@@ -313,23 +327,37 @@ ABSTRACT_TYPE(/area) // don't instantiate this directly dummies, use /area/space
 				sims_score -= penalty
 		sims_score = max(sims_score, 0)
 
-	proc/wake_critters()
-		if(waking_critters || (!length(src.registered_critters) && !length(src.registered_mob_critters))) return
+	proc/wake_critters(mob/enteringM = null)
+		if(waking_critters || (!length(src.registered_critters) && !length(src.registered_mob_critters) && !length(src.mobs_not_in_global_mobs_list))) return
 		waking_critters = 1
+		if(isnull(enteringM))
+			enteringM = usr
 		for(var/obj/critter/C in src.registered_critters)
 			C.wake_from_hibernation()
-		for (var/mob/living/critter/M as anything in src.registered_mob_critters)
-			M.wake_from_hibernation()
+		if(enteringM?.client)
+			for (var/mob/living/M as anything in src.mobs_not_in_global_mobs_list)
+				if(!M.skipped_mobs_list && get_area(M) == src)
+					stack_trace("Attempting to add [M] to global mobs list but its flag is not set.")
+				if(M.skipped_mobs_list & SKIPPED_AI_MOBS_LIST)
+					global.ai_mobs |= M
+					M.skipped_mobs_list &= ~SKIPPED_AI_MOBS_LIST
+				if(M.skipped_mobs_list & SKIPPED_MOBS_LIST && !(M.mob_flags & LIGHTWEIGHT_AI_MOB))
+					global.mobs |= M
+					M.skipped_mobs_list &= ~SKIPPED_MOBS_LIST
+			src.mobs_not_in_global_mobs_list = null
+			for (var/mob/living/critter/M as anything in src.registered_mob_critters)
+				M.wake_from_hibernation()
 		waking_critters = 0
 
 	proc/calculate_area_value()
 		var/value = 0
-		for (var/turf/simulated/floor/F in src.contents)
+		var/list/atom/our_contents = src.contents.Copy()
+		for (var/turf/simulated/floor/F in our_contents)
 			if (F.broken || F.burnt || F.icon_state == "plating")
 				continue
 			value++
 
-		for (var/obj/machinery/M in src.contents)
+		for (var/obj/machinery/M in our_contents)
 			if (M.status & BROKEN || M.status & NOPOWER)
 				continue
 			value++
@@ -338,17 +366,18 @@ ABSTRACT_TYPE(/area) // don't instantiate this directly dummies, use /area/space
 
 	proc/calculate_structure_value()
 		var/value = 0
-		for (var/turf/simulated/wall/W in src.contents)
+		var/list/atom/our_contents = src.contents.Copy()
+		for (var/turf/simulated/wall/W in our_contents)
 			value++
-		for (var/turf/simulated/floor/F in src.contents)
+		for (var/turf/simulated/floor/F in our_contents)
 			if (F.broken || F.burnt)
 				continue
 			value++
-		for (var/obj/machinery/light/L in src.contents)
+		for (var/obj/machinery/light/L in our_contents)
 			if (L.current_lamp.light_status != 0) //See LIGHT_OK
 				continue
 			value++
-		for (var/obj/window/W in src.contents)
+		for (var/obj/window/W in our_contents)
 			value++
 
 		return value
@@ -377,7 +406,7 @@ ABSTRACT_TYPE(/area) // don't instantiate this directly dummies, use /area/space
 	proc/pickAmbience()
 		switch(src.name)
 			if ("Chapel") sound_fx_1 = pick('sound/ambience/station/Chapel_FemaleChoir.ogg','sound/ambience/station/Chapel_ChoirTwoNote1.ogg','sound/ambience/station/Chapel_ChoirTwoNote2.ogg','sound/ambience/station/Chapel_HighFemaleSolo.ogg')
-			if ("Morgue") sound_fx_1 = pick('sound/ambience/station/Station_SpookyAtmosphere1.ogg','sound/ambience/station/Station_SpookyAtmosphere2.ogg')
+			//if ("Morgue") sound_fx_1 = pick('sound/ambience/station/Station_SpookyAtmosphere1.ogg','sound/ambience/station/Station_SpookyAtmosphere2.ogg') // spooky shouldn't mean overly loud wailing, replace with something lowkey
 			if ("Jazz Lounge") sound_fx_1 = 'sound/ambience/station/JazzLounge1.ogg'
 			if ("Zen Garden") sound_fx_1 = pick('sound/ambience/station/ZenGarden1.ogg','sound/ambience/station/ZenGarden2.ogg')
 			//if ("Engine Control") sound_fx_1 = pick(ambience_engine)
@@ -389,7 +418,7 @@ ABSTRACT_TYPE(/area) // don't instantiate this directly dummies, use /area/space
 			if ("Biodome South") sound_fx_1 = pick('sound/ambience/nature/Biodome_Bugs.ogg', 'sound/ambience/nature/Biodome_Birds1.ogg', 'sound/ambience/nature/Biodome_Birds2.ogg', 'sound/ambience/nature/Biodome_Monkeys.ogg')
 			if ("Caves") sound_fx_1 = pick('sound/ambience/nature/Cave_Bugs.ogg', 'sound/ambience/nature/Cave_Rumbling.ogg', 'sound/ambience/nature/Cave_Wind1.ogg', 'sound/ambience/nature/Cave_Wind2.ogg', 'sound/ambience/nature/Cave_Drips.ogg')
 			if ("Glacial Abyss") sound_fx_1 = pick('sound/ambience/nature/Glacier_DeepRumbling1.ogg','sound/ambience/nature/Glacier_DeepRumbling1.ogg', 'sound/ambience/nature/Glacier_DeepRumbling1.ogg', 'sound/ambience/nature/Glacier_IceCracking.ogg', 'sound/ambience/nature/Glacier_DeepRumbling1.ogg', 'sound/ambience/nature/Glacier_Scuttling.ogg')
-			if ("AI Satellite Core") sound_fx_1 = pick('sound/ambience/station/Station_SpookyAtmosphere1.ogg','sound/ambience/station/Station_SpookyAtmosphere2.ogg')
+			//if ("AI Satellite Core") sound_fx_1 = pick('sound/ambience/station/Station_SpookyAtmosphere1.ogg','sound/ambience/station/Station_SpookyAtmosphere2.ogg') // same as above
 			if ("The Blind Pig") sound_fx_1 = pick('sound/ambience/spooky/TheBlindPig.ogg','sound/ambience/spooky/TheBlindPig2.ogg')
 			if ("M. Fortuna's House of Fortune") sound_fx_1 = 'sound/ambience/spooky/MFortuna.ogg'
 			#ifdef SUBMARINE_MAP
@@ -410,10 +439,17 @@ ABSTRACT_TYPE(/area) // don't instantiate this directly dummies, use /area/space
 	proc/remove_light(var/obj/machinery/light/L)
 		if (light_manager)
 			light_manager.lights -= L
+
 	New()
 		..()
+		START_TRACKING
 		if(area_space_nopower(src))
 			power_equip = power_light = power_environ = 0
+
+	Del()
+		STOP_TRACKING
+		dispose()
+		..()
 
 /area/space // the base area you SHOULD be using for space/ocean/etc.
 
@@ -424,19 +460,24 @@ ABSTRACT_TYPE(/area) // don't instantiate this directly dummies, use /area/space
 	name = "CORDON"
 	icon = 'icons/effects/mapeditor.dmi'
 	icon_state = "cordonarea"
-	invisibility = 101
+	invisibility = INVIS_ALWAYS
 	teleport_blocked = 2
 	force_fullbright = 1
 	expandable = 0//oh god i know some fucker would try this
+	requires_power = FALSE
 
 	Entered(atom/movable/O) // TODO: make this better and not copy n pasted from area_that_kills_you_if_you_enter_it
 		..()
 		if (isobserver(O))
 			return
+		if (isintangible(O) || iswraith(O))
+			O.set_loc(pick_landmark(LANDMARK_LATEJOIN))
+			return
 		if (ismob(O))
 			var/mob/jerk = O
-			if ((jerk.client && jerk.client.flying))
+			if ((jerk.client && jerk.client.flying) || (ismob(jerk) && HAS_ATOM_PROPERTY(jerk, PROP_MOB_NOCLIP)))
 				return
+			logTheThing(LOG_COMBAT, jerk, "(of type [jerk.type]) was ghosted by a CORDON at [log_loc(jerk)]")
 			setdead(jerk)
 			jerk.remove()
 		else if (isobj(O) && !istype(O, /obj/overlay/tile_effect))
@@ -453,7 +494,15 @@ ABSTRACT_TYPE(/area) // don't instantiate this directly dummies, use /area/space
 	force_fullbright = 0
 	expandable = 0
 	ambient_light = rgb(79, 164, 184)
+	dont_log_combat = TRUE
 	// filler_turf = "/turf/unsimulated/floor/setpieces/gauntlet"
+
+	fullbright
+		ambient_light = null
+		force_fullbright = 1
+
+	dark
+		ambient_light = null
 
 /area/cavetiny
 	name = "Caves"
@@ -486,14 +535,14 @@ ABSTRACT_TYPE(/area) // don't instantiate this directly dummies, use /area/space
 			return
 		if (ismob(O))
 			var/mob/jerk = O
-			if ((jerk.client && jerk.client.flying))
+			if ((jerk.client && jerk.client.flying) || (ismob(jerk) && HAS_ATOM_PROPERTY(jerk, PROP_MOB_NOCLIP)))
 				return
+			logTheThing(LOG_COMBAT, jerk, "(of type [jerk.type]) was ghosted by the area that kills you if you enter it at [log_loc(jerk)]")
 			setdead(jerk)
 			jerk.remove()
-		else if (isobj(O) && !istype(O, /obj/overlay/tile_effect))
+		else if (isobj(O) && !istype(O, /obj/overlay/tile_effect) && !istype(O, /obj/landmark))
 			qdel(O)
-		return
-
+		. = ..()
 /area/battle_royale_spawn //People entering VR or exiting VR with stupid exploits are jerks.
 	name = "Battle Royale warp zone"
 	skip_sims = 1
@@ -503,18 +552,17 @@ ABSTRACT_TYPE(/area) // don't instantiate this directly dummies, use /area/space
 	teleport_blocked = 1
 
 	Entered(atom/movable/O)
-		var/dest = null
 		..()
 		if (isobserver(O))
 			return
 		if (ismob(O))
 			var/mob/jerk = O
-			dest = pick(get_area_turfs(current_battle_spawn,1))
-			if(!dest)
-				dest= pick(get_area_turfs(/area/station/maintenance/,1))
+			var/list/found_areas = get_area_turfs(current_battle_spawn,1)
+			if (length(found_areas) == 0)
+				jerk.set_loc(pick(get_area_turfs(/area/station/maintenance/,1)))
 				boutput(jerk, "You somehow land in maintenance! Weird!")
-			jerk.set_loc(dest)
-			jerk.nodamage = 0
+			else
+				jerk.set_loc(pick(found_areas))
 			jerk.removeOverlayComposition(/datum/overlayComposition/shuttle_warp)
 			jerk.removeOverlayComposition(/datum/overlayComposition/shuttle_warp/ew)
 		else if (isobj(O) && !istype(O, /obj/overlay/tile_effect))
@@ -554,116 +602,11 @@ ABSTRACT_TYPE(/area/shuttle)
 	sound_environment = 2
 	expandable = 0
 
-/area/shuttle/arrival
-	name = "Arrival Shuttle"
-	teleport_blocked = 2
-
-/area/shuttle/arrival/pre_game
-	icon_state = "shuttle2"
-
-/area/shuttle/arrival/station
-	icon_state = "shuttle"
-	flags = ALWAYS_SOLID_FLUID
-
-/area/shuttle/escape
-	name = "Emergency Shuttle"
-
-/area/shuttle/escape/station
-	icon_state = "shuttle2"
-
-/area/shuttle/escape/centcom
-	icon_state = "shuttle"
-	sound_group = "centcom"
-	is_centcom = 1
-
-/area/shuttle/prison/
-	name = "Prison Shuttle"
-
-/area/shuttle/prison/station
-	icon_state = "shuttle"
-
-/area/shuttle/prison/prison
-	icon_state = "shuttle2"
-
-/area/shuttle/brig/station
-	icon_state = "shuttle"
-
-/area/shuttle/brig/prison
-	icon_state = "shuttle2"
-
-/area/shuttle/brig/outpost
-	icon_state = "shuttle3"
-
-/area/shuttle/research/station
-	icon_state = "shuttle"
-
-/area/shuttle/research/outpost
-	icon_state = "shuttle2"
-
-/area/shuttle/attack2/prison
-	icon_state = "shuttle2"
-
-/area/shuttle/mining/station
-	icon_state = "shuttle"
-
-/area/shuttle/mining/space
-	icon_state = "shuttle2"
-
-/area/shuttle/icebase_elevator/upper
-	icon_state = "shuttle"
-	filler_turf = "/turf/simulated/floor/arctic/abyss"
-	force_fullbright = 0
-	sound_group = "ice_moon"
-
-/area/shuttle/icebase_elevator/lower
-	icon_state = "shuttle2"
-	filler_turf = "/turf/simulated/floor/arctic/snow/ice"
-	force_fullbright = 0
-	sound_group = "ice_moon"
-
-/area/shuttle/biodome_elevator/upper
-	icon_state = "shuttle"
-	force_fullbright = 0
-	name = "Elevator"
-
-/area/shuttle/biodome_elevator/lower
-	icon_state = "shuttle2"
-	force_fullbright = 0
-	name = "Elevator"
-
-/area/shuttle/recovery_shuttle
-	icon_state = "shuttle2"
-	name = "Recovery Shuttle"
-ABSTRACT_TYPE(/area/shuttle/merchant_shuttle)
-/area/shuttle/merchant_shuttle
-	icon_state = "shuttle2"
-	name = "Merchant Shuttle"
-	teleport_blocked = 1
-
-/area/shuttle/merchant_shuttle/left_centcom
-	is_centcom = 1
-
-/area/shuttle/merchant_shuttle/right_centcom
-	is_centcom = 1
-
-/area/shuttle/merchant_shuttle/diner_centcom
-	is_centcom = 1
-
-/area/shuttle/merchant_shuttle/diner_station
-
-/area/shuttle/merchant_shuttle/left_station
-	icon_state = "shuttle2"
-
-/area/shuttle/merchant_shuttle/right_station
-	icon_state = "shuttle2"
-
-/area/shuttle/spacebus
-	name = "Space Bus"
-
-/area/shuttle/escape/transit
-	icon_state = "eshuttle_transit"
-	sound_group = "eshuttle_transit"
-	var/warp_dir = NORTH // fuck you
+/area/shuttle/battle
+	name = "Battle Shuttle"
+	icon_state = "shuttle_escape-battle-shuttle"
+	var/warp_dir = EAST
+	sanctuary = 1
 
 	Entered(atom/movable/Obj,atom/OldLoc)
 		..()
@@ -680,8 +623,188 @@ ABSTRACT_TYPE(/area/shuttle/merchant_shuttle)
 			var/mob/M = Obj
 			M.removeOverlayComposition(/datum/overlayComposition/shuttle_warp)
 
-/area/shuttle/escape/transit/ew
+/area/shuttle/arrival
+	name = "Arrival Shuttle"
+	teleport_blocked = 2
+
+/area/shuttle/arrival/pre_game
+	icon_state = "shuttle2"
+
+/area/shuttle/arrival/station
+	icon_state = "shuttle"
+	flags = ALWAYS_SOLID_FLUID
+
+/area/shuttle/escape
+	name = "Emergency Shuttle"
+
+/area/shuttle/escape/station
+	name = "Emergency Shuttle Station"
+	icon_state = "shuttle2"
+	#ifdef UNDERWATER_MAP
+	ambient_light = OCEAN_LIGHT
+	#endif
+
+/area/shuttle/escape/centcom
+	name = "Emergency Shuttle Centcom"
+	icon_state = "shuttle"
+	sound_group = "centcom"
+	is_centcom = 1
+	filler_turf = /turf/unsimulated/floor/shuttlebay
+
+/area/shuttle/escape/transit
+	name = "Emergency Shuttle Transit"
+	icon_state = "shuttle_escape"
+
+/area/shuttle/prison
+	name = "Prison Shuttle"
+
+/area/shuttle/prison/station
+	icon_state = "shuttle"
+
+/area/shuttle/prison/prison
+	name = "Prison Shuttle Prison Dock"
+	icon_state = "shuttle2"
+
+/area/shuttle/brig/station
+	name = "Brig Shuttle Station Dock"
+	icon_state = "shuttle"
+
+/area/shuttle/brig/prison
+	name = "Brig Shuttle Prison Dock"
+	icon_state = "shuttle2"
+
+/area/shuttle/brig/outpost
+	name = "Brig Shuttle Outpost Dock"
+	icon_state = "shuttle3"
+
+/area/shuttle/research/station
+	name = "Research Shuttle Station Dock"
+	icon_state = "shuttle"
+
+/area/shuttle/research/outpost
+	name = "Research Shuttle Outpost Dock"
+	icon_state = "shuttle2"
+
+/area/shuttle/mining/station
+	name = "Mining Shuttle Station Dock"
+	icon_state = "shuttle"
+
+/area/shuttle/mining/diner
+	name = "Mining Shuttle Diner Dock"
+	icon_state = "shuttle"
+
+/area/shuttle/mining/outpost
+	name = "Mining Shuttle Outpost Dock"
+	icon_state = "shuttle"
+
+/area/shuttle/john/diner
+	name = "John's Bus Diner Dock"
+	icon_state = "shuttle"
+
+/area/shuttle/john/owlery
+	name = "John's Bus Owlery Dock"
+	icon_state = "shuttle2"
+
+/area/shuttle/john/mining
+	name = "John's Bus Outpost Dock"
+	icon_state = "shuttle2"
+
+/area/shuttle/john/grillnasium
+	name = "John's Bus Factory Dock"
+	icon_state = "shuttle"
+
+/area/shuttle/icebase_elevator/upper
+	name = "Chasm Lift Upper Section"
+	icon_state = "shuttle"
+	filler_turf = "/turf/simulated/floor/arctic/abyss"
+	force_fullbright = 0
+	sound_group = "ice_moon"
+
+/area/shuttle/icebase_elevator/lower
+	name = "Chasm Lift Lower Section"
+	icon_state = "shuttle2"
+	filler_turf = "/turf/simulated/floor/arctic/snow/ice"
+	force_fullbright = 0
+	sound_group = "ice_moon"
+
+/area/shuttle/biodome_elevator/upper
+	name = "Biodome Lift Upper Section"
+	icon_state = "shuttle"
+	force_fullbright = 0
+
+/area/shuttle/biodome_elevator/lower
+	name = "Biodome Lift Lower Section"
+	icon_state = "shuttle2"
+	force_fullbright = 0
+
+/area/shuttle/recovery_shuttle
+	name = "Recovery Shuttle Dock"
+	icon_state = "shuttle2"
+
+ABSTRACT_TYPE(/area/shuttle/merchant_shuttle)
+/area/shuttle/merchant_shuttle
+	icon_state = "shuttle2"
+	name = "Merchant Shuttle Dock"
+	teleport_blocked = TRUE
+
+/area/shuttle/merchant_shuttle/left_centcom
+	name = "Centcom Merchant Shuttle Dock Alpha"
+	is_centcom = TRUE
+
+/area/shuttle/merchant_shuttle/right_centcom
+	name = "Centcom Merchant Shuttle Dock Beta"
+	is_centcom = TRUE
+
+/area/shuttle/merchant_shuttle/diner_centcom
+	name = "Centcom Merchant Shuttle Dock Gamma"
+	is_centcom = TRUE
+
+/area/shuttle/merchant_shuttle/diner_station
+	name = "Station Merchant Shuttle Dock Gamma"
+
+/area/shuttle/merchant_shuttle/left_station
+	name = "Station Merchant Shuttle Dock Alpha"
+	icon_state = "shuttle2"
+
+/area/shuttle/merchant_shuttle/right_station
+	name = "Station Merchant Shuttle Dock Beta"
+	icon_state = "shuttle2"
+
+/area/shuttle/spacebus
+	name = "Space Bus"
+
+/area/shuttle/escape/transit
+	icon_state = "eshuttle_transit"
+	sound_group = "eshuttle_transit"
+	var/warp_dir = NORTH // fuck you
+
+	Entered(atom/movable/Obj, atom/OldLoc)
+		..()
+		if (ismob(Obj))
+			var/mob/M = Obj
+			if (src.warp_dir & NORTH || src.warp_dir & SOUTH)
+				M.addOverlayComposition(/datum/overlayComposition/shuttle_warp)
+			else
+				M.addOverlayComposition(/datum/overlayComposition/shuttle_warp/ew)
+
+	Exited(atom/movable/Obj)
+		..()
+		if (ismob(Obj))
+			var/mob/M = Obj
+			M.removeOverlayComposition(/datum/overlayComposition/shuttle_warp)
+
+/area/shuttle/escape/transit
+	warp_dir = NORTH
+
+/area/shuttle/escape/transit
 	warp_dir = EAST
+
+/area/shuttle/escape/transit
+	warp_dir = WEST
+
+/area/shuttle/escape/transit
+	warp_dir = SOUTH
+
 ABSTRACT_TYPE(/area/shuttle_transit_space)
 /area/shuttle_transit_space
 	name = "Wormhole"
@@ -724,8 +847,9 @@ ABSTRACT_TYPE(/area/shuttle_transit_space)
 
 ABSTRACT_TYPE(/area/shuttle_particle_spawn)
 /area/shuttle_particle_spawn
+	name = "Shuttle Particles"
 	icon_state = "shuttle_transit_stars_n"
-	teleport_blocked = 1
+	teleport_blocked = TRUE
 	var/star_dir = null // particle system defaults to northbound stars
 
 	proc/start_particles()
@@ -749,8 +873,10 @@ ABSTRACT_TYPE(/area/shuttle_particle_spawn)
 	star_dir = "_w"
 
 /area/shuttle_sound_spawn
+	name = "Shuttle Subwoofers"
 	icon_state = "shuttle_transit_sound"
-	teleport_blocked = 1
+	teleport_blocked = TRUE
+	requires_power = FALSE
 
 // zewaka - actual areas below //
 
@@ -897,7 +1023,7 @@ ABSTRACT_TYPE(/area/adventure)
 	New()
 		..()
 
-		SPAWN_DBG(6 SECONDS)
+		SPAWN(6 SECONDS)
 			if (!helldrone_awake_sound)
 				helldrone_awake_sound = new/sound()
 				helldrone_awake_sound.file = 'sound/machines/giantdrone_loop.ogg'
@@ -928,7 +1054,7 @@ ABSTRACT_TYPE(/area/adventure)
 			..()
 			if (isliving(O) && !helldrone_awake)
 				helldrone_awake = 1
-				SPAWN_DBG(2 SECONDS)
+				SPAWN(2 SECONDS)
 					helldrone_wakeup()
 					src.process()
 
@@ -965,7 +1091,7 @@ ABSTRACT_TYPE(/area/adventure)
 					helldrone_awake_sound.volume = 60
 					H << helldrone_awake_sound
 					if(S)
-						SPAWN_DBG(sound_delay)
+						SPAWN(sound_delay)
 							H << S
 
 /area/helldrone/core
@@ -979,38 +1105,54 @@ ABSTRACT_TYPE(/area/adventure)
 /area/martian_trader
 	name ="Martian Trade Outpost"
 	sound_environment = 8
+#ifdef MAP_OVERRIDE_OSHAN
+	requires_power = FALSE
+#endif
 
 /area/abandonedmedicalship
 	name = "Abandoned Medical ship"
 	icon_state = "yellow"
 
 /area/abandonedoutpostthing
-	name = "Abandoned Outpost"
+	name = "Abandoned Laboratory"
 	icon_state = "yellow"
 
 /area/abandonedmedicalship/robot_trader
 	name ="Robot Trade Outpost"
 	icon_state ="green"
 	sound_environment = 3
+#ifdef UNDERWATER_MAP
+	requires_power = FALSE
+#endif
+
 /area/bee_trader
 	name ="Bombini's Ship"
 	icon_state ="green"
 	sound_environment = 2
+#ifdef UNDERWATER_MAP
+	requires_power = FALSE
+#endif
 
 /area/flock_trader
 	name = "Flocktrader Ship"
 	icon_state = "green"
 	sound_environment = 2
+#ifdef UNDERWATER_MAP
+	requires_power = FALSE
+#endif
 
 /area/skeleton_trader
 	name = "Skeleton Trade Outpost"
 	icon_state = "green"
 	sound_environment = 2
+#ifdef UNDERWATER_MAP
+	requires_power = FALSE
+#endif
 
 /area/fermid_hive
 	name = "Fermid Hive"
 	icon_state = "purple"
-
+	requires_power = FALSE
 
 /area/iss
 	name = "Derelict Space Station"
@@ -1018,11 +1160,19 @@ ABSTRACT_TYPE(/area/adventure)
 #ifdef SUBMARINE_MAP
 	force_fullbright = 1
 #endif
+#ifdef MAP_OVERRIDE_OSHAN
+	requires_power = FALSE
+#endif
 
+/area/spacehabitat/pool
+	name = "Pool Room"
+	icon_state = "yellow"
+	requires_power = FALSE
 
 /area/abandonedship
 	name = "Abandoned ship"
 	icon_state = "yellow"
+	requires_power = FALSE
 
 /area/spacehabitat
 	name = "Habitat Dome"
@@ -1036,14 +1186,21 @@ ABSTRACT_TYPE(/area/adventure)
 /area/salyut
 	name = "Soviet derelict"
 	icon_state = "yellow"
+	requires_power = FALSE
 
 /area/hollowasteroid/ //evilderelict.dm
 	name = "Forgotten Subterranean Wreckage"
 	icon_state = "derelict"
 	sound_loop = 'sound/ambience/spooky/Evilreaver_Ambience.ogg'
+	requires_power = FALSE
+
+
 ABSTRACT_TYPE(/area/diner)
 /area/diner
 	sound_environment = 12
+#ifdef UNDERWATER_MAP
+	requires_power = FALSE
+#endif
 
 /area/diner/hangar
 	name = "Space Diner Parking"
@@ -1097,6 +1254,11 @@ ABSTRACT_TYPE(/area/diner)
 	name = "Bill E Bheezes"
 	icon_state = "red"
 
+/area/diner/cow
+	name = "Void Diner"
+	icon_state = "purple"
+	requires_power = FALSE
+
 /area/tech_outpost
 	name = "Tech Outpost"
 	icon_state = "storage"
@@ -1108,6 +1270,8 @@ ABSTRACT_TYPE(/area/prefab)
 	icon_state = "orange"
 	requires_power = FALSE
 
+/area/prefab/vault
+	name = "Secure Vault"
 /area/prefab/discount_dans_asteroid
 	name = "Discount Dan's Delivery Asteroid"
 	icon_state = "orange"
@@ -1132,11 +1296,79 @@ ABSTRACT_TYPE(/area/prefab)
 	name = "Sequestered Cloner"
 
 /area/prefab/sequestered_cloner/puzzle
+	name = "Sequestered Cloner Engineer"
 	requires_power = TRUE
 
 /area/prefab/von_ricken
 	name ="Von Ricken"
 	icon_state = "blue"
+
+/area/prefab/candy_shop
+	name = "Candy Shop"
+	icon_state = "blue"
+	sound_loop = 'sound/ambience/music/shoptheme.ogg'
+	sound_environment = 2
+
+/area/prefab/space_casino
+	name ="Space Casino"
+	icon_state = "blue"
+
+/area/prefab/ranch
+	name ="Space Ranch"
+	icon_state = "green"
+
+/area/prefab/synd_lab
+	name = "Syndicate TC Laboratory"
+	icon_state = "red"
+
+/area/prefab/shooting_range
+	name = "Shooting Range"
+	icon_state = "purple"
+
+/area/prefab/lesbeeans/interior
+	name = "Lesbian Bee Farm Interior"
+	icon_state = "ranch"
+
+/area/prefab/lesbeeans/exterior
+	name = "Lesbian Bee Farm"
+	icon_state = "park"
+
+/area/prefab/crashed_hop_shuttle
+	name = "HoP Shuttle"
+	icon_state = "purple"
+
+/area/prefab/silverglass
+	name = "Silverglass Platform"
+	icon_state = "orange"
+	requires_power = TRUE
+
+	research
+		name = "Entanglement Dynamics"
+		icon_state = "purple"
+
+	bay
+		name = "Docking Bay"
+		icon_state = "yellow"
+
+	eats
+		name = "Commissary"
+		icon_state = "green"
+
+/area/prefab/dreamplaza
+	name = "DreamPlaza Mall"
+	icon_state = "purple"
+
+/area/prefab/secbot_academy
+	name = "Securitron Academy"
+	icon_state = "red"
+
+/area/prefab/art_workshop
+	name = "The Pastel Space Workshop"
+	icon_state = "purple"
+
+/area/prefab/adrift_cargorouter
+	name = "Adrift Cargo Router"
+	icon_state = "yellow"
 
 // Sealab trench areas //
 
@@ -1256,6 +1488,10 @@ ABSTRACT_TYPE(/area/prefab)
 	name = "Bee Sanctuary"
 	icon_state = "purple"
 
+area/prefab/torpedo_deposit
+	name = "Torpedo Deposit"
+	icon_state = "purple"
+
 // zewaka - vspace areas //
 ABSTRACT_TYPE(/area/sim)
 /area/sim
@@ -1269,6 +1505,7 @@ ABSTRACT_TYPE(/area/sim)
 	skip_sims = 1
 	sims_score = 100
 	sound_group = "vr"
+	dont_log_combat = TRUE
 
 
 
@@ -1339,17 +1576,20 @@ ABSTRACT_TYPE(/area/station)
 	var/tmp/initial_structure_value = 0
 #ifdef MOVING_SUB_MAP
 	filler_turf = "/turf/space/fluid/manta"
-
-	New()
-		..()
-		initial_structure_value = calculate_structure_value()
 #else
 	filler_turf = null
+#endif
 
 	New()
 		..()
-		initial_structure_value = calculate_structure_value()
-#endif
+		START_TRACKING
+		SPAWN(10 SECONDS) // wait until world is actually loaded in lmao
+			initial_structure_value = calculate_structure_value()
+
+	Del()
+		STOP_TRACKING
+		..()
+
 ABSTRACT_TYPE(/area/station/atmos)
 /area/station/atmos
 	name = "Atmospherics"
@@ -1359,7 +1599,8 @@ ABSTRACT_TYPE(/area/station/atmos)
 	do_not_irradiate = 1
 
 /area/station/atmos/highcap_storage
-  name = "High-Capacity Atmospherics Storage"
+	name = "High-Capacity Atmospherics Storage"
+	do_not_irradiate = 0
 
 ABSTRACT_TYPE(/area/station/atmos/hookups)
 /area/station/atmos/hookups
@@ -1492,13 +1733,16 @@ ABSTRACT_TYPE(/area/shuttle/asylum)
 	icon_state = "asylum_shuttle"
 
 /area/shuttle/asylum/medbay
-		icon_state = "shuttle1"
+	name = "Asylum Shuttle Medbay Dock"
+	icon_state = "shuttle1"
 
 /area/shuttle/asylum/pathology
-		icon_state = "shuttle2"
+	name = "Asylum Shuttle Pathology Dock"
+	icon_state = "shuttle2"
 
 /area/shuttle/asylum/observation
-		icon_state = "shuttle3"
+	name = "Asylum Shuttle Main Dock"
+	icon_state = "shuttle3"
 
 // Medical
 
@@ -1624,6 +1868,10 @@ ABSTRACT_TYPE(/area/station/maintenance/outer)
 
 /area/station/maintenance/disposal
 	name = "Waste Disposal"
+	icon_state = "disposal"
+
+/area/station/maintenance/scidisposal
+	name = "Outpost Zeta Waste Disposal"
 	icon_state = "disposal"
 
 /area/station/maintenance/lowerstarboard
@@ -1771,23 +2019,28 @@ ABSTRACT_TYPE(/area/station/hallway/secondary)
 	name = "Construction Area"
 	icon_state = "construction"
 	workplace = 1
-	do_not_irradiate = 1
 
 /area/station/hallway/secondary/construction2
 	name = "Secondary Construction Area"
 	icon_state = "construction"
 	workplace = 1
-	do_not_irradiate = 1
 
 /area/station/hallway/secondary/entry
 	name = "Main Hallway"
 	icon_state = "entry"
 
+/area/station/hallway/secondary/oshan_arrivals
+	name = "Oshan Arrivals"
+	icon_state = "blue"
+	do_not_irradiate = 1
+
 /area/station/hallway/secondary/shuttle
 	name = "Shuttle Bay"
 	icon_state = "shuttle3"
 
-
+/area/station/hallway/secondary/researchshuttle
+	name = "Research Transport Dock"
+	icon_state = "shuttle3"
 
 /area/station/mailroom
 	name = "Mailroom"
@@ -1832,6 +2085,11 @@ ABSTRACT_TYPE(/area/station/mining)
 	sound_loop = 'sound/ambience/station/underwater/sub_bridge_ambi1.ogg'
 #endif
 
+/area/station/bridge/united_command //currently only on atlas - ET
+    name = "United Command"
+    icon_state ="bridge"
+    sound_environment = 4
+
 /area/station/seaturtlebridge
 	name = "Sea Turtle Bridge"
 	icon_state = "bridge"
@@ -1851,6 +2109,7 @@ ABSTRACT_TYPE(/area/station/mining)
 /area/station/bridge/captain
 	name = "Captain's Office"
 	icon_state = "CAPN"
+	spy_secure_area = TRUE
 
 /area/station/bridge/hos
 	name = "Head of Personnel's Office"
@@ -1889,6 +2148,7 @@ ABSTRACT_TYPE(/area/station/crew_quarters)
 	name = "Head of Security's Quarters"
 	icon_state = "HOS"
 	sound_environment = 4
+	spy_secure_area = TRUE
 
 /area/station/crew_quarters/md
 	name = "Medical Director's Quarters"
@@ -2028,12 +2288,13 @@ ABSTRACT_TYPE(/area/station/crew_quarters/radio)
 /area/station/crew_quarters/clown
 	name = "Clown Hole"
 	icon_state = "storage"
-	do_not_irradiate = 1
+#ifdef UNDERWATER_MAP
+	requires_power = FALSE
+#endif
 
 /area/station/crew_quarters/catering
 	name = "Catering Storage"
 	icon_state = "storage"
-	do_not_irradiate = 1
 
 /area/station/crew_quarters/bathroom
 	name = "Bathroom"
@@ -2153,32 +2414,28 @@ ABSTRACT_TYPE(/area/station/crew_quarters/radio)
 /area/station/crewquarters/cryotron
 	name ="Cryogenic Crew Storage"
 	icon_state = "blue"
+	do_not_irradiate = 1
 
 ABSTRACT_TYPE(/area/station/com_dish)
 /area/station/com_dish
 	name = "Communications Dish"
 	icon_state = "yellow"
+	requires_power = FALSE
+	#ifdef UNDERWATER_MAP
+	ambient_light = OCEAN_LIGHT
+	#endif
 
 /area/station/com_dish/comdish
 	name = "Communications Dish"
 	icon_state = "yellow"
-#ifndef UNDERWATER_MAP
-	force_fullbright = 1 // ????
-#endif
 
 /area/station/com_dish/auxdish
 	name = "Auxilary Communications Dish"
 	icon_state = "yellow"
-#ifndef UNDERWATER_MAP
-	force_fullbright = 1
-#endif
 
 /area/station/com_dish/research_outpost
 	name = "Research Outpost Communications Dish"
 	icon_state = "yellow"
-#ifndef UNDERWATER_MAP
-	force_fullbright = 1
-#endif
 
 ABSTRACT_TYPE(/area/station/engine)
 /area/station/engine
@@ -2246,6 +2503,7 @@ ABSTRACT_TYPE(/area/station/engine)
 /area/station/engine/singcore
 	name = "Singularity Core"
 	icon_state = "red"
+	requires_power = FALSE
 
 /area/station/engine/eva
 	name = "Engineering EVA"
@@ -2263,6 +2521,7 @@ ABSTRACT_TYPE(/area/station/engine)
 /area/station/engine/combustion_chamber
 	name = "Combustion Chamber"
 	icon_state = "combustion_chamber"
+	requires_power = FALSE
 
 /area/station/engine/coldloop
 	name = "Cold Loop"
@@ -2436,6 +2695,7 @@ ABSTRACT_TYPE(/area/station/security)
 /area/station/security
 	teleport_blocked = 1
 	workplace = 1
+	spy_secure_area = TRUE
 
 /area/station/security/main
 	name = "Security"
@@ -2482,6 +2742,7 @@ ABSTRACT_TYPE(/area/station/security)
 	name = "Bridge Security Checkpoint"
 	icon_state = "checkpoint1"
 	sound_environment = 2
+	spy_secure_area = FALSE		// Usually easy to get into
 
 /area/station/security/checkpoint/arrivals
 		name = "Arrivals Security Checkpoint"
@@ -2503,11 +2764,8 @@ ABSTRACT_TYPE(/area/station/security)
 		name = "East Hallway Security Checkpoint"
 /area/station/security/checkpoint/medical
 		name = "Medical Security Checkpoint"
-
-/area/station/security/armory //what the fuck this is not the real armory???
-	name = "Armory" //ai_monitored/armory is, shitty ass code
-	icon_state = "armory"
-	sound_environment = 2
+/area/station/security/checkpoint/research
+		name = "Research Security Checkpoint"
 
 /area/station/security/prison
 	name = "Prison Station"
@@ -2563,6 +2821,9 @@ ABSTRACT_TYPE(/area/station/security)
 	sound_environment = 4
 	workplace = 0 //As does the hos
 
+/area/station/security/hos/horizon
+	name = "Hovel of Security"
+
 /area/station/security/visitation
 	name ="Visitation"
 	icon_state = "red"
@@ -2592,12 +2853,12 @@ ABSTRACT_TYPE(/area/station/security)
 	name = "Beepsky's House"
 	icon_state = "storage"
 	do_not_irradiate = 1
+	spy_secure_area = FALSE	// Easy to get into
 
 ABSTRACT_TYPE(/area/station/solar)
 /area/station/solar
 	requires_power = 0
 	luminosity = 1
-	force_fullbright = 1
 	workplace = 1
 	do_not_irradiate = 1
 
@@ -2630,6 +2891,14 @@ ABSTRACT_TYPE(/area/station/solar)
 	name = "Emergency Solar Array 3"
 	icon_state = "yellow"
 
+/area/station/solar/aisat
+	name = "AI Satellite Solar Array"
+	icon_state = "yellow"
+
+/area/station/solar/zeta
+	name = "Research Outpost Solar Array"
+	icon_state = "yellow"
+
 ABSTRACT_TYPE(/area/station/quartermaster)
 /area/station/quartermaster
 	name = "Quartermaster's"
@@ -2645,7 +2914,6 @@ ABSTRACT_TYPE(/area/station/quartermaster)
 	name = "Quartermaster's Storage"
 	icon_state = "quartstorage"
 	sound_environment = 2
-	do_not_irradiate = 1
 
 /area/station/quartermaster/magnet
 	name = "Magnet Control Room"
@@ -2695,7 +2963,6 @@ ABSTRACT_TYPE(/area/station/janitor)
 	icon_state = "yellow"
 	sound_environment = 5
 	workplace = 1
-	do_not_irradiate = 1
 
 ABSTRACT_TYPE(/area/station/science)
 /area/station/science
@@ -2849,12 +3116,15 @@ ABSTRACT_TYPE(/area/station/chapel)
 	name = "Northeast Area"
 	do_not_irradiate = 1;
 
+/area/station/storage/hydroponics
+	name = "Hydroponics Storage"
+	icon_state = "pink"
+
 ABSTRACT_TYPE(/area/station/hangar)
 /area/station/hangar
 	name = "Hangar"
 	icon_state = "hangar"
 	workplace = 1
-	do_not_irradiate = 1
 
 /area/station/hangar/main
 		name = "Pod Bay"
@@ -2902,43 +3172,39 @@ ABSTRACT_TYPE(/area/station/hangar)
 /area/station/ranch
 	name = "Ranch"
 	icon_state = "ranch"
+	workplace = 1
 
 ABSTRACT_TYPE(/area/station/garden)
 /area/station/garden
 	name = "Garden"
 	icon_state = "aviary"
 	sound_environment = 15
-	do_not_irradiate = 1
 
 /area/station/garden/owlery
 	name = "Owlery"
 	icon_state = "yellow"
 	sound_environment = 15
-	do_not_irradiate = 1
+	requires_power = FALSE
 
 /area/station/garden/aviary
 	name = "Aviary"
 	icon_state = "aviary"
 	sound_environment = 15
-	do_not_irradiate = 1
 
 /area/station/garden/habitat
 	name = "Habitat Dome"
 	icon_state = "aviary"
 	sound_environment = 15
-	do_not_irradiate = 1
-	force_fullbright = 1
 
 /area/station/garden/zen
 	name = "Zen Garden"
 	icon_state = "aviary"
 	sound_environment = 15
-	do_not_irradiate = 1
 
 ABSTRACT_TYPE(/area/station/catwalk)
 /area/station/catwalk
 	icon_state = "yellow"
-	force_fullbright = 1
+	requires_power = FALSE
 
 /area/station/catwalk/north
 	name = "North Maintenance Catwalk"
@@ -2975,9 +3241,13 @@ ABSTRACT_TYPE(/area/station/catwalk)
 
 /area/station/routing/security
 		name = "Security Router"
+		spy_secure_area = TRUE
 
 /area/station/routing/airbridge
 		name = "Airbridge Router"
+
+/area/station/routing/sortingRoom
+		name = "Mail Sorting Room"
 
 /// Off-station research outpost. Used for Cog2.
 /area/research_outpost
@@ -3034,7 +3304,15 @@ ABSTRACT_TYPE(/area/station/catwalk)
 	icon_state = "yellow"
 	requires_power = 0
 	luminosity = 1
-	force_fullbright = 1
+
+// Salvager Spawn
+/area/salvager
+	name = "Salvager Vessel Magpie"
+	icon_state = "red"
+	sanctuary = 1
+
+/area/salvager/lower
+	icon_state = "orange"
 
 /// Nukeops spawn station
 /area/syndicate_station
@@ -3054,6 +3332,14 @@ ABSTRACT_TYPE(/area/station/catwalk)
 		name = "firing range"
 		icon_state = "blue"
 
+/area/syndicate_station/assault_pod
+		name = "forward assault pod"
+		icon_state = "red"
+
+/area/syndicate_station/medbay
+		name = "medical bay"
+		icon_state = "purple"
+
 // end syndie //
 
 /// Wizard den area for the wizard shuttle spawn
@@ -3066,7 +3352,7 @@ ABSTRACT_TYPE(/area/station/catwalk)
 
 	CanEnter( var/atom/movable/A )
 		var/mob/living/M = A
-		if( istype(M) && M.mind && M.mind.special_role != "wizard" && isliving(M) )
+		if( istype(M) && M.mind && M.mind.special_role != ROLE_WIZARD && isliving(M) )
 			if(M.client && M.client.holder)
 				return 1
 			boutput( M, "<span class='alert'>A magical barrier prevents you from entering!</span>" ) //or something
@@ -3082,7 +3368,7 @@ ABSTRACT_TYPE(/area/station/ai_monitored)
 /area/station/ai_monitored/New()
 	..()
 	// locate and store the motioncamera
-	SPAWN_DBG(2 SECONDS) // spawn on a delay to let turfs/objs load
+	SPAWN(2 SECONDS) // spawn on a delay to let turfs/objs load
 		for (var/obj/machinery/camera/motion/M in src)
 			motioncamera = M
 			return
@@ -3124,6 +3410,7 @@ ABSTRACT_TYPE(/area/station/ai_monitored/storage/)
 	icon_state = "armory"
 	sound_environment = 2
 	teleport_blocked = 1
+	spy_secure_area = TRUE
 
 // // // // // //
 
@@ -3131,6 +3418,8 @@ ABSTRACT_TYPE(/area/station/ai_monitored/storage/)
 ABSTRACT_TYPE(/area/station/turret_protected)
 /area/station/turret_protected
 	name = "Turret Protected Area"
+	expandable = FALSE
+	spy_secure_area = TRUE
 	var/list/obj/machinery/turret/turret_list = list()
 	var/obj/machinery/camera/motion/motioncamera = null
 	var/list/obj/blob/blob_list = list() //faster to cache blobs as they enter instead of searching the area for them (For turrets)
@@ -3138,7 +3427,7 @@ ABSTRACT_TYPE(/area/station/turret_protected)
 /area/station/turret_protected/New()
 	..()
 	// locate and store the motioncamera
-	SPAWN_DBG(2 SECONDS) // spawn on a delay to let turfs/objs load
+	SPAWN(2 SECONDS) // spawn on a delay to let turfs/objs load
 		for (var/obj/machinery/camera/motion/M in src)
 			motioncamera = M
 			return
@@ -3179,7 +3468,6 @@ ABSTRACT_TYPE(/area/station/turret_protected)
 	name = "AI Upload Chamber"
 	icon_state = "ai_upload"
 	sound_environment = 12
-	do_not_irradiate = 1
 
 /area/station/turret_protected/ai_module_storage
 	name = "AI Module Storage"
@@ -3195,7 +3483,6 @@ ABSTRACT_TYPE(/area/station/turret_protected)
 	name = "AI Chamber"
 	icon_state = "ai_chamber"
 	sound_environment = 12
-	do_not_irradiate = 1
 
 /area/station/turret_protected/AIbasecore1
 	name = "AI Core 1"
@@ -3206,14 +3493,12 @@ ABSTRACT_TYPE(/area/station/turret_protected)
 	name = "AI Satellite"
 	icon_state = "ai_satellite"
 	sound_environment = 12
-	do_not_irradiate = 1
 
 /area/station/turret_protected/AIbaseoutside
 	name = "AI Perimeter Defenses"
 	icon_state = "AIt"
 	requires_power = 0
 	sound_environment = 12
-	force_fullbright = 1
 
 /area/station/turret_protected/AIbasecore2
 	name = "AI Core 2"
@@ -3238,6 +3523,7 @@ ABSTRACT_TYPE(/area/station/turret_protected)
 /area/station/turret_protected/armory_outside
 	name = "Armory Outer Perimeter"
 	icon_state = "secext"
+	requires_power = FALSE
 
 // // // //  OLD AREAS THAT ARE NOT USED BUT ARE IN HERE // // // //
 
@@ -3305,7 +3591,6 @@ ABSTRACT_TYPE(/area/mining)
 /area/mining/mainasteroid
 	name = "Main Asteroid"
 	icon_state = "green"
-	force_fullbright = 1
 
 /area/prefab/tunnelsnake
 	name = "Tunnel Snake Mining Rig"
@@ -3354,6 +3639,7 @@ ABSTRACT_TYPE(/area/mining)
 	name = "Kosmicheskoi Stantsii 13"
 	icon_state = "yellow"
 	permarads = 1
+	irradiated = 1
 
 // // // // // // // // // // // //
 
@@ -3416,6 +3702,13 @@ ABSTRACT_TYPE(/area/mining)
 	name = "Rental Office"
 	icon_state = "purple"
 
+/// new merchant areas
+
+/area/regina
+	name = "Regina Anchorage"
+	requires_power = 0
+	sound_environment = 2
+	teleport_blocked = 1
 
 
 /* ================================================== */
@@ -3435,10 +3728,6 @@ ABSTRACT_TYPE(/area/mining)
 		#ifdef UNDERWATER_MAP
 		src.ambient_light = OCEAN_LIGHT
 		#endif
-#ifdef HALLOWEEN
-		alpha = 128
-		icon = 'icons/effects/dark.dmi'
-#endif
 
 	if(!requires_power)
 		power_light = 1
@@ -3448,7 +3737,7 @@ ABSTRACT_TYPE(/area/mining)
 		luminosity = 0
 	global.area_list_is_up_to_date = 0
 
-	SPAWN_DBG(1.5 SECONDS)
+	SPAWN(1.5 SECONDS)
 		src.power_change()		// all machines set to current power level, also updates lighting icon
 
 /**
@@ -3476,12 +3765,13 @@ ABSTRACT_TYPE(/area/mining)
 		return
 	if (!( src.fire ))
 		src.fire = 1
-		src.updateicon()
+		src.UpdateIcon()
 		src.mouse_opacity = 0
 		var/list/cameras = list()
 		for_by_tcl(F, /obj/machinery/firealarm)
 			if(get_area(F) == src)
-				F.icon_state = "fire1"
+				F.alarm_active = TRUE
+				F.UpdateIcon()
 		for (var/obj/machinery/camera/C in src)
 			cameras += C
 			LAGCHECK(LAG_HIGH)
@@ -3497,11 +3787,12 @@ ABSTRACT_TYPE(/area/mining)
 	if (src.fire)
 		src.fire = 0
 		src.mouse_opacity = 0
-		src.updateicon()
+		src.UpdateIcon()
 
 		for_by_tcl(F, /obj/machinery/firealarm)
 			if(get_area(F) == src)
-				F.icon_state = "fire0"
+				F.alarm_active = FALSE
+				F.UpdateIcon()
 		for_by_tcl(aiPlayer, /mob/living/silicon/ai)
 			aiPlayer.cancelAlarm("Fire", src, src)
 		for (var/obj/machinery/computer/atmosphere/alerts/a as anything in machine_registry[MACHINES_ATMOSALERTS])
@@ -3510,8 +3801,10 @@ ABSTRACT_TYPE(/area/mining)
 /**
   * Updates the icon of the area. Mainly used for flashing it red or blue. See: old party lights
   */
-/area/proc/updateicon()
-	if ((fire || eject) && power_environ)
+/area/update_icon()
+	if(irradiated) //From a radiation blowout event
+		icon_state = "blowout"
+	else if ((fire || eject) && power_environ)
 		if(fire && !eject)
 			icon_state = null
 		else if(!fire && eject)
@@ -3549,7 +3842,7 @@ ABSTRACT_TYPE(/area/mining)
 		var/obj/machinery/M = X
 		M?.power_change()
 
-	updateicon()
+	UpdateIcon()
 
 /**
   * Returns the current usage of the specified channel
@@ -4974,7 +5267,7 @@ area/station/security/visitation
 /area/station2/ai_monitored/New()
 	..()
 	// locate and store the motioncamera
-	SPAWN_DBG(2 SECONDS) // spawn on a delay to let turfs/objs load
+	SPAWN(2 SECONDS) // spawn on a delay to let turfs/objs load
 		for (var/obj/machinery/camera/motion/M in src)
 			motioncamera = M
 			return
@@ -5022,7 +5315,7 @@ area/station/security/visitation
 /area/station2/turret_protected/New()
 	..()
 	// locate and store the motioncamera
-	SPAWN_DBG(2 SECONDS) // spawn on a delay to let turfs/objs load
+	SPAWN(2 SECONDS) // spawn on a delay to let turfs/objs load
 		for (var/obj/machinery/camera/motion/M in src)
 			motioncamera = M
 			return
@@ -5108,3 +5401,255 @@ area/station/security/visitation
 
 
 */
+// pod_wars Areas
+/area/pod_wars/team1/hangar
+	name = "NSV Pytheas Hangar"
+	icon_state = "purple"
+
+/area/pod_wars/team1/mining
+	name = "NSV Pytheas Mining"
+	icon_state = "yellow"
+
+/area/pod_wars/team1/manufacturing
+	name = "NSV Pytheas Manufacturing"
+	icon_state = "blue"
+
+/area/pod_wars/team1/medbay
+	name = "NSV Pytheas Medbay"
+	icon_state = "medbay"
+
+/area/pod_wars/team1/bar
+	name = "NSV Pytheas Bar"
+	icon_state = "blue"
+
+/area/pod_wars/team1/powergen
+	name = "NSV Pytheas Power Station"
+	icon_state = "engine_monitoring"
+
+/area/pod_wars/team1/bridge
+	name = "NSV Pytheas Bridge"
+	icon_state = "reds"
+
+/area/pod_wars/team1/porthall
+	name = "NSV Pytheas Port Hallway"
+	icon_state = "green"
+
+/area/pod_wars/team1/starboardhall
+	name = "NSV Pytheas Starboard Hallway"
+	icon_state = "green"
+
+/area/pod_wars/team1/magnet
+	name = "NSV Pytheas Mineral Magnet"
+	icon_state = "purple"
+
+/area/pod_wars/team2/bridge
+	name = "Lodbrok Bridge"
+	icon_state = "red"
+
+/area/pod_wars/team2/medbay
+	name = "Lodbrok Medical Storage"
+	icon_state = "medbay"
+
+/area/pod_wars/team2/cloning
+	name = "Lodbrok Medical Suite"
+	icon_state = "cloner"
+
+/area/pod_wars/team2/mining
+	name = "Lodbrok Mining"
+	icon_state = "orange"
+
+/area/pod_wars/team2/central_hallway
+	name = "Lodbrok Central Hallway"
+	icon_state = "green"
+
+/area/pod_wars/team2/bar
+	name = "Lodbrok Bar"
+	icon_state = "red"
+
+/area/pod_wars/team2/power
+	name = "Lodbrok Power Station"
+	icon_state = "engine_monitoring"
+
+/area/pod_wars/team2/hangar
+	name = "Lodbrok Hangar"
+	icon_state = "yellow"
+
+/area/pod_wars/team2/storage
+	name = "Lodbrok Storage"
+	icon_state = "purple"
+
+/area/pod_wars/team2/magnet
+	name = "Lodbrok Mineral Magnet"
+	icon_state = "purple"
+
+/area/pod_wars/spacejunk/restaurant
+	name = "Cheesy Chuck's Premium Eatery"
+	icon_state = "yellow"
+
+/area/pod_wars/spacejunk/restaurant/solars
+	name = "Cheesy Chuck's Premium Solar Array"
+	icon_state = "red"
+
+/area/pod_wars/spacejunk/restaurant/landingpads
+	name = "Cheesy Chuck's Premium Landing Pads"
+	icon_state = "green"
+
+/area/pod_wars/spacejunk/reliant
+	name = "NSV Reliant"
+	icon_state = "yellow"
+
+/area/pod_wars/spacejunk/reliant/landingpads
+	name = "NSV Reliant Landing Pads"
+	icon_state = "red"
+
+/area/pod_wars/spacejunk/dorgun
+	name = "DORGUN'S GREAT SHIP 10/10"
+	icon_state = "yellow"
+
+/area/pod_wars/spacejunk/memorial_stats
+	name = "Mission Memorial Ruins"
+	icon_state = "yellow"
+
+/area/pod_wars/spacejunk/brightwell
+	name = "LS Brightwell"
+	icon_state = "yellow"
+
+/area/pod_wars/spacejunk/fstation
+	name = "Fortuna Main Hall"
+	icon_state = "blue"
+
+/area/pod_wars/spacejunk/fstation/primary
+	name = "Fortuna Primary Dock"
+	icon_state = "red"
+
+/area/pod_wars/spacejunk/fstation/secdock
+	name = "Fortuna Security Dock"
+	icon_state = "security"
+
+/area/pod_wars/spacejunk/fstation/maintdock
+	name = "Fortuna Maintenence Dock"
+	icon_state = "red"
+
+/area/pod_wars/spacejunk/fstation/computercore
+	name = "Fortuna Computer Core"
+	icon_state = "green"
+
+/area/pod_wars/spacejunk/fstation/crewquarters
+	name = "Fortuna Crew Quarters"
+	icon_state = "yellow"
+
+/area/pod_wars/spacejunk/fstation/mess
+	name = "Fortuna Mess Hall"
+	icon_state = "purple"
+
+/area/pod_wars/spacejunk/fstation/power
+	name = "Fortuna Engineering"
+	icon_state = "engine_monitoring"
+
+/area/pod_wars/spacejunk/fstation/medbay
+	name = "Fortuna Medical Bay"
+	icon_state = "medbay"
+
+/area/pod_wars/spacejunk/fstation/observatory
+	name = "Fortuna Observatory"
+	icon_state = "yellow"
+
+/area/pod_wars/spacejunk/fstation/bar
+	name = "Fortuna Bar"
+	icon_state = "green"
+
+/area/pod_wars/spacejunk/fstation/command
+	name = "Fortuna Command"
+	icon_state = "purple"
+
+/area/pod_wars/spacejunk/fstation/landingpads
+	name = "Fortuna Landing Pads"
+	icon_state = "green"
+
+/area/pod_wars/spacejunk/uvb67/power
+	name = "UVB-67 Power Station"
+	icon_state = "yellow"
+
+/area/pod_wars/spacejunk/uvb67/crew
+	name = "UVB-67 Crew Habitat"
+	icon_state = "Yellow"
+
+/area/pod_wars/spacejunk/uvb67/central
+	name = "UVB-67 Defensive Zone"
+	icon_state = "red"
+
+/area/pod_wars/spacejunk/uvb67/solars
+	name = "UVB-67 Solar Array"
+	icon_state = "Purple"
+
+/area/pod_wars/spacejunk/greatwreck
+	name = "Wreckage of LS Greater Things Await You"
+	icon_state = "yellow"
+
+/area/pod_wars/spacejunk/nancy
+	name = "Nancy's Pristine Goods"
+	icon_state = "red"
+
+/area/pod_wars/spacejunk/nancy/landingpad
+	name = "Nancy's Pristine Goods Landing Pad"
+	icon_state = "yellow"
+
+/area/pod_wars/spacejunk/nancy/warehouse
+	name = "Nancy's Warehouse"
+	icon_state = "green"
+
+/area/pod_wars/spacejunk/nancy/powergen
+	name = "Nancy's Power Generator"
+	icon_state = "engine_montioring"
+
+/area/pod_wars/spacejunk/snackstand
+	name = "Snack Shack"
+	icon_state = "yellow"
+
+/area/pod_wars/spacejunk/miningoutpost
+	name = "Abandoned Mining Outpost"
+	icon_state = "yellow"
+
+/area/pod_wars/spacejunk/miningoutpost/crewquarters
+	name = "Abandoned Mining Outpost Crew Quarters"
+	icon_state = "green"
+
+#define MAJOR_AST(num) area/pod_wars/asteroid/major/maj_##num/name = "" + "major asteroid " + #num
+
+area/pod_wars/asteroid/major/icon_state = "green"
+area/pod_wars/asteroid/minor/icon_state = "yellow"
+area/pod_wars/asteroid/minor/name = "minor asteroid"
+area/pod_wars/asteroid/minor/nospawn/icon_state = "red"
+
+MAJOR_AST(1)
+MAJOR_AST(2)
+MAJOR_AST(3)
+MAJOR_AST(4)
+MAJOR_AST(5)
+MAJOR_AST(6)
+MAJOR_AST(7)
+MAJOR_AST(8)
+MAJOR_AST(9)
+MAJOR_AST(10)
+MAJOR_AST(11)
+MAJOR_AST(12)
+MAJOR_AST(13)
+MAJOR_AST(14)
+MAJOR_AST(15)
+MAJOR_AST(16)
+MAJOR_AST(17)
+MAJOR_AST(18)
+MAJOR_AST(19)
+MAJOR_AST(20)
+MAJOR_AST(21)
+MAJOR_AST(22)
+MAJOR_AST(23)
+MAJOR_AST(24)
+MAJOR_AST(25)
+MAJOR_AST(26)
+MAJOR_AST(27)
+MAJOR_AST(28)
+MAJOR_AST(29)
+MAJOR_AST(30)
+
+#undef MAJOR_AST

@@ -8,9 +8,10 @@
 	name = "genetics console"
 	icon = 'icons/obj/computer.dmi'
 	icon_state = "scanner"
-	req_access = list(access_heads) //Only used for record deletion right now.
-	object_flags = CAN_REPROGRAM_ACCESS
-	can_reconnect = 1
+	req_access = list(access_medlab)
+	object_flags = CAN_REPROGRAM_ACCESS | NO_GHOSTCRITTER
+	can_reconnect = TRUE
+	circuit_type = /obj/item/circuitboard/genetics
 	/// Linked scanner. For scanning.
 	var/obj/machinery/genetics_scanner/scanner = null
 	var/list/equipment = list(
@@ -41,7 +42,7 @@
 /obj/machinery/computer/genetics/New()
 	..()
 	START_TRACKING
-	SPAWN_DBG(0.5 SECONDS)
+	SPAWN(0.5 SECONDS)
 		connection_scan()
 
 /obj/machinery/computer/genetics/connection_scan()
@@ -51,26 +52,8 @@
 	STOP_TRACKING
 	..()
 
-/obj/machinery/computer/genetics/attackby(obj/item/W as obj, mob/user as mob)
-	if (isscrewingtool(W) && ((src.status & BROKEN) || !src.scanner))
-		playsound(src.loc, "sound/items/Screwdriver.ogg", 50, 1)
-		if (do_after(user, 2 SECONDS))
-			boutput(user, "<span class='notice'>The broken glass falls out.</span>")
-			var/obj/computerframe/A = new /obj/computerframe( src.loc )
-			if(src.material) A.setMaterial(src.material)
-			var/obj/item/raw_material/shard/glass/G = unpool(/obj/item/raw_material/shard/glass)
-			G.set_loc(src.loc)
-
-			var/obj/item/circuitboard/genetics/M = new /obj/item/circuitboard/genetics( A )
-			for (var/obj/C in src)
-				C.set_loc(src.loc)
-			A.circuit = M
-			A.state = 3
-			A.icon_state = "3"
-			A.anchored = 1
-			qdel(src)
-
-	else if (istype(W,/obj/item/genetics_injector/dna_activator))
+/obj/machinery/computer/genetics/attackby(obj/item/W, mob/user)
+	if (istype(W,/obj/item/genetics_injector/dna_activator))
 		var/obj/item/genetics_injector/dna_activator/DNA = W
 		if (DNA.expended_properly)
 			user.drop_item()
@@ -82,7 +65,7 @@
 			user.drop_item()
 			qdel(DNA)
 		else
-			src.attack_hand(user)
+			src.Attackhand(user)
 	else
 		var/obj/item/device/pda2/PDA = W
 		if (istype(PDA) && PDA.ID_card)
@@ -91,11 +74,11 @@
 		var/obj/item/card/id/ID = W
 		if (istype(ID))
 			registered_id = ID.registered
-			user.show_text("You swipe the ID on [src]. You will now recieve a cut from gene booth sales.", "blue")
+			user.show_text("You swipe the ID on [src]. You will now receive a cut from gene booth sales.", "blue")
 			return
 
 		..()
-	return
+
 
 /obj/machinery/computer/genetics/proc/activated_bonus(mob/user as mob)
 	if (genResearch.time_discount < 0.75)
@@ -111,9 +94,6 @@
 		var/type_to_make = pick(concrete_typesof(/datum/dna_chromosome))
 		var/datum/dna_chromosome/C = new type_to_make(src)
 		src.saved_chromosomes += C
-
-/obj/machinery/computer/genetics/attack_ai(mob/user as mob)
-	return attack_hand(user)
 
 /obj/machinery/computer/genetics/proc/bioEffect_sanity_check(datum/bioEffect/E, occupant_check = 1)
 	var/mob/living/carbon/human/H = src.get_scan_subject()
@@ -242,6 +222,7 @@
 		return null
 	if (!src.scanner.occupant_preview)
 		src.scanner.occupant_preview = new()
+		src.scanner.occupant_preview.add_background("#092426")
 		src.scanner.update_occupant()
 	return src.scanner.occupant_preview
 
@@ -253,26 +234,28 @@
 	if (!src || !M || !ismob(M) || !action)
 		return
 
-	logTheThing("station", usr, M, "uses [src.name] on [constructTarget(M,"station")][M.bioHolder ? " (Genetic stability: [M.bioHolder.genetic_stability])" : ""] at [log_loc(src)]. Action: [action][BE && istype(BE, /datum/bioEffect/) ? ". Gene: [BE] (Stability impact: [BE.stability_loss])" : ""]")
+	logTheThing(LOG_STATION, usr, "uses [src.name] on [constructTarget(M,"station")][M.bioHolder ? " (Genetic stability: [M.bioHolder.genetic_stability])" : ""] at [log_loc(src)]. Action: [action][BE && istype(BE, /datum/bioEffect/) ? ". Gene: [BE] (Stability impact: [BE.stability_loss])" : ""]")
 	return
 
 /obj/machinery/computer/genetics/proc/log_maybe_cheater(var/who, var/action = "")
 	// this is used repeatedly so let's just make it a proc and stop repeating ourselves 50 times
 	message_admins("[key_name(who)] [action] (failed validation, maybe cheating)")
-	logTheThing("debug", who, null, "[action] but failed validation.")
-	logTheThing("diary", who, null, "[action] but failed validation.", "debug")
+	logTheThing(LOG_DEBUG, who, "[action] but failed validation.")
+	logTheThing(LOG_DIARY, who, "[action] but failed validation.", "debug")
 
 /obj/machinery/computer/genetics/ui_status(mob/user)
 	if (user in src.scanner)
 		return UI_UPDATE
-	return ..()
+	. = ..()
+	if (!src.allowed(user))
+		. = min(., UI_UPDATE)
 
 /obj/machinery/computer/genetics/proc/on_ui_interacted(mob/user, minor = FALSE)
 	src.add_fingerprint(user)
 	playsound(src.loc, 'sound/machines/keypress.ogg', minor ? 25 : 50, 1, -15)
 
 /obj/machinery/computer/genetics/proc/play_emitter_sound()
-	SPAWN_DBG(0)
+	SPAWN(0)
 		for (var/i = 0, i < 15 && (i < 3 || prob(genResearch.emitter_radiation)), i++)
 			switch (genResearch.emitter_radiation)
 				if(1 to 15)
@@ -372,7 +355,7 @@
 				I.name = "dna activator - [E.name]"
 				I.gene_to_activate = E.id
 				on_ui_interacted(ui.user)
-				playsound(src, "sound/machines/click.ogg", 50, 1)
+				playsound(src, 'sound/machines/click.ogg', 50, 1)
 		if("injector")
 			. = TRUE
 			if (!genResearch.isResearched(/datum/geneticsResearchEntry/injector))
@@ -397,7 +380,7 @@
 			copy_datum_vars(E, NEW)
 			I.BE = NEW
 			on_ui_interacted(ui.user)
-			playsound(src, "sound/machines/click.ogg", 50, 1)
+			playsound(src, 'sound/machines/click.ogg', 50, 1)
 		if("researchmut")
 			. = TRUE
 			var/datum/bioEffect/E = locate(params["ref"])
@@ -408,9 +391,8 @@
 					return
 				if (!(E in selected_record.dna_pool))
 					return
-			else
-				if (bioEffect_sanity_check(E))
-					return
+			else if (bioEffect_sanity_check(E))
+				return
 			genResearch.addResearch(E)
 			on_ui_interacted(ui.user)
 		if("advancepair")
@@ -529,6 +511,10 @@
 			if (!istype(H) || isprematureclone(H))
 				return
 			var/datum/bioEffect/mutantrace/BE = locate(params["ref"])
+			if (H.mutantrace && !H.mutantrace?.genetics_removable)
+				//this should probably be a UI notification but I'm not touching that code with a ten foot pole
+				scanner_alert(ui.user, "Unable to purge corrupt genotype.")
+				return
 			if (isnull(BE))
 				if (!isnull(H.mutantrace))
 					src.log_me(H, "mutantrace removed")
@@ -575,7 +561,7 @@
 			if (addEffect) // re-mutantify if we would have been able to anyway
 				subject.bioHolder.AddEffect(addEffect)
 			if (genResearch.emitter_radiation > 0)
-				subject.changeStatus("radiation", (genResearch.emitter_radiation*10), 3)
+				subject.take_radiation_dose((genResearch.emitter_radiation/75) * 0.5 SIEVERTS)
 			src.equipment_cooldown(GENETICS_EMITTERS, 1200)
 			scanner_alert(ui.user, "Genes successfully scrambled.")
 			on_ui_interacted(ui.user)
@@ -594,7 +580,7 @@
 				return
 			src.log_me(subject, "gene scrambled", E)
 			if (genResearch.emitter_radiation > 0)
-				subject.changeStatus("radiation", (genResearch.emitter_radiation*10), 3)
+				subject.take_radiation_dose((genResearch.emitter_radiation/75) * 0.1 SIEVERTS)
 			subject.bioHolder.RemovePoolEffect(E)
 			subject.bioHolder.AddRandomNewPoolEffect()
 			src.equipment_cooldown(GENETICS_EMITTERS, 600)
@@ -620,14 +606,14 @@
 			if (!E.can_make_injector)
 				return
 			genResearch.researchMaterial -= price
-			var/booth_effect_cost = text2num(params["price"])
+			var/booth_effect_cost = text2num_safe(params["price"])
 			booth_effect_cost = clamp(booth_effect_cost, 0, 999999)
 			var/booth_effect_desc = params["desc"]
 			booth_effect_desc = strip_html(booth_effect_desc, 280)
 			for_by_tcl(GB, /obj/machinery/genetics_booth)
 				var/already_has = 0
 				for (var/datum/geneboothproduct/P as anything in GB.offered_genes)
-					if (P.id == E.id)
+					if (P.id == E.id && P.name == E.name)
 						already_has = P
 						P.uses += 5
 						P.desc = booth_effect_desc
@@ -713,15 +699,19 @@
 				var/waste = (E.reclaim_mats + genResearch.researchMaterial) - reclamation_cap
 				if (waste >= E.reclaim_mats)
 					scanner_alert(ui.user, "Nothing would be gained from reclamation due to material capacity limit. Reclamation aborted.", error = TRUE)
-					playsound(src, "sound/machines/buzz-two.ogg", 50, 1, -10)
+					playsound(src, 'sound/machines/buzz-two.ogg', 50, 1, -10)
 					return
 				genResearch.researchMaterial = min(genResearch.researchMaterial + E.reclaim_mats, reclamation_cap)
 				if (waste > 0)
 					scanner_alert(ui.user, "Reclamation successful. [E.reclaim_mats] materials gained. Material count now at [genResearch.researchMaterial]. [waste] units of material wasted due to material capacity limit.")
 				else
 					scanner_alert(ui.user, "Reclamation successful. [E.reclaim_mats] materials gained. Material count now at [genResearch.researchMaterial].")
-				subject.bioHolder.RemovePoolEffect(E)
-			playsound(src, "sound/machines/pc_process.ogg", 50, 1)
+				subject.bioHolder.RemoveEffect(E.id)
+				E.owner = null
+				E.holder = null
+				saved_mutations -= E
+				qdel(E)
+			playsound(src, 'sound/machines/pc_process.ogg', 50, 1)
 			src.equipment_cooldown(GENETICS_RECLAIMER, 600)
 		if("save")
 			. = TRUE
@@ -861,42 +851,45 @@
 			scanner_alert(ui.user, "Decryption code \"[code]\" failed.", error = TRUE)
 			on_ui_interacted(ui.user)
 
-/obj/machinery/computer/genetics/proc/serialize_bioeffect_for_tgui(datum/bioEffect/BE, active = FALSE, potential = FALSE)
+/obj/machinery/computer/genetics/proc/serialize_bioeffect_for_tgui(datum/bioEffect/BE, active = FALSE, potential = FALSE, full_data = TRUE)
 	var/datum/bioEffect/GBE = BE.get_global_instance()
 	var/research_level = GBE.research_level
-
-	var/list/blockList = active || (research_level >= EFFECT_RESEARCH_ACTIVATED && !potential) ? GBE.dnaBlocks.blockList : BE.dnaBlocks.blockListCurr
-	if (!length(blockList)) // stable mutagen doesn't generate messed-up DNA for genes :(
-		BE.dnaBlocks.ModBlocks()
-		blockList = BE.dnaBlocks.blockListCurr
-
-	var/list/dna = list()
-	for (var/datum/basePair/BP as anything in blockList)
-		dna += list(list(
-			"upper" = BP.bpp1,
-			"lower" = BP.bpp2,
-			"style" = BP.style,
-			"marker" = BP.marker,
-		))
 
 	. = list(
 		"ref" = "\ref[BE]",
 		"name" = research_level >= EFFECT_RESEARCH_DONE ? BE.name \
 			: "Unknown Mutation",
-		"desc" = research_level >= EFFECT_RESEARCH_ACTIVATED && !isnull(BE.researched_desc) ? BE.researched_desc \
-			: research_level >= EFFECT_RESEARCH_DONE ? BE.desc \
-			: research_level >= EFFECT_RESEARCH_IN_PROGRESS ? "Research on this gene is currently in progress." \
-			: "Research on a non-active instance of this gene is required.",
-		"icon" = research_level >= EFFECT_RESEARCH_DONE ? BE.icon_state : "unknown",
-		"research" = research_level,
-		"time" = GBE.research_finish_time,
-		"canResearch" = BE.can_research,
-		"canInject" = BE.can_make_injector,
-		"canScramble" = BE.can_scramble,
-		"canReclaim" = BE.can_reclaim,
-		"spliceError" = src.to_splice?.check_apply(BE),
-		"dna" = dna,
-	)
+		"research" = research_level
+		)
+	// The following items are only applicable for currently selected gene or list of mutations
+	if(full_data)
+		var/list/blockList = active || (research_level >= EFFECT_RESEARCH_ACTIVATED && !potential) ? GBE.dnaBlocks.blockList : BE.dnaBlocks.blockListCurr
+		if (!length(blockList)) // stable mutagen doesn't generate messed-up DNA for genes :(
+			BE.dnaBlocks.ModBlocks()
+			blockList = BE.dnaBlocks.blockListCurr
+
+		var/list/dna = list()
+		for (var/datum/basePair/BP as anything in blockList)
+			dna += list(list(
+				"pair" = "[BP.bpp1][BP.bpp2]",
+				"style" = BP.style,
+				"marker" = BP.marker,
+			))
+
+		. += list(
+			"desc" = research_level >= EFFECT_RESEARCH_ACTIVATED && !isnull(BE.researched_desc) ? BE.researched_desc \
+				: research_level >= EFFECT_RESEARCH_DONE ? BE.desc \
+				: research_level >= EFFECT_RESEARCH_IN_PROGRESS ? "Research on this gene is currently in progress." \
+				: "Research on a non-active instance of this gene is required.",
+			"icon" = research_level >= EFFECT_RESEARCH_DONE ? BE.icon_state : "unknown",
+			"time" = GBE.research_finish_time,
+			"canResearch" = BE.can_research,
+			"canInject" = BE.can_make_injector,
+			"canScramble" = BE.can_scramble,
+			"canReclaim" = BE.can_reclaim,
+			"spliceError" = src.to_splice?.check_apply(BE),
+			"dna" = dna,
+			)
 
 /obj/machinery/computer/genetics/ui_data(mob/user)
 	var/mut_research_cost = genResearch.mut_research_cost
@@ -911,16 +904,11 @@
 	. = list(
 		"haveScanner" = !isnull(get_scanner()),
 		"materialCur" = genResearch.researchMaterial,
-		"materialMax" = genResearch.max_material,
 		"mutationsResearched" = genResearch.mutations_researched,
 		"autoDecryptors" = genResearch.lock_breakers,
 		"budget" = wagesystem.research_budget,
 		"costPerMaterial" = 50,
 		"researchCost" = mut_research_cost,
-		"boothCost" = genResearch.isResearched(/datum/geneticsResearchEntry/genebooth) ? genResearch.genebooth_cost : -1,
-		"injectorCost" = genResearch.isResearched(/datum/geneticsResearchEntry/injector) ? genResearch.injector_cost : -1,
-		"saveSlots" = genResearch.isResearched(/datum/geneticsResearchEntry/saver) ? genResearch.max_save_slots : 0,
-		"precisionEmitter" = genResearch.isResearched(/datum/geneticsResearchEntry/rad_precision),
 		"toSplice" = src.to_splice?.name,
 		"activeGene" = "\ref[src.currently_browsing]",
 		"scannerAlert" = src.last_scanner_alert,
@@ -933,16 +921,12 @@
 		"savedMutations" = list(),
 		"savedChromosomes" = list(),
 		"combining" = list(),
-		"mutantRaces" = list(list(
-			"name" = "Human",
-			"icon" = "template",
-			"ref" = "\ref[null]",
-		)),
 		"unlock" = null,
+		"allowed" = src.allowed(user),
 	)
 
-	for(var/datum/data/record/R as anything in data_core.medical)
-		var/datum/computer/file/genetics_scan/S = R.fields["dnasample"]
+	for(var/datum/db_record/R as anything in data_core.medical.records)
+		var/datum/computer/file/genetics_scan/S = R["dnasample"]
 		if (!istype(S))
 			continue
 		.["samples"] += list(list(
@@ -964,15 +948,6 @@
 	for (var/datum/bioEffect/BE as anything in combining)
 		.["combining"] += "\ref[BE]"
 
-	for (var/X as anything in bioEffectList)
-		var/datum/bioEffect/BE = bioEffectList[X]
-		if (BE.effectType == EFFECT_TYPE_MUTANTRACE && BE.research_level >= EFFECT_RESEARCH_DONE && BE.mutantrace_option)
-			.["mutantRaces"] += list(list(
-				"name" = BE.mutantrace_option,
-				"icon" = BE.icon_state,
-				"ref" = "\ref[BE]",
-			))
-
 	if (!src.decrypt_sanity_check())
 		.["unlock"] = list(
 			"length" = src.decrypt_gene.lockedDiff,
@@ -988,7 +963,7 @@
 			var/datum/bioEffect/GBE = BE.get_global_instance()
 			if (GBE.secret && !genResearch.see_secret)
 				continue
-			genes += list(serialize_bioeffect_for_tgui(BE))
+			genes += list(serialize_bioeffect_for_tgui(BE, full_data=(BE == src.currently_browsing)))
 		.["record"] = list(
 			"ref" = "\ref[selected_record]",
 			"name" = selected_record.subject_name,
@@ -1003,20 +978,21 @@
 		var/mob/living/carbon/human/H = subject
 		var/datum/character_preview/multiclient/P = src.get_occupant_preview()
 		P?.add_client(user?.client)
-		.["haveSubject"] = TRUE
-		.["subjectPreview"] = P?.preview_id
-		.["subjectName"] = subject.name
-		.["subjectStat"] = subject.stat
-		.["subjectHealth"] = subject.health / subject.max_health
-		.["subjectStability"] = subject.bioHolder.genetic_stability
-		.["subjectHuman"] = istype(H)
-		.["subjectBloodType"] = subject.bioHolder.bloodType
-		.["subjectAge"] = subject.bioHolder.age
-		.["subjectMutantRace"] = istype(H) ? capitalize(H.mutantrace?.name || "human") : "Unknown"
-		.["subjectCanAppearance"] = istype(H) && (!H.mutantrace || length(H.mutantrace.color_channel_names) || H.mutantrace.mutant_appearance_flags & (HAS_HUMAN_SKINTONE | HAS_HUMAN_EYES | HAS_HUMAN_HAIR))
-		.["subjectPremature"] = isprematureclone(subject)
-		.["subjectPotential"] = list()
-		.["subjectActive"] = list()
+		.["subject"] = list(
+			"preview" = P?.preview_id,
+			"name" = subject.name,
+			"stat" = subject.stat,
+			"health" = subject.health / subject.max_health,
+			"stability" = subject.bioHolder.genetic_stability,
+			"human" = istype(H),
+			"bloodType" = subject.bioHolder.bloodType,
+			"age" = subject.bioHolder.age,
+			"mutantRace" = istype(H) ? capitalize(H.mutantrace?.name || "human") : "Unknown",
+			"canAppearance" = istype(H) && (!H.mutantrace || length(H.mutantrace.color_channel_names) || H.mutantrace.mutant_appearance_flags & (HAS_HUMAN_SKINTONE | HAS_HUMAN_EYES | HAS_HUMAN_HAIR)),
+			"premature" = isprematureclone(subject),
+			"potential" = list(),
+			"active" = list()
+			)
 		for (var/D in subject.bioHolder.effectPool)
 			var/datum/bioEffect/BE = subject.bioHolder.effectPool[D]
 			var/datum/bioEffect/GBE = BE.get_global_instance()
@@ -1024,7 +1000,7 @@
 				continue
 			if (GBE.secret && !genResearch.see_secret)
 				continue
-			.["subjectPotential"] += list(serialize_bioeffect_for_tgui(BE, potential = TRUE))
+			.["subject"]["potential"] += list(serialize_bioeffect_for_tgui(BE, potential = TRUE, full_data=(BE == src.currently_browsing)))
 		for (var/D in subject.bioHolder.effects)
 			var/datum/bioEffect/BE = subject.bioHolder.effects[D]
 			var/datum/bioEffect/GBE = BE.get_global_instance()
@@ -1032,16 +1008,16 @@
 				continue
 			if (GBE.secret && !genResearch.see_secret)
 				continue
-			.["subjectActive"] += list(serialize_bioeffect_for_tgui(BE, active = TRUE))
+			.["subject"]["active"] += list(serialize_bioeffect_for_tgui(BE, active = TRUE, full_data=(BE == src.currently_browsing)))
 		if (src.modify_appearance)
 			.["modifyAppearance"] = src.modify_appearance.ui_data(user)
 		else
 			.["modifyAppearance"] = null
 	else
-		.["haveSubject"] = FALSE
+		.["subject"] = null
 
 	for(var/R as anything in genResearch.researchTreeTiered)
-		if (text2num(R) == 0)
+		if (text2num_safe(R) == 0)
 			continue
 		var/list/availTier = list()
 		var/list/finishedTier = list()
@@ -1060,19 +1036,16 @@
 
 				availTier += list(list(
 					"ref" = "\ref[C]",
-					"name" = C.name,
-					"desc" = C.desc,
 					"cost" = research_cost,
 					"time" = research_time,
 				))
 			else if (C.isResearched == 1)
 				finishedTier += list(list(
-					"name" = C.name,
-					"desc" = C.desc,
+					"ref" = "\ref[C]",
 				))
 
-		.["availableResearch"][text2num(R)] = availTier
-		.["finishedResearch"][text2num(R)] = finishedTier
+		.["availableResearch"][text2num_safe(R)] = availTier
+		.["finishedResearch"][text2num_safe(R)] = finishedTier
 
 	for(var/datum/geneticsResearchEntry/R as anything in genResearch.currentResearch)
 		.["currentResearch"] += list(list(
@@ -1104,16 +1077,44 @@
 		))
 
 /obj/machinery/computer/genetics/ui_static_data(mob/user)
-	var/to_send = list()
+	. = list("research"=list(),
+					"boothCost" = genResearch.isResearched(/datum/geneticsResearchEntry/genebooth) ? genResearch.genebooth_cost : -1,
+					"injectorCost" = genResearch.isResearched(/datum/geneticsResearchEntry/injector) ? genResearch.injector_cost : -1,
+					"saveSlots" = genResearch.isResearched(/datum/geneticsResearchEntry/saver) ? genResearch.max_save_slots : 0,
+					"precisionEmitter" = genResearch.isResearched(/datum/geneticsResearchEntry/rad_precision),
+					"materialMax" = genResearch.max_material,
+					"mutantRaces" = list(list(
+						"name" = "Human",
+						"icon" = "template",
+						"ref" = "\ref[null]",
+						)),
+					)
+
+	var/bioEffects = list()
 	for (var/id as anything in bioEffectList)
 		var/datum/bioEffect/BE = bioEffectList[id]
 		if (!BE.scanner_visibility || BE.research_level < EFFECT_RESEARCH_IN_PROGRESS)
 			continue
-		to_send += list(serialize_bioeffect_for_tgui(BE))
+		bioEffects += list(serialize_bioeffect_for_tgui(BE))
 
-	. = list(
-		"bioEffects" = to_send
-	)
+		if (BE.effectType == EFFECT_TYPE_MUTANTRACE && BE.research_level >= EFFECT_RESEARCH_DONE && BE.mutantrace_option)
+			.["mutantRaces"] += list(list(
+				"name" = BE.mutantrace_option,
+				"icon" = BE.icon_state,
+				"ref" = "\ref[BE]",
+			))
+	.["bioEffects"] = bioEffects
+
+	for(var/key as anything in genResearch.researchTree)
+		var/datum/geneticsResearchEntry/R = genResearch.researchTree[key]
+
+		//Only need name/description for available and completed research items
+		if ((R.isResearched == 1) || R.meetsRequirements())
+			.["research"]["\ref[R]"] = list(
+				"name" = R.name,
+				"desc" = R.desc
+				)
+
 
 /obj/machinery/computer/genetics/ui_interact(mob/user, datum/tgui/ui)
 	ui = tgui_process.try_update_ui(user, src, ui)

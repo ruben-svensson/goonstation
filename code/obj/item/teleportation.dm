@@ -9,11 +9,11 @@ HAND_TELE
 	icon = 'icons/obj/items/device.dmi'
 	icon_state = "locator"
 	var/temp = null
-	var/frequency = 1451
+	var/frequency = FREQ_TRACKING_IMPLANT
 	var/broadcasting = null
-	var/listening = 1.0
+	var/listening = 1
 	flags = FPRINT | TABLEPASS| CONDUCT
-	w_class = 2.0
+	w_class = W_CLASS_SMALL
 	item_state = "electronic"
 	throw_speed = 4
 	throw_range = 20
@@ -52,8 +52,6 @@ Frequency:
 				src.temp += "<B>Located Beacons:</B><BR>"
 
 				for_by_tcl(W, /obj/item/device/radio/beacon)
-					if (istype(src, /obj/item/locator/jones) && istype(W, /obj/item/device/radio/beacon/jones)) //For Jones City
-						src.temp += "Unknown Location-[W.x], [W.y], [W.z]<BR>"
 					if (W.frequency == src.frequency)
 						var/turf/tr = get_turf(W)
 						if (tr.z == sr.z && tr)
@@ -120,7 +118,8 @@ Frequency:
 	icon_state = "hand_tele"
 	item_state = "electronic"
 	throwforce = 5
-	w_class = 2.0
+	health = 5
+	w_class = W_CLASS_SMALL
 	throw_speed = 3
 	throw_range = 5
 	m_amt = 10000
@@ -132,6 +131,25 @@ Frequency:
 	var/turf/our_random_target = null
 	var/list/portals = list()
 	var/list/users = list() // List of people who've clicked on the hand tele and haven't resolved its UI yet
+	var/power_cost = 25
+
+	New()
+		..()
+		START_TRACKING
+		AddComponent(/datum/component/cell_holder, new/obj/item/ammo/power_cell, TRUE, 100, TRUE)
+
+	disposing()
+		STOP_TRACKING
+		..()
+
+	examine()
+		. = ..()
+		var/ret = list()
+		if (!(SEND_SIGNAL(src, COMSIG_CELL_CHECK_CHARGE, ret) & CELL_RETURNED_LIST))
+			. += "<span class='alert'>No power cell installed.</span>"
+		else
+			. += "The power cell has [ret["charge"]]/[ret["max_charge"]] PUs left! Each portal will use [src.power_cost] PUs."
+
 
 	// Port of the telegun improvements (Convair880).
 	attack_self(mob/user as mob)
@@ -155,8 +173,12 @@ Frequency:
 			else
 				return
 
-		if (src.portals.len > 2)
-			user.show_text("The hand teleporter is recharging!", "red")
+		if (!(SEND_SIGNAL(src, COMSIG_CELL_CHECK_CHARGE, src.power_cost) & CELL_SUFFICIENT_CHARGE))
+			user.show_text("[src] doesn't have sufficient cell charge to function!", "red")
+			return 0
+
+		if (src.portals.len >= 2)
+			user.show_text("The hand teleporter cannot sustain more than 2 portals!", "red")
 			return
 
 		var/turf/our_loc = get_turf(src)
@@ -194,11 +216,23 @@ Frequency:
 					if (0) // It's busted, Jim.
 						continue
 					if (1)
-						L["Tele at [get_area(Control)]: Locked in ([ismob(Control.locked.loc) ? "[Control.locked.loc.name]" : "[get_area(Control.locked)]"])"] += Control
+						var/index = "Tele at [get_area(Control)]: Locked in ([ismob(Control.locked.loc) ? "[Control.locked.loc.name]" : "[get_area(Control.locked)]"])"
+						if (L[index])
+							L[dedupe_index(L, index)] = Control
+						else
+							L[index] = Control
 					if (2)
-						L["Tele at [get_area(Control)]: *NOPOWER*"] += Control
+						var/index = "Tele at [get_area(Control)]: *NOPOWER*"
+						if (L[index])
+							L[dedupe_index(L, index)] = Control
+						else
+							L[index] = Control
 					if (3)
-						L["Tele at [get_area(Control)]: Inactive"] += Control
+						var/index = "Tele at [get_area(Control)]: Inactive"
+						if (L[index])
+							L[dedupe_index(L, index)] = Control
+						else
+							L[index] = Control
 			else
 				continue
 
@@ -209,7 +243,7 @@ Frequency:
 		users += user // We're about to show the UI
 		var/t1
 		if(user.client)
-			t1 = input(user, "Please select a teleporter to lock in on.", "Target Selection") in L
+			t1 = tgui_input_list(user, "Please select a teleporter to lock in on.", "Target Selection", L)
 		else
 			t1 = pick(L)
 		users -= user // We're done showing the UI
@@ -260,7 +294,7 @@ Frequency:
 			user.show_text("The [src.name] does not seem to work here!", "red")
 			return
 
-		var/obj/portal/P = unpool(/obj/portal)
+		var/obj/portal/P = new /obj/portal
 		P.set_loc(our_loc)
 		portals += P
 		if (!src.our_target)
@@ -269,11 +303,21 @@ Frequency:
 			P.target = src.our_target
 
 		user.visible_message("<span class='notice'>Portal opened.</span>")
-		logTheThing("station", user, null, "creates a hand tele portal (<b>Destination:</b> [src.our_target ? "[log_loc(src.our_target)]" : "*random coordinates*"]) at [log_loc(user)].")
+		SEND_SIGNAL(src, COMSIG_CELL_USE, src.power_cost)
+		logTheThing(LOG_STATION, user, "creates a hand tele portal (<b>Destination:</b> [src.our_target ? "[log_loc(src.our_target)]" : "*random coordinates*"]) at [log_loc(user)].")
 
-		SPAWN_DBG(30 SECONDS)
+		SPAWN(30 SECONDS)
 			if (P)
 				portals -= P
-				pool(P)
+				qdel(P)
 
 		return
+
+	proc/dedupe_index(list/L, index)
+		var/index_base = index
+		var/i = 2
+		while(L[index])
+			index = index_base
+			index += " [i]"
+			i++
+		return index
