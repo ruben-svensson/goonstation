@@ -107,9 +107,10 @@
 		else
 			..()
 
-	MouseDrop(var/mob/user) // because picking up the board is cool
+	mouse_drop(var/mob/user) // because picking up the board is cool
 		if((istype(user,/mob/living/carbon/human))&&(!user.stat)&&!(src in user.contents))
 			user.put_in_hand_or_drop(src)
+		return ..()
 
 	disposing() // close windows when you throw the board into the bin
 		..()
@@ -345,50 +346,52 @@
 	MouseDrop_T(atom/movable/O as mob|obj, var/mob/user) //handles piling pieces into a chessbox
 		if(istype(O,/obj/item/chessman))
 			user.visible_message("[user.name] scoops pieces into the [src.name]!")
-			SPAWN_DBG(0.05 SECONDS)
-				for(var/obj/item/chessman/piece in range(1, user))
-					if(piece.pieceAffinity != affinity)
-						continue
-					if(piece.loc == user)
-						user.u_equip(piece)
-					piece.set_loc(src)
-					adjustIcon()
-					sleep(0.05 SECONDS)
-					setExamine(src)
+			SPAWN(0.05 SECONDS)
+			for(var/obj/item/chessman/piece in range(1, user))
+				if(piece.pieceAffinity != affinity)
+					continue
+				if(piece.loc == user)
+					user.u_equip(piece)
+				piece.set_loc(src)
+				adjustIcon()
+				sleep(0.05 SECONDS)
+				setExamine(src)
+		return ..()
 
-	MouseDrop(over_object, src_location, over_location) // checks for targeting locations for piece ejection
+	mouse_drop(over_object, src_location, over_location) // checks for targeting locations for piece ejection
 		if(!istype(usr,/mob/living/))
 			boutput(usr, "<span class='alert'>Only living mobs are able to set the output target for [src].</span>")
-			return
+			return ..()
 
 		if(get_dist(over_object,src) > 1)
 			src.outputTarget = null
 			boutput(usr, "<span class='alert'>[src] is too far away from the target!</span>")
-			return
+			return ..()
 
 		if(get_dist(over_object,usr) > 1)
 			boutput(usr, "<span class='alert'>You are too far away from the target!</span>")
-			return
+			return ..()
 
 		if(istype(over_object,/obj/table/) || istype(over_object,/obj/rack/) || istype(over_object,/obj/item/chessboard))
 			var/obj/O = over_object
 			src.outputTarget = O.loc
 			boutput(usr, "<span class='notice'>You set [src] to output on top of [O]!</span>")
-			return
+			return ..()
 
 		if(istype(over_object,/turf) && !over_object:density)
 			src.outputTarget = over_object
 			boutput(usr, "<span class='notice'>You set [src] to output to [over_object]!</span>")
-			return
+			return ..()
 
 		if(istype(over_object,usr))
 			src.outputTarget = null
 			boutput(usr, "<span class='notice'>You will now pick up pieces from [src] normally!</span>")
-			return
+			return ..()
 
 		else
 			boutput(usr, "<span class='alert'>You can't use that as an output target.</span>")
-		return
+
+		return ..()
 
 	custom_suicide = 1
 	suicide(var/mob/user)
@@ -398,16 +401,16 @@
 		user.visible_message("<span class='alert'>[user] grabs a king and rook from the chess box, and stuffs a piece in each ear!</span>")
 		user.visible_message("<span class='alert'><b>[user] castles the king in [his_or_her(user)] ear! Oh god, there's a gaping hole in [his_or_her(user)] head!</b></span>")
 		playsound(user.loc, "sound/impact_sounds/Flesh_Stab_[rand(1,3)].ogg", 60, 1, 25)
-		SPAWN_DBG(5 DECI SECONDS) // just in case you start to regret your decision
+		SPAWN(5 DECI SECONDS) // just in case you start to regret your decision
 		user.take_brain_damage(75)
 		user.TakeDamage("head", 125)
 		take_bleeding_damage(user, null, 0, DAMAGE_STAB, 0)
 		bleed(user, 20, 20)
 		user.emote("scream")
 		user.drop_item(src)
-		SPAWN_DBG(50 SECONDS)
-			if(user)
-				user.suiciding = 0
+		SPAWN(50 SECONDS)
+		if(user)
+			user.suiciding = 0
 		return 1
 	proc/getOutputLocation() // returns a location to output tiles if the user's hands are full
 		if (!src.outputTarget)
