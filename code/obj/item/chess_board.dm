@@ -23,6 +23,38 @@
 			pieceDisplay.pixel_y = -(offsetY * (round(boardPos / 8)))
 			src.UpdateOverlays(pieceDisplay, "[boardPos]")
 
+
+	ui_interact(mob/user, datum/tgui/ui)
+		ui = tgui_process.try_update_ui(user, src, ui)
+		if(!ui)
+			ui = new(user, src, "ChessBoard")
+			ui.open()
+
+	ui_data(mob/user)
+		. = list()
+
+		.["pieceIcons"] = list(
+			"king" = icon2base64(icon('icons/obj/items/chess.dmi', "king")),
+			"queen" = icon2base64(icon('icons/obj/items/chess.dmi', "queen")),
+			"bishop" = icon2base64(icon('icons/obj/items/chess.dmi', "bishop")),
+			"knight" = icon2base64(icon('icons/obj/items/chess.dmi', "knight")),
+			"rook" = icon2base64(icon('icons/obj/items/chess.dmi', "rook")),
+			"pawn" = icon2base64(icon('icons/obj/items/chess.dmi', "pawn")),
+		)
+
+	ui_act(action, list/params, datum/tgui/ui, datum/ui_state/state)
+		. = ..()
+		if(.)
+			return
+
+	ui_close(mob/user)
+		. = ..()
+
+	ui_status(mob/user, datum/ui_state/state)
+		. = ..()
+		if(. <= UI_CLOSE || !IN_RANGE(src, user, 10))
+			return UI_CLOSE
+
 	New()
 		..()
 
@@ -95,6 +127,7 @@
 							return
 
 	attack_hand(var/mob/user) // open browser window when board is clicked
+		src.ui_interact(user)
 		if(!(user in src.openWindows) && istype(user,/mob/living/carbon/human) && !(src in user.contents))
 			src.openWindows.Add(user)
 			uiSetup(user)
