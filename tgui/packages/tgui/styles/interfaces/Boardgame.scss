@@ -12,6 +12,45 @@
   flex-grow: 1;
 }
 
+.boardgame__notations {
+}
+
+.boardgame__vnotation {
+}
+
+.boardgame__verticalnotations {
+  display: flex;
+  flex-direction: column;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  width: 20px;
+}
+
+.boardgame__verticalnotations > div {
+  display: flex;
+  text-align: center;
+  justify-content: center;
+  align-items: center;
+  padding: 4px;
+}
+
+.boardgame__horizontalnotations {
+  display: flex;
+  justify-content: space-around;
+  flex-direction: row;
+  margin-left: 30px;
+  margin-right: 30px;
+  padding-left: 24px;
+  padding-right: 24px;
+}
+
+.boardgame__horizontalnotations > div {
+  display: flex;
+  text-align: center;
+  justify-content: center;
+  align-items: center;
+}
+
 .boardgame__palette {
   display: flex;
   width: 30px;
@@ -72,21 +111,45 @@
 }
 
 .boardgame__checker {
-  background-color: blue;
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
 }
 
 .boardgame__checkertile {
-  width: 12.5%;
-  height: 12.5%;
+  //box-shadow: inset 0px 0px 0px 0px white;
+  //background-color: blue;
 }
 
-.boardgame__blacktile {
-  background-color: #b58863;
+.boardgame__checkertile img {
+  display: none;
 }
 
-.boardgame__whitetile {
-  background-color: #f0d9b5;
+.boardgame__checkertile:hover {
+  box-shadow: inset 0px 0px 0px 1px white;
+}
+
+.boardgame__tilenotation {
+  display: flex;
+  flex-direction: column;
+  color: black;
+  text-shadow: 0px 1px white;
+  font-size: 8px;
+}
+
+.boardgame__tilenotationx {
+  background-color: blue;
+
+  flex-grow: 1;
+  justify-content: center;
+}
+
+.boardgame__tilenotationy {
+  background-color: red;
+}
+.boardgame_hexagontile {
+  background: red;
+  width: 40px;
+  height: 40px;
+  clip-path: polygon(0% 25%, 0% 75%, 50% 100%, 100% 75%, 100% 25%, 50% 0%);
 }
