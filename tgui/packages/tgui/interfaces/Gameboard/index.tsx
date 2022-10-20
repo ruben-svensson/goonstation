@@ -59,7 +59,20 @@ const CheckerBoard = (_props, context) => {
 
           const isWhite = (x + y) % 2 === 0;
           const tileClass = isWhite ? 'boardgame__whitetile' : 'boardgame__blacktile';
-          return <Box key={i} className={classes(['boardgame__checkertile', tileClass])} />;
+
+          const widthPercentage = 100 / width;
+          const heightPercentage = 100 / height;
+
+          return (
+            <Box
+              key={i}
+              style={{
+                'width': `${widthPercentage}%`,
+                'height': `${heightPercentage}%`,
+              }}
+              className={classes(['boardgame__checkertile', tileClass])}
+            />
+          );
         })
       }
     </Flex.Item>
