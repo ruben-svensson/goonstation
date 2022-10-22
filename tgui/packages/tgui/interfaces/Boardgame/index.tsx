@@ -1,24 +1,46 @@
 declare const React;
 
 import { Window } from '../../layouts';
-import { Box, Button, Flex, Input, Knob, LabeledList } from '../../components';
+import { Box, Flex } from '../../components';
 import { classes } from 'common/react';
+import { useBackend, useLocalState } from '../../backend';
+import { fetchPieces, getPieceByTeam, TeamType } from './Pieces';
+import { PieceType } from './Pieces';
+import { Pattern } from './Patterns';
 
-import { useBackend } from '../../backend';
+import { TileSize, BoardgameData } from './types';
 
-import { fetchPieces, getPieceByTeam, getPiecesByGame } from './Pieces';
-
-type BoardgameData = {
-  boardInfo: {
-    name: string;
-    game: string;
-    width: number;
-    height: number;
+const getFirstTileDimensions = () => {
+  const firstTileRef = document.getElementsByClassName('boardgame__checkertile')[0];
+  return {
+    width: firstTileRef.clientWidth,
+    height: firstTileRef.clientHeight,
   };
-  styling: {
-    tileColour1: string;
-    tileColour2: string;
+};
+
+/**
+ * Returns the smallest size, if equal, returns 0
+ */
+const getSmallestTileSize = (tile: TileSize) => {
+  let dimensions: TileSize = {
+    width: 0,
+    height: 0,
   };
+
+  if (tile.width > tile.height) {
+    dimensions.height = tile.height;
+    dimensions.width = tile.height;
+  } else if (tile.width < tile.height) {
+    dimensions.width = tile.width;
+    dimensions.height = tile.width;
+  }
+  return dimensions;
+};
+
+type FloatingPieceType = {
+  piece: PieceType;
+  x: number;
+  y: number;
 };
 
 export const Boardgame = (_props, context) => {
@@ -29,22 +51,109 @@ export const Boardgame = (_props, context) => {
 
   let loc = window.location.pathname;
   let dir = loc.substring(0, loc.lastIndexOf('/'));
+
+  const getProperDimensions = () => {
+    const firstTile = getFirstTileDimensions();
+    const size = getSmallestTileSize(firstTile);
+
+    if (size.width === 0 && size.height === 0) return;
+
+    const additionalWidth = 48; // 48 is the width of the (notations + padding) * 2
+    const additionalHeight = 200; // 190 is the height of the titlebar + (notations + padding) * 2 + piece set
+
+    const desiredWidth = size.width * boardInfo.width + additionalWidth;
+    const desiredHeight = size.height * boardInfo.height + additionalHeight;
+
+    return {
+      width: desiredWidth,
+      height: desiredHeight,
+    };
+  };
+
+  const adjustWindowSize = () => {
+    const dimensions = getProperDimensions();
+
+    if (!dimensions) return; // Dimensions already good if 0
+
+    const { width, height } = dimensions;
+
+    Byond.winset(window.__windowId__, {
+      size: `${width}x${height}`,
+    });
+  };
+
   return (
-    <Window title={name || 'No name'} width={520} height={580}>
-      <Window.Content fitted className="boardgame__window">
-        <Box className="boardgame__panel" />
+    <Window title={'Test'} width={400} height={550}>
+      <Window.Content
+        onFocusIn={() => {
+          adjustWindowSize();
+        }}
+        onMouseMove={(e) => {
+          adjustWindowSize();
+        }}
+        fitted
+        className="boardgame__window">
+        <FloatingPiece />
+        <Box className="boardgame__debug" />
         <Notations direction={'horizontal'} />
         <Flex className="boardgame__board">
-          <Palette team={'Black'} />
           <Notations direction={'vertical'} />
-          <CheckerBoard />
+          <Pattern pattern={boardInfo.pattern} />
           <Notations direction={'vertical'} />
-          <Palette team={'White'} />
         </Flex>
         <Notations direction={'horizontal'} />
-        <Box className="boardgame__panel" />
+        <Box className="boardgame__piece-set-container">
+          <PieceSet game={'Chess'} team={'Black'} />
+          <PieceSet game={'Chess'} team={'White'} />
+        </Box>
       </Window.Content>
     </Window>
+  );
+};
+
+const FloatingPiece = (props, context) => {
+  const { act, data } = useBackend<BoardgameData>(context);
+
+  return <Box className="boardgame_floatingpiece" />;
+};
+
+// <PieceSet game={'Chess'} />
+type PieceSetProps = {
+  game: string;
+  team: TeamType;
+};
+
+const PieceSet = ({ game, team }: PieceSetProps, context) => {
+  const { act, data } = useBackend<BoardgameData>(context);
+  const { styling } = data;
+  const { tileColour1, tileColour2 } = styling;
+
+  const pieces = getPieceByTeam(team, game);
+
+  // convert so the fencode is the key and the piece is the value
+
+  return (
+    <Flex className="boardgame__piece-set">
+      {pieces.map((piece) => (
+        <Flex.Item className="boardgame__piece-set__piece" key={piece.name}>
+          <Piece piece={piece} />
+        </Flex.Item>
+      ))}
+    </Flex>
+  );
+};
+
+type PieceProps = {
+  piece: PieceType;
+};
+
+export const Piece = ({ piece }: PieceProps, context) => {
+  const { act, data } = useBackend<BoardgameData>(context);
+  const { name, game, image, team } = piece;
+  return (
+    <Box className="boardgame__piece">
+      <img src={image} />
+    </Box>
   );
 };
 
@@ -75,6 +184,7 @@ const Notations = ({ direction }: NotationsProps, context) => {
     <Flex.Item
       style={{
         'background-color': tileColour1,
+        'color': tileColour2,
       }}
       className={classes(['boardgame__notations', notationDirectionClass])}>
       {Array.from(Array(direction === 'vertical' ? height : width).keys()).map((i) => (
@@ -91,50 +201,7 @@ const Notations = ({ direction }: NotationsProps, context) => {
   );
 };
 
-const CheckerBoard = (_props, context) => {
-  const { act, data } = useBackend<BoardgameData>(context);
-  const { width, height } = data.boardInfo;
-  const { tileColour1, tileColour2 } = data.styling;
-
-  const pieces = getPiecesByGame('Chess');
-  const widthPercentage = 100 / width;
-  const heightPercentage = 100 / height;
-  return (
-    <Flex.Item
-      grow={1}
-      className="boardgame__checker"
-      style={{
-        'border': `4px solid ${tileColour2}`,
-      }}>
-      {
-        // Loop widthXheight
-        Array.from(Array(width * height).keys()).map((i) => {
-          const x = i % width;
-          const y = Math.floor(i / width);
-
-          const isWhite = (x + y) % 2 === 0;
-          const tileColour = isWhite ? tileColour1 : tileColour2;
-
-          return (
-            <Box
-              key={i}
-              style={{
-                'width': `${widthPercentage}%`,
-                'max-width': `${widthPercentage}%`,
-                'height': `${heightPercentage}%`,
-                'max-height': `${heightPercentage}%`,
-                'background-color': tileColour,
-              }}
-              className={classes(['boardgame__checkertile'])}>
-              <img src={pieces[(x + y) % (pieces.length - 1)].image} />
-            </Box>
-          );
-        })
-      }
-    </Flex.Item>
-  );
-};
-
+// <Piece piece={pieces[(x + y) % (pieces.length - 1)]} />
 type PaletteProps = {
   team: string;
 };
@@ -144,7 +211,7 @@ type PaletteProps = {
 const Palette = ({ team }: PaletteProps, context) => {
   const { act, data } = useBackend<BoardgameData>(context);
   const pieces = fetchPieces(team, 'Chess');
-  return (
+  /* return (
     <Flex.Item className="boardgame__palette">
       {
         // Fetch all the pieces for the team
@@ -160,7 +227,8 @@ const Palette = ({ team }: PaletteProps, context) => {
         <Box className="boardgame__palette-label">Palette</Box>
       </Box>
     </Flex.Item>
-  );
+  );*/
+  return <Flex.Item className="boardgame__palette" />;
 };
 
 const PalettePiece = (_props, context) => {

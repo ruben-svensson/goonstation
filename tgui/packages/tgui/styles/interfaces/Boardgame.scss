@@ -4,12 +4,68 @@
   flex-direction: column;
 }
 
+.boardgame__debug {
+  display: none;
+  position: fixed;
+  margin: 2px;
+  padding: 2px;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.boardgame_floatingpiece {
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+
 .boardgame__panel {
   height: 30px;
 }
 
 .boardgame__board {
   flex-grow: 1;
+}
+
+.boardgame__piece-set-container {
+  text-align: center;
+  background-color: rgb(177, 177, 177);
+  height: 120px;
+  padding: 4px;
+  overflow-x: scroll;
+  overflow-y: hidden;
+}
+
+.boardgame__piece-set {
+  justify-content: center;
+  align-items: center;
+}
+
+.boardgame__piece-set-vertical {
+  display: flex;
+  flex-direction: column;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  width: 20px;
+}
+.boardgame__piece-set-horizontal {
+  display: flex;
+  justify-content: space-around;
+  flex-direction: row;
+  margin-left: 30px;
+  margin-right: 30px;
+  padding-left: 24px;
+  padding-right: 24px;
+}
+.boardgame__piece-set-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  padding: 4px;
+  font-weight: bold;
+}
+
+.boardgame__piece-set__piece img {
 }
 
 .boardgame__notations {
@@ -38,8 +94,6 @@
   display: flex;
   justify-content: space-around;
   flex-direction: row;
-  margin-left: 30px;
-  margin-right: 30px;
   padding-left: 24px;
   padding-right: 24px;
 }
@@ -107,7 +161,6 @@
 
 .boardgame__palettepiece > img:hover {
   cursor: pointer;
-  border: 1px solid rgb(175, 175, 175);
 }
 
 .boardgame__checker {
@@ -117,16 +170,24 @@
 }
 
 .boardgame__checkertile {
-  //box-shadow: inset 0px 0px 0px 0px white;
-  //background-color: blue;
-}
-
-.boardgame__checkertile img {
-  display: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .boardgame__checkertile:hover {
-  box-shadow: inset 0px 0px 0px 1px white;
+}
+
+.boardgame__piece {
+  transition: 1s all;
+  padding: 5%;
+}
+
+.boardgame__piece > img {
+  cursor: pointer;
+  width: 100%;
+  height: auto;
+  max-height: 100%;
 }
 
 .boardgame__tilenotation {

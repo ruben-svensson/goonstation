@@ -6,14 +6,51 @@
 	layer = 2.9
 
 	var/game = "chess"
+	var/pattern = "checkerboard"
 
 	var/board_width = 8
 	var/board_height = 8
-
+	var/board = list() // single dimensional board
 	var/tgui_styling = list(
-		"tileColour1" = "#b58863",
-		"tileColour2" = "#f0d9b5",
+		"tileColour1" = "#f0d9b5",
+		"tileColour2" = "#b58863",
 	)
+
+
+	proc/generateEmptyBoard()
+
+		src.board = list()
+
+		// Generate empty board
+		for (var/i in 1 to board_height * board_width)
+			src.board += ""
+
+
+	proc/createPiece(var/fenCode, var/x, var/y)
+		var/index = (x * board_width) + y - 1
+		// return if index is out of bounds
+		if (index < 1 || index > board_height * board_width)
+			return
+		src.board[index] = fenCode
+
+	proc/movePiece(var/x1, var/y1, var/x2, var/y2)
+		var/index1 = (x1 * board_width) + y1 - 1
+		var/index2 = (x2 * board_width) + y2 - 1
+		// return if index is out of bounds
+		if (index1 < 1 || index1 > board_height * board_width)
+			return
+		if (index2 < 1 || index2 > board_height * board_width)
+			return
+		src.board[index2] = src.board[index1]
+		src.board[index1] = ""
+
+	proc/removePiece(var/x, var/y)
+		var/index = (x * board_width) + y - 1
+		// return if index is out of bounds
+		if (index < 1 || index > board_height * board_width)
+			return
+		src.board[index] = ""
+
 
 	ui_interact(mob/user, datum/tgui/ui)
 		ui = tgui_process.try_update_ui(user, src, ui)
@@ -26,16 +63,16 @@
 		.["boardInfo"] = list(
 			"name" = src.name,
 			"game" = src.game,
+			"pattern" = src.pattern,
 			"width" = src.board_width,
 			"height" = src.board_height,
 		)
 
 		.["styling"] = src.tgui_styling
 
-
-
 	ui_data(mob/user)
 		. = list()
+		.["board"] = src.board
 
 	ui_act(action, list/params, datum/tgui/ui, datum/ui_state/state)
 		. = ..()
@@ -72,7 +109,6 @@
 			)
 			..()
 
-
 	evilchess
 		name = "evil chess board"
 		desc = "It's a board for playing chess, but more evil!"
@@ -86,7 +122,6 @@
 			)
 			..()
 
-
-
 	New()
+		src.generateEmptyBoard()
 		..()
