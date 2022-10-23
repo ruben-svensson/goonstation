@@ -2,36 +2,40 @@
 
 import chessPieces from './chess';
 
-export type Piece = {
+export type TeamType = 'White' | 'Black';
+
+export type PieceType = {
   fenCode: string;
   name: string;
-  team: 'White' | 'Black';
+  team: TeamType;
   game: string;
   image: string;
 };
 
-const pieces: Piece[] = [];
+const pieces: PieceType[] = [];
 
 pieces.push(...chessPieces);
 
-export const getPieceByTeam = (team: string, game: string) => {
+export const getPiece = (fenCode: string, game: string) => {
+  return pieces.find((piece) => piece.fenCode === fenCode && piece.game === game);
+};
+
+export const getPiecesByTeam = (team: string, game: string): PieceType[] => {
   return pieces.filter((piece) => piece.team === team && piece.game === game);
 };
 
-export const getPiecesByGame = (game: string) => {
+export const getPiecesByGame = (game: string): PieceType[] => {
   return pieces.filter((piece) => piece.game === game);
 };
 
-/**
- *
- * Returns all pieces, use params to filter by team and/or game
- *
- * @param team
- * @param game
- * @returns
- */
+export const fenCodeRecordFromPieces = (pieces: PieceType[]): Record<string, PieceType> => {
+  return pieces.reduce((map, piece) => {
+    map[piece.fenCode] = piece;
+    return map;
+  }, {});
+};
 
-export const fetchPieces = (team?: string, game?: string) => {
+export const fetchPieces = (team?: string, game?: string): PieceType[] => {
   return pieces.filter((piece) => {
     if (team && game) {
       return piece.team === team && piece.game === game;
