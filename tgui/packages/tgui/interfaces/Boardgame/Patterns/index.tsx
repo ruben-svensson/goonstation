@@ -7,6 +7,7 @@ export type BoardPattern = 'checkerboard' | 'hexagon' | 'go';
 type PatternProps = {
   pattern: BoardPattern;
 };
+
 export const Pattern = ({ pattern }: PatternProps, context) => {
   const { act, data } = useBackend<BoardgameData>(context);
 

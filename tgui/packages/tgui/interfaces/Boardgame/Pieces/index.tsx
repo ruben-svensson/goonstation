@@ -16,7 +16,11 @@ const pieces: PieceType[] = [];
 
 pieces.push(...chessPieces);
 
-export const getPieceByTeam = (team: string, game: string): PieceType[] => {
+export const getPiece = (fenCode: string, game: string) => {
+  return pieces.find((piece) => piece.fenCode === fenCode && piece.game === game);
+};
+
+export const getPiecesByTeam = (team: string, game: string): PieceType[] => {
   return pieces.filter((piece) => piece.team === team && piece.game === game);
 };
 

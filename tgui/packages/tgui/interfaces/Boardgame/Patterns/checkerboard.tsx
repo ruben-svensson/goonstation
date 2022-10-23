@@ -10,6 +10,7 @@ import { Piece } from '..';
 export const CheckerBoard = (_props, context) => {
   const { act, data } = useBackend<BoardgameData>(context);
   const { width, height } = data.boardInfo;
+  const { currentUser } = data;
   const { board } = data;
   const { tileColour1, tileColour2 } = data.styling;
 
@@ -39,15 +40,27 @@ export const CheckerBoard = (_props, context) => {
           return (
             <Box
               key={i}
+              onMouseUp={() => {
+                act('pawnPlace', {
+                  ckey: 'guest3464356586',
+                  x: x,
+                  y: y,
+                });
+                act('pawnDeselect', {
+                  ckey: 'guest3464356586',
+                });
+              }}
               style={{
                 'width': `${widthPercentage}%`,
                 'height': `${heightPercentage}%`,
+                'max-width': `${widthPercentage}%`,
+                'max-height': `${heightPercentage}%`,
                 'background-color': tileColour,
               }}
               className={classes(['boardgame__checkertile'])}>
               {
                 // If there is a piece on this tile, render it
-                code !== '' && <Piece piece={codes[code]} />
+                code !== '' && <Piece piece={codes[code]} position={{ x: x, y: y }} isSetPiece={false} />
               }
             </Box>
           );

@@ -5,6 +5,7 @@ export type BoardgameData = {
     name: string;
     game: string;
     pattern: BoardPattern;
+    startingPositions: StartingPosition[];
     width: number;
     height: number;
   };
@@ -13,6 +14,26 @@ export type BoardgameData = {
     tileColour2: string;
   };
   board: string[];
+
+  users: User[];
+  currentUser: User;
+};
+
+export type StartingPosition = {
+  name: string;
+  fen: string;
+};
+
+export type User = {
+  ckey: string;
+  name: string;
+  mouseX: number;
+  mouseY: number;
+  selected?: {
+    code: string;
+    team: string;
+    game: string;
+  };
 };
 
 export type TileSize = {
