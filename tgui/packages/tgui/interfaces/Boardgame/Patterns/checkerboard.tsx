@@ -42,12 +42,12 @@ export const CheckerBoard = (_props, context) => {
               key={i}
               onMouseUp={() => {
                 act('pawnPlace', {
-                  ckey: 'guest3464356586',
+                  ckey: currentUser,
                   x: x,
                   y: y,
                 });
                 act('pawnDeselect', {
-                  ckey: 'guest3464356586',
+                  ckey: currentUser,
                 });
               }}
               style={{
