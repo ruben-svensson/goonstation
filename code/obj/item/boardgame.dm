@@ -210,6 +210,7 @@
 
 		New()
 			..()
+			src.setupEmptyStartingPosition()
 			src.starting_positions += list(
 				"name" = "Standard Position",
 				"fen" = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
@@ -247,6 +248,4 @@
 	New()
 		..()
 		src.generateEmptyBoard()
-
-		src.setupEmptyStartingPosition()
 

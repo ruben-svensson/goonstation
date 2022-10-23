@@ -1,7 +1,7 @@
 declare const React;
 
 import { Window } from '../../layouts';
-import { Box, Button, Divider, Dropdown, Flex, Input, Modal, TextArea } from '../../components';
+import { Box, Button, Dimmer, Divider, Dropdown, Flex, Input, Modal, TextArea } from '../../components';
 import { classes } from 'common/react';
 import { useBackend, useLocalState } from '../../backend';
 import { getPiece, getPiecesByTeam, TeamType } from './Pieces';
@@ -89,10 +89,10 @@ export const Boardgame = (_props, context) => {
   return (
     <Window title={name} width={400} height={550}>
       {configModalOpen && (
-        <Modal className="boardgame__configmodal">
+        <Dimmer full className="boardgame__configmodal">
           <Button onClick={() => setConfigModalOpen(false)}>Close</Button>
           <FenCodeSettings />
-        </Modal>
+        </Dimmer>
       )}
       <Window.Content
         onFocusIn={() => {
@@ -108,12 +108,16 @@ export const Boardgame = (_props, context) => {
             });
           }
         }}
+        onMouseUp={() => {
+          act('pawnDeselect', {
+            ckey: currentUser,
+          });
+        }}
         fitted
         className="boardgame__window">
         <FloatingPieces />
         <Box className="boardgame__debug">
           <h3>{currentUser}</h3>
-          <span>users: {JSON.stringify(data.users)}</span>
         </Box>
         <Notations direction={'horizontal'} />
         <Flex className="boardgame__board">
@@ -148,6 +152,7 @@ const FenCodeSettings = (_props, context) => {
   return (
     <Flex direction={'column'} className="boardgame__settings">
       <h2>Apply FEN</h2>
+      {JSON.stringify(startingPositions)}
       <Divider />
       <span>Presets</span>
       <Dropdown
@@ -172,7 +177,16 @@ const FenCodeSettings = (_props, context) => {
         }}
       />
       <Flex>
-        <Flex.Item grow={1}>Custom</Flex.Item>
+        <Button
+          disabled={!fenCode || fenCode.length === 0}
+          grow={1}
+          content={'Get from board'}
+          onClick={() => {
+            act('applyFen', {
+              fen: fenCode,
+            });
+          }}
+        />
         <Button
           disabled={!fenCode || fenCode.length === 0}
           grow={1}
@@ -183,6 +197,8 @@ const FenCodeSettings = (_props, context) => {
             });
           }}
         />
+        <Button.Checkbox />
+        <span>Swap teams</span>
       </Flex>
     </Flex>
   );
