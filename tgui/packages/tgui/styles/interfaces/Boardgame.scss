@@ -1,3 +1,5 @@
+@use '../base.scss';
+
 .boardgame__window {
   height: 100%;
   display: flex;
@@ -5,15 +7,11 @@
 }
 
 .boardgame__debug {
+  display: none;
   position: fixed;
   margin: 2px;
   padding: 2px;
   background-color: rgba(0, 0, 0, 0.5);
-}
-
-.boardgame__menubutton {
-  position: absolute;
-  float: right;
 }
 
 .boardgame__configmodal {
@@ -28,7 +26,8 @@
 }
 
 .boardgame__settings {
-  width: 100%;
+  padding: 20px;
+  background-color: base.$color-bg;
 }
 
 .boardgame__settings-input {
@@ -72,11 +71,18 @@
   flex-grow: 1;
 }
 
-.boardgame__piece-set-container {
-  text-align: center;
-  background-color: rgb(177, 177, 177);
+.boardgame__piece-set-wrapper {
   height: 120px;
   padding: 4px;
+  background-color: rgb(177, 177, 177);
+}
+
+.boardgame__menubutton {
+}
+
+.boardgame__piece-set-container {
+  text-align: center;
+
   overflow-x: scroll;
   overflow-y: hidden;
 }
