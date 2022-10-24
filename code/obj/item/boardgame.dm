@@ -10,6 +10,9 @@
 
 	var/board_width = 8
 	var/board_height = 8
+
+	var/draw_custom_icon = true
+
 	var/board = list() // single dimensional board
 	var/tgui_styling = list(
 		"tileColour1" = "#f0d9b5",
@@ -35,12 +38,9 @@
 		var/fen = ""
 		for(var/y in 1 to src.board_height)
 			fen += "[src.board_width]/"
-		fen = copytext(fen, 1, length(fen) - 1) // Remove the last slash
+		fen = copytext(fen, 1, length(fen)) // Remove the last slash
 
-		src.starting_positions += list(
-			"name" = "Empty",
-			"fen" = fen
-		)
+		src.starting_positions["Empty"] = fen
 
 
 	proc/applyFen(fen)
@@ -211,15 +211,12 @@
 		New()
 			..()
 			src.setupEmptyStartingPosition()
-			src.starting_positions += list(
-				"name" = "Standard Position",
-				"fen" = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
-			)
+			src.starting_positions["Starting Position"] = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
+
 
 	chesshor
 		name = "chess board horizontal"
 		desc = "It's a board for playing chess, but more horizontally!"
-		icon_state = "chessboard"
 		board_height = 6
 		board_width = 12
 
@@ -248,4 +245,21 @@
 	New()
 		..()
 		src.generateEmptyBoard()
+
+		if(src.draw_custom_icon)
+			var/icon/custom_icon = icon(src.icon, icon_state = "base")
+			// Draw checkered pattern
+			// using custom_icon.DrawBox(rgb(r,g,b), x, y, w, y)
+			// make each square 2 pixels wide and height
+			for (var/x in 1 to src.board_width)
+				for (var/y in 1 to src.board_height)
+					var/color1rgb = hex2num(src.tgui_styling["tileColour1"])
+					var/color2rgb = hex2num(src.tgui_styling["tileColour2"])
+
+					var/r = (x + y) % 2 ? color1rgb >> 16 & 0xFF : color2rgb >> 16 & 0xFF
+					var/g = (x + y) % 2 ? color1rgb >> 8 & 0xFF : color2rgb >> 8 & 0xFF
+					var/b = (x + y) % 2 ? color1rgb & 0xFF : color2rgb & 0xFF
+					custom_icon.DrawBox(rgb(r,g,b), x * 2, y * 2, 2, 2)
+
+			src.icon = custom_icon
 
