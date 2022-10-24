@@ -9,12 +9,12 @@ import { Piece } from '..';
 
 export const CheckerBoard = (_props, context) => {
   const { act, data } = useBackend<BoardgameData>(context);
-  const { width, height } = data.boardInfo;
+  const { width, height, game } = data.boardInfo;
   const { currentUser } = data;
   const { board } = data;
   const { tileColour1, tileColour2 } = data.styling;
 
-  const pieces = getPiecesByGame('Chess');
+  const pieces = getPiecesByGame(game);
   const codes = fenCodeRecordFromPieces(pieces);
 
   const widthPercentage = 100 / width;

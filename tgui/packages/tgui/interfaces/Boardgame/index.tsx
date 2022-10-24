@@ -1,10 +1,10 @@
 declare const React;
 
 import { Window } from '../../layouts';
-import { Box, Button, Dimmer, Divider, Dropdown, Flex, Input, Modal, TextArea } from '../../components';
+import { Box, Button, Dimmer, Divider, Dropdown, Flex, Icon, Input, Modal, TextArea } from '../../components';
 import { classes } from 'common/react';
 import { useBackend, useLocalState } from '../../backend';
-import { getPiece, getPiecesByTeam, TeamType } from './Pieces';
+import { getPiece, getPiecesByTeam, getPiecesByGame, TeamType } from './Pieces';
 import { PieceType } from './Pieces';
 import { Pattern } from './Patterns';
 
@@ -46,10 +46,9 @@ type FloatingPieceType = {
 export const Boardgame = (_props, context) => {
   const { act, data } = useBackend<BoardgameData>(context);
 
-  const { boardInfo, styling } = data;
-  const { name } = boardInfo;
+  const { boardInfo } = data;
+  const { name, game } = boardInfo;
   const { currentUser } = data;
-  const { users } = data;
 
   let loc = window.location.pathname;
   let dir = loc.substring(0, loc.lastIndexOf('/'));
@@ -90,8 +89,10 @@ export const Boardgame = (_props, context) => {
     <Window title={name} width={400} height={550}>
       {configModalOpen && (
         <Dimmer full className="boardgame__configmodal">
-          <Button onClick={() => setConfigModalOpen(false)}>Close</Button>
-          <FenCodeSettings />
+          <Box className="boardgame__settings">
+            <Button onClick={() => setConfigModalOpen(false)}>Close</Button>
+            <FenCodeSettings />
+          </Box>
         </Dimmer>
       )}
       <Window.Content
@@ -102,7 +103,7 @@ export const Boardgame = (_props, context) => {
           adjustWindowSize();
           if (currentUser) {
             act('mouseMove', {
-              ckey: 'guest3464356586',
+              ckey: currentUser,
               x: e.clientX,
               y: e.clientY,
             });
@@ -127,11 +128,15 @@ export const Boardgame = (_props, context) => {
         </Flex>
         <Notations direction={'horizontal'} />
 
-        <Box className="boardgame__piece-set-container">
-          <Button className="boardgame__menubutton" icon={'cog'} onClick={() => setConfigModalOpen(true)} />
-          <PieceSet game={'Chess'} team={'Black'} />
-          <PieceSet game={'Chess'} team={'White'} />
-        </Box>
+        <Flex className="boardgame__piece-set-wrapper">
+          <Box>
+            <Button icon={'cog'} className="boardgame__menubutton" onClick={() => setConfigModalOpen(true)} />
+          </Box>
+          <Flex.Item className="boardgame__piece-set-container" grow={1}>
+            <PieceSet game={game} team={'Black'} />
+            <PieceSet game={game} team={'White'} />
+          </Flex.Item>
+        </Flex>
       </Window.Content>
     </Window>
   );
@@ -139,30 +144,137 @@ export const Boardgame = (_props, context) => {
 
 const FenCodeSettings = (_props, context) => {
   const { act, data } = useBackend<BoardgameData>(context);
-  const { startingPositions } = data.boardInfo;
-  const { width, height } = data.boardInfo;
+  const { startingPositions } = data.boardInfo; // Key value pairs of board name and starting position
+  const { width, height, game } = data.boardInfo;
+  const { board } = data;
+
+  const [disabled, setDisabled] = useLocalState(context, 'disabled', true);
+  const startingPositionNames = Object.keys(startingPositions);
+
+  // Set fencode to the first starting position as default
   const [fenCode, setFenCode] = useLocalState(context, 'fenCode', '');
 
-  const isFenCodeValid = (fenCode: string) => {
-    const cleanFenCode = fenCode.replace(/\s/g, '');
+  const convertBoardToFenCode = () => {
+    // Convert board to fen code
+    // Example code: rnbqkbnr/ppp3pp/8/8/8/8/PPP3PP/RNBQKBNR
+    // the board is single array of 64 elements, each element is a piece or "" if empty
+    // a new row is represented by a slash
+    // add the char at the current index to the fenCode string
 
-    return cleanFenCode.length > 0 && fenCode.length === width * height;
+    let fenCode = '';
+    let emptyCount = 0;
+
+    for (let i = 0; i < board.length; i++) {
+      const piece = board[i];
+      if (piece) {
+        if (emptyCount > 0) {
+          fenCode += emptyCount;
+          emptyCount = 0;
+        }
+        fenCode += piece;
+      } else {
+        emptyCount++;
+      }
+
+      if (i % width === width - 1) {
+        if (emptyCount > 0) {
+          fenCode += emptyCount;
+          emptyCount = 0;
+        }
+        if (i !== board.length - 1) {
+          fenCode += '/';
+        }
+      }
+    }
+
+    setFenCode(fenCode);
   };
 
+  const getFenCodeLength = () => {
+    // Check if the fen code is valid
+    // loop though fenCode, if the fenLength ends with width * height then it is valid
+    // ignore slashes, the number at index adds to the length its self
+
+    let fenLength = 0;
+
+    for (let i = 0; i < fenCode.length; i++) {
+      const char: string = fenCode[i];
+
+      if (char === '/') continue;
+
+      if (isNaN(parseInt(char, 10))) {
+        fenLength++;
+      }
+
+      if (!isNaN(parseInt(char, 10))) {
+        fenLength += parseInt(char, 10);
+      }
+    }
+
+    return fenLength;
+  };
+
+  const lengthValid = () => {
+    const length = getFenCodeLength();
+    if (length !== width * height) {
+      return false;
+    }
+    return true;
+  };
+
+  const slashesValid = () => {
+    // Count the number of slashes in the fen code
+    // if the number of slashes is not equal to the height - 1 then it is invalid
+
+    let slashCount = 0;
+
+    for (let i = 0; i < fenCode.length; i++) {
+      const char: string = fenCode[i];
+
+      if (char === '/') {
+        slashCount++;
+      }
+    }
+
+    if (slashCount !== height - 1) {
+      return false;
+    }
+
+    return true;
+  };
+
+  const charactersValid = () => {
+    // Check if all the letters are inlcuded in the piece array
+    // if not then it is invalid
+    const pieces = getPiecesByGame(game).map((piece) => piece.fenCode);
+
+    for (let i = 0; i < fenCode.length; i++) {
+      const char: string = fenCode[i];
+      // If char is a is not a number or a slash then it is a piece
+      // Check if the piece is in the pieces array
+
+      if (isNaN(parseInt(char, 10)) && char !== '/') {
+        if (!pieces.includes(char)) {
+          return false;
+        }
+      }
+    }
+    return true;
+  };
+
+  const allValid = lengthValid() && slashesValid() && charactersValid();
+
   return (
-    <Flex direction={'column'} className="boardgame__settings">
+    <Flex direction={'column'}>
       <h2>Apply FEN</h2>
-      {JSON.stringify(startingPositions)}
       <Divider />
       <span>Presets</span>
       <Dropdown
         style={{ 'width': '100%' }}
         selected={'Empty'}
-        options={['Empty', 'Starting Position']}
+        options={startingPositionNames}
         onSelected={(value) => {
-          const selectedOption = startingPositions.find((option) => option.name === value);
-          if (!selectedOption) return;
-          setFenCode(selectedOption.fen);
+          setFenCode(startingPositions[value]);
         }}
       />
       <Divider />
@@ -178,17 +290,14 @@ const FenCodeSettings = (_props, context) => {
       />
       <Flex>
         <Button
-          disabled={!fenCode || fenCode.length === 0}
           grow={1}
           content={'Get from board'}
           onClick={() => {
-            act('applyFen', {
-              fen: fenCode,
-            });
+            convertBoardToFenCode();
           }}
         />
         <Button
-          disabled={!fenCode || fenCode.length === 0}
+          disabled={!allValid}
           grow={1}
           content={'Apply'}
           onClick={() => {
@@ -197,8 +306,27 @@ const FenCodeSettings = (_props, context) => {
             });
           }}
         />
-        <Button.Checkbox />
-        <span>Swap teams</span>
+        <Button
+          disabled={!allValid}
+          grow={1}
+          content={'Swap teams'}
+          onClick={() => {
+            // Swap between big and small letters in the fen code
+            // Example: Test becomes tEST
+            const swappedFenCode = fenCode
+              .split('')
+              .map((char) => {
+                if (char === char.toUpperCase()) {
+                  return char.toLowerCase();
+                } else {
+                  return char.toUpperCase();
+                }
+              })
+              .join('');
+
+            setFenCode(swappedFenCode);
+          }}
+        />
       </Flex>
     </Flex>
   );
@@ -251,7 +379,6 @@ const FloatingPiece = ({ user, piece, x, y }: FloatingPieceProps, context) => {
   );
 };
 
-// <PieceSet game={'Chess'} />
 type PieceSetProps = {
   game: string;
   team: TeamType;

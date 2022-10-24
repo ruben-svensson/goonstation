@@ -5,7 +5,7 @@ export type BoardgameData = {
     name: string;
     game: string;
     pattern: BoardPattern;
-    startingPositions: StartingPosition[];
+    startingPositions: { [key: string]: string };
     width: number;
     height: number;
   };
