@@ -263,3 +263,31 @@
 
 			src.icon = custom_icon
 
+/obj/item/boardgame_clock
+	name = "board game clock"
+	desc = "A set of clocks used to track time for two player board games. Fancy!"
+	icon = 'icons/obj/items/gameboard.dmi'
+	icon_state = "chessclock"
+
+	ui_interact(mob/user, datum/tgui/ui)
+		ui = tgui_process.try_update_ui(user, src, ui)
+		if(!ui)
+			ui = new(user, src, "Gameclock")
+			ui.open()
+
+	ui_data(mob/user)
+		. = list(
+		)
+
+	ui_act(action, params)
+
+	mouse_drop(var/mob/user)
+		if((istype(user,/mob/living/carbon/human))&&(!user.stat)&&!(src in user.contents))
+			user.put_in_hand_or_drop(src)
+		return ..()
+
+	attack_hand(var/mob/user)
+		src.ui_interact(user)
+
+	attack_self(var/mob/user)
+		src.ui_interact(user)

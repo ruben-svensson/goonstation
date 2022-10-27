@@ -1,0 +1,36 @@
+@use '../base.scss';
+
+.gameclock__side {
+  padding: 8px;
+}
+
+.gameclock__timebutton {
+  width: 100%;
+  height: 40px;
+  margin: 2px;
+}
+
+.gameclock__timebutton > i {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+.gameclock__swap {
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+.gameclock__swapbutton {
+  width: 30px;
+  height: 30px;
+  margin: 6px;
+}
+
+.gameclock__swapbutton > i {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
