@@ -414,33 +414,21 @@ export const Piece = ({ piece, isSetPiece, position }: PieceProps, context) => {
   const { act, data } = useBackend<BoardgameData>(context);
   const { currentUser } = data;
   const { fenCode, name, game, image, team } = piece;
-  const { x, y } = position || { x: 0, y: 0 }; // Default to 0,0 if no position is provided
+  const { x, y } = position || { x: -1, y: -1 }; // Default to 0,0 if no position is provided
 
   return (
     <Box className="boardgame__piece">
+      <span>{name}</span>
       <img
         onMouseDown={() => {
-          if (isSetPiece) {
-            act('pawnSelect', {
-              ckey: currentUser,
-              pCode: fenCode,
-              pTeam: team,
-              pGame: game,
-            });
-          } else {
-            act('pawnSelect', {
-              ckey: currentUser,
-              pCode: fenCode,
-              pTeam: team,
-              pGame: game,
-            });
-
-            act('pawnRemove', {
-              ckey: currentUser,
-              x,
-              y,
-            });
-          }
+          act('pawnSelect', {
+            ckey: currentUser,
+            pCode: fenCode,
+            pTeam: team,
+            pGame: game,
+            x: x,
+            y: y,
+          });
         }}
         src={image}
       />

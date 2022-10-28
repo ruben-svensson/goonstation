@@ -8,15 +8,21 @@
 	var/game = "chess"
 	var/pattern = "checkerboard"
 
+
 	var/board_width = 8
 	var/board_height = 8
 
-	var/draw_custom_icon = true
+	var/icon/custom_board = null
+	/// If true, the board will be drawn with a checkerboard pattern automatically
+	/// If false, the board will be drawn with the icon provided
+	var/draw_custom_icon = TRUE
 
 	var/board = list() // single dimensional board
-	var/tgui_styling = list(
-		"tileColour1" = "#f0d9b5",
-		"tileColour2" = "#b58863",
+
+	/// Apply custom styling, matches both in dm and tgui releated code
+	var/styling = list(
+		"tileColour1" = rgb(255, 224, 175),
+		"tileColour2" = rgb(181,136,99),
 	)
 
 	var/starting_positions = list()
@@ -25,12 +31,19 @@
 	// also track pawns they have selected and moving
 	var/active_users = list()
 
+	/**
+	 * Removes all the pieces from the board
+	 */
 	proc/generateEmptyBoard()
 		src.board = list()
 		// Generate empty board
 		for (var/i in 1 to board_height * board_width)
 			src.board += ""
 
+	/**
+	 * Generates an empty starting position for any sized board
+	 * with no pieces on it. Works like a clear board
+	 */
 	proc/setupEmptyStartingPosition()
 		// Automatically generate preset for an empty board
 		// Example of a 8x8 board
@@ -42,10 +55,11 @@
 
 		src.starting_positions["Empty"] = fen
 
-
+	/**
+	 * Applies Forsyth-Edwards Notation (FEN) to the board
+	 * FEN is a standard notation for describing a particular board position of a chess game.
+	 */
 	proc/applyFen(fen)
-		// Example code: rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR
-		// Remove all the slashes, replace numbers with x number of empty spaces
 		src.board = list()
 		var/filtered_fen = replacetext(fen, "/", "")
 		for (var/char in splittext(filtered_fen, ""))
@@ -55,8 +69,9 @@
 			else
 				src.board += char
 
+		src.drawBoardIcon()
+
 	proc/createPiece(var/fenCode, var/x, var/y)
-		// Convert 2d coordinates to 1d, array starts at 1
 		var/index = (y - 1) * board_width + x
 		// return if index is out of bounds
 		if (index < 1 || index > board_height * board_width)
@@ -80,6 +95,7 @@
 		if (index < 1 || index > board_height * board_width)
 			return
 		src.board[index] = ""
+		src.drawBoardIcon()
 
 	proc/selectPawn(ckey, pCode, pTeam, pGame)
 		src.active_users[ckey]["selected"] = list(
@@ -96,7 +112,67 @@
 			return
 		var/pawn = src.active_users[ckey]["selected"]
 		src.createPiece(pawn["code"], x, y)
+		src.drawBoardIcon()
 		playsound(src.loc, 'sound/impact_sounds/Wood_Hit_Small_1.ogg', 50, 1)
+
+	proc/drawBoardIcon()
+		if(!draw_custom_icon) return
+
+		var/board_padding = 4
+		var/width = (board_width * 3) + board_padding
+		var/height = (board_height * 3) + board_padding
+
+		src.bound_width = width
+		src.bound_height = height
+
+		src.custom_board = icon(src.icon, icon_state = "base")
+		src.custom_board.Crop(1, 1, width, height)
+
+		var/color1rgb = styling["tileColour1"]
+		var/color2rgb = styling["tileColour2"]
+
+		// Draw the background for the board
+		var/list/RGB = rgb2num(color1rgb)
+		var/darker = 0.9
+		var/darkercolor1 = rgb(RGB[1] * darker, RGB[2] * darker, RGB[3] * darker)
+
+		src.custom_board.DrawBox(darkercolor1, 0, 0, width, height)
+
+		//reverse for (var/y in 1 to board_height)
+
+		for (var/x in 1 to board_width)
+			for (var/y in 1 to board_height)
+				var/index = (y - 1) * board_width + x
+				var/letter = src.board[index]
+
+				// DrawBox uses x1, y1, x2, y2, each tile should be 2x2
+
+				var/tile_size = 3
+
+				var/tile_x1 = (x) * tile_size
+				var/tile_y1 = (board_height - y + 1) * tile_size
+				var/tile_x2 = tile_x1 + tile_size
+				var/tile_y2 = tile_y1 + tile_size
+
+				var/tile_color = color1rgb
+				if ((x + y) % 2 == 0)
+					tile_color = color2rgb
+				src.custom_board.DrawBox(tile_color, tile_x1, tile_y1, tile_x2-1, tile_y2-1)
+
+				var/pawn_height = 1
+				if(letter == "p" || letter == "P")
+					pawn_height = 0
+				if(letter == "k" || letter == "K")
+					pawn_height = 2
+
+				if (letter != "")
+					if (letter == uppertext(letter))
+						src.custom_board.DrawBox(rgb(255, 255, 255), tile_x1 + 1, tile_y1 + 1, tile_x1 + 1, tile_y1 + 1 + pawn_height)
+					else
+						src.custom_board.DrawBox(rgb(0, 0, 0), tile_x1 + 1, tile_y1 + 1, tile_x1 + 1, tile_y1 + 1 + pawn_height)
+
+
+			src.icon = custom_board
 
 
 	ui_interact(mob/user, datum/tgui/ui)
@@ -129,7 +205,7 @@
 	ui_data(mob/user)
 		. = list()
 		.["board"] = src.board
-		.["styling"] = src.tgui_styling
+		.["styling"] = src.styling
 		.["users"] = src.active_users
 		.["currentUser"] = user.ckey
 
@@ -164,6 +240,7 @@
 				var/pTeam = params["pTeam"]
 				var/pGame = params["pGame"]
 				src.selectPawn(ckey, pCode, pTeam, pGame, x, y)
+				src.removePiece(x, y)
 				. = TRUE
 			if("pawnDeselect")
 				var/ckey = params["ckey"]
@@ -206,60 +283,41 @@
 	chess
 		name = "chess board"
 		desc = "It's a board for playing chess!"
-		icon_state = "chessboard"
+
 
 		New()
 			..()
-			src.setupEmptyStartingPosition()
 			src.starting_positions["Starting Position"] = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
-
 
 	chesshor
 		name = "chess board horizontal"
 		desc = "It's a board for playing chess, but more horizontally!"
 		board_height = 6
 		board_width = 12
+		styling = list(
+			"tileColour1" = rgb(32, 187, 45),
+			"tileColour2" = rgb(92, 6, 95),
+		)
 
 		New()
 			..()
-			tgui_styling = list(
-				"tileColour1" = "#20bb2d",
-				"tileColour2" = "#5c065f",
-			)
-
 
 	evilchess
 		name = "evil chess board"
 		desc = "It's a board for playing chess, but more evil!"
 		board_width = 16
 		board_height = 16
+		styling = list(
+				"tileColour1" = rgb(136, 10, 10),
+				"tileColour2" = rgb(109,68,255),
+		)
 
 		New()
 			..()
-			tgui_styling = list(
-				"tileColour1" = "#880a0a",
-				"tileColour2" = "#6d44ff",
-			)
-
 
 	New()
 		..()
 		src.generateEmptyBoard()
-
-		if(src.draw_custom_icon)
-			var/icon/custom_icon = icon(src.icon, icon_state = "base")
-			// Draw checkered pattern
-			// using custom_icon.DrawBox(rgb(r,g,b), x, y, w, y)
-			// make each square 2 pixels wide and height
-			for (var/x in 1 to src.board_width)
-				for (var/y in 1 to src.board_height)
-					var/color1rgb = hex2num(src.tgui_styling["tileColour1"])
-					var/color2rgb = hex2num(src.tgui_styling["tileColour2"])
-
-					var/r = (x + y) % 2 ? color1rgb >> 16 & 0xFF : color2rgb >> 16 & 0xFF
-					var/g = (x + y) % 2 ? color1rgb >> 8 & 0xFF : color2rgb >> 8 & 0xFF
-					var/b = (x + y) % 2 ? color1rgb & 0xFF : color2rgb & 0xFF
-					custom_icon.DrawBox(rgb(r,g,b), x * 2, y * 2, 2, 2)
-
-			src.icon = custom_icon
+		src.setupEmptyStartingPosition()
+		src.drawBoardIcon()
 
