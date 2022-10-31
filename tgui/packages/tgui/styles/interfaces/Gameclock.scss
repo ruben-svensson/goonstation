@@ -4,10 +4,26 @@
   padding: 8px;
 }
 
+.gameclock__sideicon {
+  text-align: center;
+  font-size: 24px;
+  padding-bottom: 8px;
+}
+
 .gameclock__timebutton {
   width: 100%;
-  height: 40px;
+  height: 100px;
   margin: 2px;
+  text-align: center;
+  font-size: 2em;
+}
+
+.gameclock__timeflex {
+  flex-direction: column;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
 }
 
 .gameclock__timebutton > i {
@@ -18,19 +34,22 @@
 }
 
 .gameclock__swap {
-  padding-top: 8px;
-  padding-bottom: 8px;
+  padding-top: 16px;
 }
 
-.gameclock__swapbutton {
-  width: 30px;
-  height: 30px;
+.gameclock__utilbutton {
+  width: 28px;
+  height: 28px;
   margin: 6px;
 }
 
-.gameclock__swapbutton > i {
+.gameclock__utilbutton > i {
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100%;
+}
+
+.gameclock__mid {
+  padding-top: 36px;
 }

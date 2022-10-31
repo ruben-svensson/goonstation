@@ -1,10 +1,19 @@
-import { useBackend } from '../../backend';
+import { useBackend, useLocalState } from '../../backend';
 import { GameClockData } from './types';
-import { Box, Button, Flex, Icon } from '../../components';
+import { Button, Flex, Icon, LabeledList, Modal, NumberInput } from '../../components';
 import { Window } from '../../layouts';
+import { formatTime } from '../../format';
+
+const MAX_TIME = 1800;
 
 export const Gameclock = (_props, context) => {
   const { act, data } = useBackend<GameClockData>(context);
+
+  const [configModalOpen, setConfigModalOpen] = useLocalState(context, 'configModalOpen', false);
+
+  const showTime = (value) => {
+    return formatTime(value * 10);
+  };
 
   return (
     <Window
@@ -12,15 +21,45 @@ export const Gameclock = (_props, context) => {
       width={400}
       height={200}>
       <Window.Content scrollable>
+        {configModalOpen && (
+          <Modal>
+            <Button.Checkbox content="Use separate times" />
+            <LabeledList>
+              <LabeledList.Item label="Time per side">
+                <NumberInput
+                  format={showTime}
+                  maxValue={MAX_TIME}
+                />
+              </LabeledList.Item>
+              <LabeledList.Item label="Time (White)">
+                <NumberInput
+                  format={showTime}
+                  maxValue={MAX_TIME}
+                />
+              </LabeledList.Item>
+              <LabeledList.Item label="Time (Black)">
+                <NumberInput
+                  format={showTime}
+                  maxValue={MAX_TIME}
+                />
+              </LabeledList.Item>
+            </LabeledList>
+            <Button onClick={() => setConfigModalOpen(false)}>Close</Button>
+          </Modal>
+        )}
         <Flex>
           <Flex.Item grow={1}>
-            <SidePart iconName="far fa-circle-o" />
+            <SidePart team={'white'} />
           </Flex.Item>
           <Flex.Item>
-            <SwapButton />
+            <Flex direction={'column'} className="gameclock__mid">
+              <Button className="gameclock__utilbutton" icon="cog" onClick={() => setConfigModalOpen(true)} />
+              <Button className="gameclock__utilbutton" icon="pause" />
+              <Button className="gameclock__utilbutton" icon="exchange-alt" />
+            </Flex>
           </Flex.Item>
           <Flex.Item grow={1}>
-            <SidePart iconName="fas fa-circle" />
+            <SidePart team={'black'} />
           </Flex.Item>
         </Flex>
       </Window.Content>
@@ -28,21 +67,16 @@ export const Gameclock = (_props, context) => {
   );
 };
 
-const SidePart = (props) => {
-  return (
-    <Flex direction={'column'} className="gameclock__side">
-      {/*
-        to do: make it so that iconName isn't specified in the Window.Content and make icons contingent on a Side prop
-     */}
-      <Button className="gameclock__timebutton" icon={props.iconName} />
-    </Flex>
-  );
+type SidePartProps = {
+  team: 'white' | 'black';
 };
 
-const SwapButton = () => {
+const SidePart = (props: SidePartProps) => {
+  const { team } = props;
   return (
-    <Flex direction={'column'} className="gameclock__swap">
-      <Button className="gameclock__swapbutton" icon="fas fa-exchange-alt" />
+    <Flex direction={'column'} className="gameclock__side">
+      <Icon className="gameclock__sideicon" name={`circle${team === 'white' ? "-o" : ''}`} />
+      <Button className="gameclock__timebutton"><Flex className="gameclock__timeflex">00:00</Flex></Button>
     </Flex>
   );
 };
