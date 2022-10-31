@@ -1,11 +1,11 @@
 declare const React;
 
 import { Flex, Box } from '../../../components';
-import { useBackend } from '../../../backend';
+import { useBackend, useLocalState } from '../../../backend';
 import { fenCodeRecordFromPieces, getPiecesByGame } from '../Pieces';
 import { BoardgameData } from '../types';
 import { classes } from 'common/react';
-import { Piece } from '..';
+import { Piece } from '../Components/Piece';
 
 export const CheckerBoard = (_props, context) => {
   const { act, data } = useBackend<BoardgameData>(context);
@@ -19,6 +19,8 @@ export const CheckerBoard = (_props, context) => {
 
   const widthPercentage = 100 / width;
   const heightPercentage = 100 / height;
+
+  const [flip, setFlip] = useLocalState(context, 'flip', false);
   return (
     <Flex.Item
       grow={1}
@@ -57,7 +59,7 @@ export const CheckerBoard = (_props, context) => {
                 'max-height': `${heightPercentage}%`,
                 'background-color': tileColour,
               }}
-              className={classes(['boardgame__checkertile'])}>
+              className={classes(['boardgame__checkertile', flip ? 'boardgame__boardflip' : ''])}>
               {
                 // If there is a piece on this tile, render it
                 code !== '' && <Piece piece={codes[code]} position={{ x: x, y: y }} isSetPiece={false} />

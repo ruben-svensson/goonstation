@@ -282,38 +282,14 @@
 
 	chess
 		name = "chess board"
-		desc = "It's a board for playing chess!"
+		desc = "It's a board for playing chess and checkers!"
 
 
 		New()
 			..()
-			src.starting_positions["Starting Position"] = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
+			src.starting_positions["Chess"] = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
+			src.starting_positions["Checkers"] = "1D1D1D1D/D1D1D1D1/1D1D1D1D/8/8/d1d1d1d1/1d1d1d1d/d1d1d1d1"
 
-	chesshor
-		name = "chess board horizontal"
-		desc = "It's a board for playing chess, but more horizontally!"
-		board_height = 6
-		board_width = 12
-		styling = list(
-			"tileColour1" = rgb(32, 187, 45),
-			"tileColour2" = rgb(92, 6, 95),
-		)
-
-		New()
-			..()
-
-	evilchess
-		name = "evil chess board"
-		desc = "It's a board for playing chess, but more evil!"
-		board_width = 16
-		board_height = 16
-		styling = list(
-				"tileColour1" = rgb(136, 10, 10),
-				"tileColour2" = rgb(109,68,255),
-		)
-
-		New()
-			..()
 
 	New()
 		..()
