@@ -27156,9 +27156,6 @@
 	name = "indoor garden"
 	},
 /area/afterlife/heaven/hydroponics/inside)
-"bEN" = (
-/turf/space,
-/area/afterlife/heaven/hydroponics/inside)
 "bEO" = (
 /obj/shrub{
 	dir = 8
@@ -30834,7 +30831,10 @@
 /obj/cable{
 	icon_state = "1-4"
 	},
-/obj/machinery/atmospherics/pipe/tank/toxins/south,
+/obj/machinery/atmospherics/pipe/tank/toxins{
+	dir = 2;
+	
+	},
 /turf/unsimulated/floor/plating/scorched,
 /area/crater)
 "bQe" = (
@@ -31065,7 +31065,10 @@
 /turf/unsimulated/floor/engine,
 /area/crypt/sigma/lab)
 "bQH" = (
-/obj/machinery/atmospherics/pipe/tank/carbon_dioxide/south,
+/obj/machinery/atmospherics/pipe/tank/carbon_dioxide{
+	dir = 2;
+	
+	},
 /turf/unsimulated/floor/plating/scorched,
 /area/crater)
 "bQI" = (
@@ -60081,9 +60084,6 @@
 "dwr" = (
 /obj/storage/secure/closet/fridge,
 /obj/item/reagent_containers/food/snacks/bagel{
-	icon_state = "swedishfisk-open"
-	},
-/obj/item/reagent_containers/food/snacks/bagel{
 	icon_state = "seedbagel"
 	},
 /obj/item/reagent_containers/food/snacks/plant/coffeebean,
@@ -60094,7 +60094,6 @@
 /obj/drink_rack/cup{
 	pixel_y = 24
 	},
-/obj/decal/cleanable/rust/jen,
 /turf/unsimulated/greek/cave/floor{
 	dir = 1
 	},
@@ -60813,22 +60812,6 @@
 /area/centcom/offices/mbc)
 "dyA" = (
 /obj/table/wood/auto/desk,
-/obj/item/reagent_containers/food/drinks/bottle/beer{
-	pixel_x = 2;
-	pixel_y = 16
-	},
-/obj/item/reagent_containers/food/drinks/bottle/beer{
-	pixel_x = -3;
-	pixel_y = 5
-	},
-/obj/item/reagent_containers/food/drinks/bottle/beer{
-	pixel_x = -12;
-	pixel_y = 16
-	},
-/obj/item/reagent_containers/food/drinks/bottle/fancy_beer{
-	pixel_x = -9;
-	pixel_y = 8
-	},
 /turf/unsimulated/floor/wood/two,
 /area/centcom/offices/drsingh)
 "dyB" = (
@@ -135689,7 +135672,7 @@ aaa
 aaa
 aXt
 bkT
-bEN
+bkT
 bmX
 jbA
 bNP

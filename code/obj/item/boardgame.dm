@@ -115,7 +115,7 @@
 		var/pawn = src.active_users[ckey]["selected"]
 		src.createPiece(pawn["code"], x, y)
 		src.drawBoardIcon()
-		playsound(src.loc, 'sound/impact_sounds/Wood_Hit_Small_1.ogg', 50, 1)
+		playsound(src.loc, 'sound/impact_sounds/Wood_Tap.ogg', 30, 1)
 
 	proc/drawBoardIcon()
 		if(!draw_custom_icon) return
@@ -276,6 +276,11 @@
 		if(. <= UI_CLOSE || !IN_RANGE(src, user, 10))
 			return UI_CLOSE
 
+	mouse_drop(var/mob/user)
+		if((istype(user,/mob/living/carbon/human))&&(!user.stat)&&!(src in user.contents))
+			user.put_in_hand_or_drop(src)
+		return ..()
+
 	attack_hand(var/mob/user) // open browser window when board is clicked
 		src.ui_interact(user)
 
@@ -299,3 +304,36 @@
 		src.setupEmptyStartingPosition()
 		src.drawBoardIcon()
 
+/obj/item/boardgame_clock
+	name = "board game clock"
+	desc = "A set of clocks used to track time for two player board games. Fancy!"
+	icon = 'icons/obj/items/gameboard.dmi'
+	icon_state = "chessclock"
+	var/timing = 0
+	var/time = null
+	var/last_tick = 0
+	var/const/max_time = 1800 SECONDS
+	var/const/min_time = 0
+
+	ui_interact(mob/user, datum/tgui/ui)
+		ui = tgui_process.try_update_ui(user, src, ui)
+		if(!ui)
+			ui = new(user, src, "Gameclock")
+			ui.open()
+
+	ui_data(mob/user)
+		. = list(
+		)
+
+	ui_act(action, params)
+
+	mouse_drop(var/mob/user)
+		if((istype(user,/mob/living/carbon/human))&&(!user.stat)&&!(src in user.contents))
+			user.put_in_hand_or_drop(src)
+		return ..()
+
+	attack_hand(var/mob/user)
+		src.ui_interact(user)
+
+	attack_self(var/mob/user)
+		src.ui_interact(user)
