@@ -1,6 +1,6 @@
 declare const React;
 
-import { useBackend } from '../../../backend';
+import { useBackend, useLocalState } from '../../../backend';
 import { Box } from '../../../components';
 import { getPiece } from '../Pieces';
 import { BoardgameData, User } from '../types';
@@ -9,7 +9,6 @@ import { FloatingPiece } from './FloatingPiece';
 export const FloatingPiecesContainer = (_props, context) => {
   const { act, data } = useBackend<BoardgameData>(context);
   const { users } = data;
-
   // Loop through every object in users
   if (users) {
     return (
@@ -20,7 +19,7 @@ export const FloatingPiecesContainer = (_props, context) => {
           if (selected) {
             const { code, game } = selected;
             const piece = getPiece(code, game);
-            return <FloatingPiece key={key} user={user} piece={piece} x={user.mouseX} y={user.mouseY} />;
+            return <FloatingPiece key={key} user={user} piece={piece} x={200} y={200} />;
           }
         })}
       </Box>

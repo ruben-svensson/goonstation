@@ -97,11 +97,13 @@
 		src.board[index] = ""
 		src.drawBoardIcon()
 
-	proc/selectPawn(ckey, pCode, pTeam, pGame)
+	proc/selectPawn(ckey, pCode, pTeam, pGame, x, y)
 		src.active_users[ckey]["selected"] = list(
 			"code" = pCode,
 			"team" = pTeam,
-			"game" = pGame
+			"game" = pGame,
+			"x" = x,
+			"y" = y
 		)
 
 	proc/deselectPawn(ckey)
@@ -207,7 +209,7 @@
 		.["board"] = src.board
 		.["styling"] = src.styling
 		.["users"] = src.active_users
-		.["currentUser"] = user.ckey
+		.["currentUser"] = src.active_users[user.ckey]
 
 	ui_act(action, list/params, datum/tgui/ui, datum/ui_state/state)
 		. = ..()
