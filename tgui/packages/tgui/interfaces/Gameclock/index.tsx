@@ -1,6 +1,6 @@
 import { useBackend, useLocalState } from '../../backend';
 import { GameClockData } from './types';
-import { Button, Flex, Icon, LabeledList, Modal, NumberInput } from '../../components';
+import { Button, Dimmer, Flex, Icon, LabeledList, NumberInput } from '../../components';
 import { Window } from '../../layouts';
 import { formatTime } from '../../format';
 
@@ -22,7 +22,7 @@ export const Gameclock = (_props, context) => {
       height={200}>
       <Window.Content scrollable>
         {configModalOpen && (
-          <Modal>
+          <Dimmer>
             <Button.Checkbox content="Use separate times" />
             <LabeledList>
               <LabeledList.Item label="Time per side">
@@ -45,7 +45,7 @@ export const Gameclock = (_props, context) => {
               </LabeledList.Item>
             </LabeledList>
             <Button onClick={() => setConfigModalOpen(false)}>Close</Button>
-          </Modal>
+          </Dimmer>
         )}
         <Flex>
           <Flex.Item grow={1}>
