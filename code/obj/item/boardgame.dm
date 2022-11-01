@@ -113,7 +113,7 @@
 		var/pawn = src.active_users[ckey]["selected"]
 		src.createPiece(pawn["code"], x, y)
 		src.drawBoardIcon()
-		playsound(src.loc, 'sound/impact_sounds/Wood_Hit_Small_1.ogg', 50, 1)
+		playsound(src.loc, 'sound/impact_sounds/Wood_Tap.ogg', 30, 1)
 
 	proc/drawBoardIcon()
 		if(!draw_custom_icon) return
