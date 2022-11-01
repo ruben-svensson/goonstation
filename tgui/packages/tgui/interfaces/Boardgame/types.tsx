@@ -33,6 +33,8 @@ export type User = {
     code: string;
     team: string;
     game: string;
+    x: number;
+    y: number;
   };
 };
 

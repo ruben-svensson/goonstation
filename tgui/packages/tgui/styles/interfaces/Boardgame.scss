@@ -1,46 +1,13 @@
 @use '../base.scss';
 
-.gameclock__side {
-  padding: 8px;
-}
-
-.gameclock__clock {
-  text-align: center;
-  font-size: 40px;
-  font-weight: bold;
-  color: black;
-  background-color: white;
-  border: 2px solid black;
-  border-radius: 4px;
-  width: 100%;
-  padding-top: 8px;
-  padding-bottom: 8px;
-  margin: 2px;
-}
-
-.gameclock__iconwrapper {
-  padding: 4px;
-  text-align: center;
-  font-size: 16px;
-}
-
-.gameclock__button {
-  width: 100%;
-  height: 50px;
-  margin: 2px;
-}
-
-.gameclock__button > i {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100%;
-}
-
 .boardgame__window {
   height: 100%;
   display: flex;
   flex-direction: column;
+}
+
+.boardgame__wrapper {
+  flex: 1;
 }
 
 .boardgame__window * {
@@ -55,9 +22,9 @@
 
 .boardgame__debug {
   position: fixed;
-  margin: 2px;
+  top: 4px;
+  right: 50px;
   padding: 2px;
-  background-color: rgba(0, 0, 0, 0.5);
   z-index: 20;
 }
 
@@ -81,6 +48,16 @@
   font-size: 12px;
   min-width: 150px;
   height: 60px;
+}
+
+.boardgame__ghostpiece {
+  position: fixed;
+  top: 0px;
+  left: 0px;
+  width: 30px;
+  height: 30px;
+  background-color: green;
+  z-index: 20;
 }
 
 .boardgame_floatingpiece {
@@ -107,14 +84,25 @@
   user-select: none; /* Non-prefixed version, currently
                                 supported by Chrome, Edge, Opera and Firefox */
 }
+
+.boardgame_floatingpiece img {
+}
+
 .boardgame__panel {
   height: 30px;
 }
 
 .boardgame__board {
+  flex-grow: 1;
+}
+
+.boardgame__board-inner {
   transition: 1s all;
   transform: rotate(0deg);
   flex-grow: 1;
+  background-color: purple;
+  display: flex;
+  flex-direction: column;
 }
 
 .boardgame__boardflip {
@@ -122,10 +110,7 @@
 }
 
 .boardgame__piece-set-wrapper {
-  z-index: 30;
-  height: 120px;
-  padding: 4px;
-  background-color: rgb(177, 177, 177);
+  width: 80px;
 }
 
 .boardgame__menubutton {
@@ -152,8 +137,15 @@
 }
 
 .boardgame__piece-set {
-  justify-content: center;
-  align-items: center;
+  width: 100%;
+  overflow-y: auto;
+  background-color: #e0e0e0;
+  flex-wrap: wrap;
+}
+
+.boardgame__piece-set-header {
+  font-size: 10px;
+  padding: 2px;
 }
 
 .boardgame__piece-set-vertical {
@@ -181,18 +173,13 @@
   font-weight: bold;
 }
 
-.boardgame__piece-set__piece img {
+.boardgame__piece-set__piece {
+  transition: 0.3s all;
+  width: 50%;
 }
 
-.boardgame__vnotation {
-}
-
-.boardgame__verticalnotations {
-  display: flex;
-  flex-direction: column;
-  padding-top: 4px;
-  padding-bottom: 4px;
-  width: 20px;
+.boardgame__piece-set-minimized > .boardgame__piece-set__piece {
+  width: 20%;
 }
 
 .boardgame__verticalnotations > div {

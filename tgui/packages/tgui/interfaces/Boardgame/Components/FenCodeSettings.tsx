@@ -145,7 +145,7 @@ export const FenCodeSettings = (_props, context) => {
           setFenCode(value);
         }}
       />
-      <Flex>
+      <Flex direction={'column'}>
         <Button
           grow={1}
           content={'Get from board'}

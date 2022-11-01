@@ -2,10 +2,52 @@ declare const React;
 
 import { Flex, Box } from '../../../components';
 import { useBackend, useLocalState } from '../../../backend';
-import { fenCodeRecordFromPieces, getPiecesByGame } from '../Pieces';
-import { BoardgameData } from '../types';
+import { fenCodeRecordFromPieces, fetchPieces, getPiece, getPiecesByGame, PieceType } from '../Pieces';
+import { BoardgameData, User } from '../types';
 import { classes } from 'common/react';
 import { Piece } from '../Components/Piece';
+import { render } from 'inferno';
+
+export type GhostPieceProps = {
+  piece: PieceType;
+  x: number;
+  y: number;
+};
+
+export const GhostPiece = ({ piece, x, y }: GhostPieceProps) => {
+  return (
+    <Box
+      className="boardgame__ghostpiece"
+      style={{
+        top: `${y}px`,
+        left: `${x}px`,
+      }}>
+      <img src={piece.image} />
+    </Box>
+  );
+};
+
+export const GhostPiecesContainer = (_props, context) => {
+  const { act, data } = useBackend<BoardgameData>(context);
+  const { users } = data;
+  // Loop through every object in users
+  if (users) {
+    return (
+      <Box>
+        {users.length}
+        {Object.keys(users).map((key) => {
+          const user: User = users[key];
+          const { selected } = user;
+          if (selected) {
+            const { code, game } = selected;
+            const piece = getPiece(code, game);
+            return <GhostPiece key={key} piece={piece} x={200} y={200} />;
+          }
+        })}
+      </Box>
+    );
+  }
+};
 
 export const CheckerBoard = (_props, context) => {
   const { act, data } = useBackend<BoardgameData>(context);
@@ -14,13 +56,14 @@ export const CheckerBoard = (_props, context) => {
   const { board } = data;
   const { tileColour1, tileColour2 } = data.styling;
 
-  const pieces = getPiecesByGame(game);
+  const pieces = fetchPieces();
   const codes = fenCodeRecordFromPieces(pieces);
 
   const widthPercentage = 100 / width;
   const heightPercentage = 100 / height;
 
   const [flip, setFlip] = useLocalState(context, 'flip', false);
+
   return (
     <Flex.Item
       grow={1}
@@ -44,12 +87,12 @@ export const CheckerBoard = (_props, context) => {
               key={i}
               onMouseUp={() => {
                 act('pawnPlace', {
-                  ckey: currentUser,
+                  ckey: currentUser.ckey,
                   x: x,
                   y: y,
                 });
                 act('pawnDeselect', {
-                  ckey: currentUser,
+                  ckey: currentUser.ckey,
                 });
               }}
               style={{

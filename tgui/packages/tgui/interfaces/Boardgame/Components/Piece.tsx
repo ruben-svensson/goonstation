@@ -27,7 +27,7 @@ export const Piece = ({ piece, isSetPiece, position }: PieceProps, context) => {
       <img
         onMouseDown={() => {
           act('pawnSelect', {
-            ckey: currentUser,
+            ckey: currentUser.ckey,
             pCode: fenCode,
             pTeam: team,
             pGame: game,
