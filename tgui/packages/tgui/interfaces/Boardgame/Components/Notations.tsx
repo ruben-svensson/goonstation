@@ -39,7 +39,6 @@ export const Notations = ({ direction }: NotationsProps, context) => {
           key={i}
           style={{
             'height': direction === 'vertical' ? `${heightPercentage}%` : 'auto',
-            'font-size': `${widthPercentage * 0.12}rem`,
           }}>
           {direction === 'vertical' ? height - i : flip ? chars[width - i - 1] : chars[i]}
         </Box>

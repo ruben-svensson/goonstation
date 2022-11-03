@@ -25,7 +25,6 @@ export const FloatingPiece = ({ user, piece, x, y }: FloatingPieceProps, context
       <Flex.Item grow={1}>
         <img src={piece.image} />
       </Flex.Item>
-      <span>{user.name}</span>
     </Flex>
   );
 };

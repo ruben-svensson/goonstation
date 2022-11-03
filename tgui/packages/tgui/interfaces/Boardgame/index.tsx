@@ -1,17 +1,98 @@
 declare const React;
+declare const twemoji;
 
 import { Window } from '../../layouts';
 import { Box, Button, Dimmer, Flex } from '../../components';
 import { useBackend, useLocalState } from '../../backend';
 import { Pattern } from './Patterns';
-import { BoardgameData } from './types';
+import { BoardgameData, User } from './types';
 
-import { adjustWindowSize } from './helpers';
+import { adjustWindowSize, getFirstTileDimensions } from './helpers';
 import { PieceDrawer } from './Components/PieceDrawer';
 
-import { FenCodeSettings, FloatingPiece, FloatingPiecesContainer, Notations, PieceSet } from './Components';
-import { getPiece } from './Pieces';
-import { GhostPiecesContainer } from './Patterns/checkerboard';
+import { FenCodeSettings, FloatingPiece, Notations } from './Components';
+import { getPiece, PieceType } from './Pieces';
+
+export type GhostPieceProps = {
+  user: User;
+  piece: PieceType;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
+export const GhostPiece = ({ user, piece, x, y, width, height }: GhostPieceProps) => {
+  return (
+    <Box
+      className="boardgame__ghostpiece"
+      style={{
+        top: `${y}px`,
+        left: `${x}px`,
+        width: `${width}px`,
+        height: `${height}px`,
+        'max-width': `${width}px`,
+        'max-height': `${height}px`,
+      }}>
+      <img src={piece.image} />
+      <span>{user.name}</span>
+    </Box>
+  );
+};
+
+export const GhostPiecesContainer = (_props, context) => {
+  const { act, data } = useBackend<BoardgameData>(context);
+  const { users } = data;
+  const { width, height } = data.boardInfo;
+  const [flip, setFlip] = useLocalState(context, 'flip', false);
+  // Loop through every object in users
+
+  const widthPercentage = 100 / width;
+  const heightPercentage = 100 / height;
+
+  const additionalWidth = 24;
+  const additionalHeight = 32 + 24;
+
+  if (users) {
+    return (
+      <Box>
+        {users.length}
+        {Object.keys(users).map((key) => {
+          const user: User = users[key];
+          const { selected } = user;
+          if (selected) {
+            const firstTile = getFirstTileDimensions();
+            const { code, game, x, y } = selected;
+            const xPos = additionalWidth + firstTile.width * x - firstTile.width;
+            let yPos = additionalHeight + firstTile.height * y - firstTile.height;
+
+            if (flip) {
+              yPos = additionalHeight + firstTile.height * (height - y);
+            }
+
+            const piece = getPiece(code, game);
+
+            if (x === 0 && y === 0) {
+              return;
+            }
+
+            return (
+              <GhostPiece
+                user={user}
+                key={key}
+                piece={piece}
+                x={xPos}
+                y={yPos}
+                width={firstTile.width}
+                height={firstTile.height}
+              />
+            );
+          }
+        })}
+      </Box>
+    );
+  }
+};
 
 export const Boardgame = (_props, context) => {
   const { act, data } = useBackend<BoardgameData>(context);
@@ -39,7 +120,7 @@ export const Boardgame = (_props, context) => {
       )}
       <Window.Content
         onFocusIn={() => {
-          // adjustWindowSize(width, height);
+          adjustWindowSize(width, height);
         }}
         onMouseMove={(e) => {
           // adjustWindowSize(width, height);
@@ -47,16 +128,6 @@ export const Boardgame = (_props, context) => {
             x: e.clientX,
             y: e.clientY,
           });
-
-          if (currentUser) {
-            /*
-            act('mouseMove', {
-              ckey: currentUser,
-              x: e.clientX,
-              y: e.clientY,
-            });
-            */
-          }
         }}
         onMouseUp={() => {
           act('pawnDeselect', {
@@ -65,6 +136,7 @@ export const Boardgame = (_props, context) => {
         }}
         fitted
         className="boardgame__window">
+        <GhostPiecesContainer />
         <HeldPieceRenderer />
         <Box className="boardgame__debug">
           <span>Flip board</span>

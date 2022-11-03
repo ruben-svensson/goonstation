@@ -1,5 +1,5 @@
 declare const React;
-
+/*
 import { useBackend } from '../../../backend';
 import { Flex } from '../../../components';
 import { getPiecesByTeam, TeamType } from '../Pieces';
@@ -27,3 +27,4 @@ export const PieceSet = ({ game, team }: PieceSetProps, context) => {
     </Flex>
   );
 };
+*/

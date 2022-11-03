@@ -1,4 +1,5 @@
 declare const React;
+declare const twemoji;
 
 import { Box } from '../../../components';
 import { classes } from 'common/react';
@@ -14,29 +15,51 @@ export type PieceProps = {
     y: number;
   };
 };
-
 export const Piece = ({ piece, isSetPiece, position }: PieceProps, context) => {
   const { act, data } = useBackend<BoardgameData>(context);
   const { currentUser } = data;
-  const { fenCode, name, game, image, team } = piece;
+  const { fenCode, name, game, image } = piece;
   const { x, y } = position || { x: -1, y: -1 }; // Default to 0,0 if no position is provided
 
+  const getTwemojiSrc = (code: string) => {
+    const image = twemoji.parse(code); // img as with src set to twemoji image
+    // Get src from image
+    // Example string: <img class="emoji" draggable="false" alt="😀" src="https://twemoji.maxcdn.com/v/14.0.2/72x72/1f600.png">
+    let src = '';
+    if (image.includes('src')) {
+      src = twemoji.parse(fenCode).split('src="')[1].split('"')[0];
+    }
+    return src;
+  };
+
   return (
-    <Box className={`boardgame__piece`}>
-      <span>{name}</span>
-      <img
-        onMouseDown={() => {
-          act('pawnSelect', {
-            ckey: currentUser.ckey,
-            pCode: fenCode,
-            pTeam: team,
-            pGame: game,
-            x: x,
-            y: y,
-          });
-        }}
-        src={image}
-      />
+    <Box
+      onMouseDown={() => {
+        act('pawnSelect', {
+          ckey: currentUser.ckey,
+          pCode: fenCode,
+          pTeam: '',
+          pGame: game,
+          x: x,
+          y: y,
+        });
+      }}
+      className={`boardgame__piece`}>
+      {image ? <img src={image} /> : <img src={getTwemojiSrc(fenCode)} />}
     </Box>
+  );
+};
+
+type SvgFenRendererProps = {
+  fenCode: string;
+};
+
+const SvgFenRenderer = ({ fenCode }: SvgFenRendererProps) => {
+  return (
+    <svg viewBox="0 0 45 45" width="45" height="45">
+      <text y="50%" x="50%" dy=".3em">
+        {fenCode}
+      </text>
+    </svg>
   );
 };
