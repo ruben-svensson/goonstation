@@ -1,27 +1,26 @@
 /* eslint-disable max-len */
 
 import chessPieces from './chess';
-
-export type TeamType = 'White' | 'Black';
+import unicodePieces from './unicode';
+import facesPieces from './faces';
+import gifPieces from './gifs';
 
 export type PieceType = {
   fenCode: string;
   name: string;
-  team: TeamType;
   game: string;
-  image: string;
+  image?: string;
 };
 
 const pieces: PieceType[] = [];
 
 pieces.push(...chessPieces);
+pieces.push(...unicodePieces);
+pieces.push(...facesPieces);
+pieces.push(...gifPieces);
 
 export const getPiece = (fenCode: string, game: string) => {
   return pieces.find((piece) => piece.fenCode === fenCode && piece.game === game);
-};
-
-export const getPiecesByTeam = (team: string, game: string): PieceType[] => {
-  return pieces.filter((piece) => piece.team === team && piece.game === game);
 };
 
 export const getPiecesByGame = (game: string): PieceType[] => {
@@ -35,16 +34,4 @@ export const fenCodeRecordFromPieces = (pieces: PieceType[]): Record<string, Pie
   }, {});
 };
 
-export const fetchPieces = (team?: string, game?: string): PieceType[] => {
-  return pieces.filter((piece) => {
-    if (team && game) {
-      return piece.team === team && piece.game === game;
-    } else if (team) {
-      return piece.team === team;
-    } else if (game) {
-      return piece.game === game;
-    } else {
-      return true;
-    }
-  });
-};
+export const fetchPieces = () => pieces;

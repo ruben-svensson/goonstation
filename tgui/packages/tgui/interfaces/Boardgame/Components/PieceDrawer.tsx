@@ -3,8 +3,8 @@ declare const React;
 import { useBackend, useLocalState } from '../../../backend';
 import { BoardgameData } from '../types';
 
-import { PieceSet, sets } from '../PieceSet';
-import { Box, Button, Dropdown, Flex } from '../../../components';
+import { sets } from '../PieceSet';
+import { Box, Button, Flex } from '../../../components';
 import { Piece } from './Piece';
 
 export const PieceDrawer = (orps, context) => {
@@ -21,8 +21,12 @@ export const PieceDrawer = (orps, context) => {
               'text-align': 'center',
             }}>
             {set.name}
+            <ExpandedSetsButton index={i} setId={set.name} />
           </Box>
-          <Flex direction={'row'} className={`boardgame__piece-set`}>
+
+          <Flex
+            direction={'row'}
+            className={`boardgame__piece-set  ${!expandedSets[i] ? 'boardgame__piece-set-minimized' : ''}`}>
             {set.pieces.map((piece) => (
               <Flex.Item className="boardgame__piece-set__piece" key={piece.name}>
                 <Piece piece={piece} isSetPiece />
@@ -41,7 +45,7 @@ type ExpandedSetsButtonProps = {
 };
 
 const ExpandedSetsButton = ({ index, setId }: ExpandedSetsButtonProps, context) => {
-  const [expandedSets, setExpandedSets] = useLocalState<boolean[]>(context, `expandedSets${setId}`, []);
+  const [expandedSets, setExpandedSets] = useLocalState<boolean[]>(context, `expandedSets`, []);
 
   return (
     <Button.Checkbox

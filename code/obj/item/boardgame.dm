@@ -296,12 +296,22 @@
 		name = "chess board"
 		desc = "It's a board for playing chess and checkers!"
 
-
 		New()
 			..()
 			src.starting_positions["Chess"] = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
 			src.starting_positions["Checkers"] = "1D1D1D1D/D1D1D1D1/1D1D1D1D/8/8/d1d1d1d1/1d1d1d1d/d1d1d1d1"
 
+	chesstiny
+		name = "tiny chess board"
+		desc = "It's a board for playing tiny chess and checkers!"
+		board_width = 4
+		board_height = 4
+
+	chessweird
+		name = "wide chess board"
+		desc = "It's a board for playing wide chess and checkers!"
+		board_width = 12
+		board_height = 6
 
 	New()
 		..()

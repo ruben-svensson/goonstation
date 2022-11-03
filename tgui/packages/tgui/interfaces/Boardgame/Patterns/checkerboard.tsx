@@ -8,47 +8,6 @@ import { classes } from 'common/react';
 import { Piece } from '../Components/Piece';
 import { render } from 'inferno';
 
-export type GhostPieceProps = {
-  piece: PieceType;
-  x: number;
-  y: number;
-};
-
-export const GhostPiece = ({ piece, x, y }: GhostPieceProps) => {
-  return (
-    <Box
-      className="boardgame__ghostpiece"
-      style={{
-        top: `${y}px`,
-        left: `${x}px`,
-      }}>
-      <img src={piece.image} />
-    </Box>
-  );
-};
-
-export const GhostPiecesContainer = (_props, context) => {
-  const { act, data } = useBackend<BoardgameData>(context);
-  const { users } = data;
-  // Loop through every object in users
-  if (users) {
-    return (
-      <Box>
-        {users.length}
-        {Object.keys(users).map((key) => {
-          const user: User = users[key];
-          const { selected } = user;
-          if (selected) {
-            const { code, game } = selected;
-            const piece = getPiece(code, game);
-            return <GhostPiece key={key} piece={piece} x={200} y={200} />;
-          }
-        })}
-      </Box>
-    );
-  }
-};
-
 export const CheckerBoard = (_props, context) => {
   const { act, data } = useBackend<BoardgameData>(context);
   const { width, height, game } = data.boardInfo;

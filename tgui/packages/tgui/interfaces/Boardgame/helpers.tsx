@@ -33,8 +33,8 @@ export const getProperDimensions = (width: number, height: number) => {
 
   if (size.width === 0 && size.height === 0) return;
 
-  const additionalWidth = 48 + 80; // 48 is the width of the (notations + padding) * 2
-  const additionalHeight = 200; // 190 is the height of the titlebar + (notations + padding) * 2 + piece set
+  const additionalWidth = 48 + 100; // 48 is the width of the (notations + padding) * 2
+  const additionalHeight = 32 + 48; // 190 is the height of the titlebar + (notations + padding) * 2 + piece set
 
   const desiredWidth = size.width * width + additionalWidth;
   const desiredHeight = size.height * height + additionalHeight;
