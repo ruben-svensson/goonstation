@@ -218,7 +218,7 @@
 
 	ui_act(action, list/params, datum/tgui/ui, datum/ui_state/state)
 		. = ..()
-		if(.)
+		if(. || !IN_RANGE(src, ui.user, 1))
 			return
 		switch(action)
 			if("pawnMove")
