@@ -293,7 +293,7 @@ const GenerateSvgBoard = ({ preset }: GenerateSvgBoardProps, context) => {
 
           return (
             <g key={index} transform={`translate(${x * 10}, ${y * 10})`}>
-              <image width="10" height="10" href={piece?.image} />
+              <image width="10" height="10" xlinkHref={piece?.image} />
             </g>
           );
         })
