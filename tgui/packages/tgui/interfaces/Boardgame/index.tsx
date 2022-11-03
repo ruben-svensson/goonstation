@@ -44,6 +44,7 @@ export const GhostPiecesContainer = (_props, context) => {
   const { act, data } = useBackend<BoardgameData>(context);
   const { users } = data;
   const { width, height } = data.boardInfo;
+
   const [flip, setFlip] = useLocalState(context, 'flip', false);
   // Loop through every object in users
 
@@ -56,7 +57,6 @@ export const GhostPiecesContainer = (_props, context) => {
   if (users) {
     return (
       <Box>
-        {users.length}
         {Object.keys(users).map((key) => {
           const user: User = users[key];
           const { selected } = user;
@@ -103,23 +103,24 @@ export const Boardgame = (_props, context) => {
   const [configModalOpen, setConfigModalOpen] = useLocalState(context, 'configModalOpen', false);
   const [flip, setFlip] = useLocalState(context, 'flip', false);
 
+  const [testNumber, setTestNumber] = useLocalState(context, 'testNumber', 0);
+
   const [mouseCoords, setMouseCoords] = useLocalState<{
     x: number;
     y: number;
   }>(context, 'mouseCoords', { x: 0, y: 0 });
 
+  // Run a function once without using React
+
   return (
     <Window title={name} width={400} height={550}>
-      {configModalOpen && (
-        <Dimmer full className="boardgame__configmodal">
-          <Box className="boardgame__settings">
-            <Button onClick={() => setConfigModalOpen(false)}>Close</Button>
-            <FenCodeSettings />
-          </Box>
-        </Dimmer>
-      )}
+      <FenCodeSettings />
+
       <Window.Content
         onFocusIn={() => {
+          adjustWindowSize(width, height);
+        }}
+        onFocusOut={() => {
           adjustWindowSize(width, height);
         }}
         onMouseMove={(e) => {
@@ -139,6 +140,7 @@ export const Boardgame = (_props, context) => {
         <GhostPiecesContainer />
         <HeldPieceRenderer />
         <Box className="boardgame__debug">
+          <span>{testNumber}</span>
           <span>Flip board</span>
           <Button.Checkbox checked={flip} onClick={() => setFlip(!flip)} />
           <Button title={'Setup'} icon={'cog'} onClick={() => setConfigModalOpen(true)} />
