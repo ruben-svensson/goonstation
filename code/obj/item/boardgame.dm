@@ -3,7 +3,12 @@
 	desc = "A generic game board?"
 	icon = 'icons/obj/items/gameboard.dmi'
 	icon_state = "chessboard"
+	w_class = W_CLASS_HUGE
 	layer = 2.9
+	// The old game kit did this too, we should keep a piece of its dead corpse with us forever - DisturbHerb
+	stamina_damage = 5
+	stamina_cost = 5
+	stamina_crit_chance = 5
 
 	var/game = "chess"
 	var/pattern = "checkerboard"
@@ -319,11 +324,35 @@
 	desc = "A set of clocks used to track time for two player board games. Fancy!"
 	icon = 'icons/obj/items/gameboard.dmi'
 	icon_state = "chessclock"
-	var/timing = 0
-	var/time = null
-	var/last_tick = 0
-	var/const/max_time = 1800 SECONDS
-	var/const/min_time = 0
+	var/timing = FALSE
+	var/whiteTime = 0
+	var/blackTime = 0
+	var/lastTick = 0
+	var/const/maxTime = 1800 SECONDS
+	var/const/minTime = 0
+
+	proc/setTime(var/new_white_time as num, var/new_black_time as num)
+		src.whiteTime = clamp(new_white_time, src.minTime, src.maxTime)
+		src.blackTime = clamp(new_black_time, src.minTime, src.maxTime)
+
+	process()
+		if (src.timing)
+			if (!src.lastTick)
+				src.lastTick = TIME
+			var/passedTime = TIME - src.lastTick
+
+			if (src.whiteTime > 0)
+				src.whiteTime -= passedTime
+			else
+				src.whiteTime = 0
+				src.timing = FALSE
+				src.lastTick = 0
+
+			src.lastTick = TIME
+
+		else
+			src.lastTick = 0
+		src.whiteTime = max(src.whiteTime, 0)
 
 	ui_interact(mob/user, datum/tgui/ui)
 		ui = tgui_process.try_update_ui(user, src, ui)
@@ -333,9 +362,20 @@
 
 	ui_data(mob/user)
 		. = list(
+			"timing" = src.timing,
+			"whiteTime" = round(src.whiteTime / 10),
+			"blackTime" = round(src.blackTime / 10),
 		)
 
 	ui_act(action, params)
+		switch(action)
+			if ("set_time")
+				var/whiteTime = text2num_safe(params["whiteTime"])
+				var/blackTime = text2num_safe(params["blackTime"])
+				src.setTime(round(whiteTime), round(blackTime))
+				. = TRUE
+			if ("toggle_timing")
+				src.timing = !src.timing
 
 	mouse_drop(var/mob/user)
 		if((istype(user,/mob/living/carbon/human))&&(!user.stat)&&!(src in user.contents))

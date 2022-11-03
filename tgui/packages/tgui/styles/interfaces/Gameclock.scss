@@ -1,5 +1,20 @@
 @use '../base.scss';
 
+.gameclock__configmodal {
+  z-index: 20;
+}
+
+.gameclock__configmodal > .Dimmer__inner {
+  background-color: rgba(0, 0, 0, 0.8);
+  padding: 5%;
+  width: 80%;
+  height: 65%;
+}
+
+.gameclock__configmodalbuttoncontainer {
+  padding-top: 5%;
+}
+
 .gameclock__side {
   padding: 8px;
 }
