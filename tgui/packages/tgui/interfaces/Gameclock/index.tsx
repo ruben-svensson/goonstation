@@ -10,8 +10,8 @@ export const Gameclock = (_props, context) => {
   const { act, data } = useBackend<GameClockData>(context);
 
   const [configModalOpen, setConfigModalOpen] = useLocalState(context, 'configModalOpen', false);
-  const [whiteTimeBuffer, setWhiteTimeBuffer] = useLocalState(context, 'whiteTimeBuffer', 0);
-  const [blackTimeBuffer, setBlackTimeBuffer] = useLocalState(context, 'blackTimeBuffer', 0);
+  const [whiteTimeBuffer] = useLocalState(context, 'whiteTimeBuffer', 0);
+  const [blackTimeBuffer] = useLocalState(context, 'blackTimeBuffer', 0);
 
   const setTime = (whiteTime, blackTime) => {
     act("set_time", {
@@ -107,6 +107,7 @@ const ConfigButton = (_, context) => {
 
   return (
     <Button
+      disabled={data.timing}
       className="gameclock__utilbutton"
       icon="cog"
       onClick={() => {
@@ -119,26 +120,28 @@ const ConfigButton = (_, context) => {
 };
 
 const PauseButton = (_, context) => {
-  const { act } = useBackend(context);
+  const { data, act } = useBackend<GameClockData>(context);
 
   return (
     <Button
       className="gameclock__utilbutton"
-      icon="pause"
+      icon={data.timing ? "pause" : "play"}
+      color={data.timing ? "orange" : ""}
       onClick={() => act('toggle_timing')}
     />
   );
 };
 
 const SwapButton = (_, context) => {
-  const [team, setTeam]= useLocalState(context, 'team', '');
-
-  const swapTeams = () => {
-    setTeam(team === 'white' ? 'black' : 'white');
-  };
+  const { data, act } = useBackend<GameClockData>(context);
 
   return (
-    <Button onClick={swapTeams} className="gameclock__utilbutton" icon="exchange-alt" />
+    <Button
+      disabled={data.timing}
+      onClick={() => act('swap_teams')}
+      className="gameclock__utilbutton"
+      icon="exchange-alt"
+    />
   );
 };
 
@@ -154,7 +157,12 @@ const SidePart = (props: TeamProps, context) => {
   return (
     <Flex direction={'column'} className="gameclock__side">
       <Icon className="gameclock__sideicon" name={`circle${team === 'white' ? "-o" : ''}`} />
-      <Button className="gameclock__timebutton" onClick={() => act('end_turn')}>
+      <Button
+        color="orange"
+        disabled={!data.timing || data.turn === (team === 'white' ? 0 : 1)}
+        className="gameclock__timebutton"
+        onClick={() => act('end_turn')}
+      >
         <Flex className="gameclock__timeflex">
           <AnimatedNumber value={team === 'white' ? data.whiteTime : data.blackTime} format={showTime} />
         </Flex>

@@ -378,6 +378,7 @@
 		src.process()
 		. = list(
 			"timing" = src.timing,
+			"turn" = src.turn,
 			"whiteTime" = round(src.whiteTime / 10),
 			"blackTime" = round(src.blackTime / 10),
 		)
