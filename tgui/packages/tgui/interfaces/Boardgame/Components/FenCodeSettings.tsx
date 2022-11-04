@@ -1,8 +1,21 @@
 import { useBackend, useLocalState } from '../../../backend';
-import { Box, Button, Dimmer, Divider, Dropdown, Flex, Modal, Stack, Tabs, TextArea } from '../../../components';
-import { fenCodeRecordFromPieces, fetchPieces, getPiece, getPiecesByGame } from '../Pieces';
-import { BoardgameData } from '../types';
+import {
+  Box,
+  Button,
+  Dimmer,
+  Divider,
+  Dropdown,
+  Flex,
+  Modal,
+  Stack,
+  Tabs,
+  TextArea,
+  Tooltip,
+} from '../../../components';
+import { fenCodeRecordFromPieces, fetchPieces, getPiece, getPiecesByGame, PieceType } from '../Pieces';
+import { BoardgameData, Piece } from '../types';
 import { presets } from '../Presets';
+import { getTwemojiSrc } from './Piece';
 
 declare const React;
 
@@ -58,6 +71,61 @@ const convertFenCodeToBoardArray = (fenCode: string) => {
   return boardArray;
 };
 
+type ConfigTooltipProps = {
+  text: string;
+  tooltip: string;
+  link?: string;
+};
+
+const ConfigTooltip = ({ text, tooltip, link }: ConfigTooltipProps) => {
+  return (
+    <Tooltip position="bottom" content={tooltip}>
+      <Box
+        style={{
+          'padding': '0 0.5em',
+        }}
+        position="relative">
+        {text}
+        {link && (
+          <a
+            href={link}
+            target="_blank"
+            rel="noreferrer"
+            style={{
+              'padding': '0 0.5em',
+            }}>
+            (Wiki)
+          </a>
+        )}
+      </Box>
+    </Tooltip>
+  );
+};
+
+const ConfigTab = (_props, context) => {
+  const { act, data } = useBackend<BoardgameData>(context);
+
+  return (
+    <Stack vertical>
+      <h4>Apply notation</h4>
+      <Box
+        style={{
+          'display': 'flex',
+          'flex-direction': 'row',
+        }}>
+        <span>You can import: </span>
+        <ConfigTooltip text="GNot" tooltip="Goon Notation" link={'https://wiki.ss13.co/Main_Page'} />
+        <ConfigTooltip text="FEN" tooltip="Forsyth–Edwards Notation" />
+        <ConfigTooltip text="PGN" tooltip="Portable Game Notation (coming later)" />
+        <ConfigTooltip text="PDN" tooltip="Portable Draughts Notation (coming later)" />
+      </Box>
+      <TextArea style={{ 'height': '250px', 'margin': '6px' }}>Code</TextArea>
+      <Button>Apply and close</Button>
+    </Stack>
+  );
+};
+
+/*
 const ConfigTab = (_props, context) => {
   const { act, data } = useBackend<BoardgameData>(context);
   const { startingPositions } = data.boardInfo; // Key value pairs of board name and starting position
@@ -252,6 +320,46 @@ const ConfigTab = (_props, context) => {
       </Flex>
     </Flex>
   );
+};*/
+
+type PieceSVGImageProps = {
+  width: number;
+  height: number;
+  pieceData: PieceType;
+};
+
+const PieceSVGImage = ({ width, height, pieceData }: PieceSVGImageProps) => {
+  // if pieceData.image exists
+  // return the image
+  // else return the svg
+
+  if (pieceData?.image) {
+    return <image width={width} height={height} xlinkHref={pieceData.image} />;
+  }
+
+  if (pieceData?.fenCode) {
+    return <text>{pieceData.fenCode} </text>;
+  }
+
+  return;
+  /** else {
+    if (pieceData?.fenCode) {
+      let src = getTwemojiSrc(pieceData.fenCode);
+      if (src) {
+        return <image width={width} height={height} xlinkHref={src} />;
+      } else {
+        return <text>{pieceData.fenCode}</text>;
+      } */
+  /*
+    return (
+          <text x={width / 2} y={height / 2} textAnchor="middle">
+            {pieceData.fenCode}
+          </text>
+        );
+
+    if (src) {
+      return <image width={width} height={height} xlinkHref={src} />;
+    */
 };
 
 type GenerateSvgBoardProps = {
@@ -262,38 +370,46 @@ type GenerateSvgBoardProps = {
 // The board size is 128x128
 const GenerateSvgBoard = ({ preset }: GenerateSvgBoardProps, context) => {
   const { data } = useBackend<BoardgameData>(context);
-  const { board } = data;
+  const { pieces } = data;
   const { width, height, game } = data.boardInfo;
   const boardSize = width * height;
   const { tileColour1, tileColour2 } = data.styling;
 
-  const pieces = fetchPieces();
-  const fenCodeRecords = fenCodeRecordFromPieces(pieces);
+  const allPieces = fetchPieces();
+  const codeRecords = fenCodeRecordFromPieces(allPieces);
 
   const fenArray = convertFenCodeToBoardArray(preset);
-
+  const presetArray = preset.split(',');
+  let currentIndex = 0;
   return (
-    <svg width="80" height="80" viewBox="0 0 80 80">
-      <pattern id="pattern-checkerboard" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-        <rect width="10" height="10" fill={tileColour1} />
-        <rect x="10" y="10" width="10" height="10" fill={tileColour1} />
-        <rect x="10" width="10" height="10" fill={tileColour2} />
-        <rect y="10" width="10" height="10" fill={tileColour2} />
+    <svg width="160" height="160" viewBox="0 0 160 160">
+      <pattern id="pattern-checkerboard-preset" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+        <rect width="20" height="20" fill={tileColour1} />
+        <rect x="20" y="20" width="20" height="20" fill={tileColour1} />
+        <rect x="20" width="20" height="20" fill={tileColour2} />
+        <rect y="20" width="20" height="20" fill={tileColour2} />
       </pattern>
-      <rect width="80" height="80" fill="url(#pattern-checkerboard)" />
+      <rect width="160" height="160" fill="url(#pattern-checkerboard-preset)" />
 
       {
         // Draw the pieces on the board
-        fenArray.map((fenCode, index) => {
-          const piece = fenCodeRecords[fenCode];
+        presetArray.map((piece, index) => {
+          const pieceData = codeRecords[piece];
 
-          // Convert index to x and y
-          const x = index % width;
-          const y = Math.floor(index / width);
+          // Convert index to x and y, use current index to get the piece
+          const x = currentIndex % width;
+          const y = Math.floor(currentIndex / width);
+
+          // if the piece is a number, apply the number to the current index
+          if (!isNaN(parseInt(piece, 10))) {
+            currentIndex += parseInt(piece, 10);
+          } else {
+            currentIndex++;
+          }
 
           return (
-            <g key={index} transform={`translate(${x * 10}, ${y * 10})`}>
-              <image width="10" height="10" xlinkHref={piece?.image} />
+            <g key={index} transform={`translate(${x * 20}, ${y * 20})`}>
+              <PieceSVGImage width={20} height={20} pieceData={pieceData} />
             </g>
           );
         })
@@ -321,6 +437,7 @@ const GenerateSvgBoard = ({ preset }: GenerateSvgBoardProps, context) => {
       })}
     </svg> */
 
+/*
 const PresetsTab = (_props, context) => {
   const { act, data } = useBackend<BoardgameData>(context);
   const [configModalOpen, setConfigModalOpen] = useLocalState(context, 'configModalOpen', false);
@@ -338,8 +455,8 @@ const PresetsTab = (_props, context) => {
                 <p>{preset.description}</p>
                 <Button
                   onClick={() => {
-                    act('applyFen', {
-                      fen: preset.setup,
+                    act('applyGNot', {
+                      gnot: preset.setup,
                     });
                     setConfigModalOpen(false);
                   }}>
@@ -351,5 +468,58 @@ const PresetsTab = (_props, context) => {
         );
       })}
     </Stack>
+  );
+};
+*/
+
+/** <Flex>
+              <Flex.Item>
+                <GenerateSvgBoard preset={preset.setup} />
+              </Flex.Item>
+              <Flex.Item className="boardgame__presetdetails">
+                <h4>{preset.name}</h4>
+                <p>{preset.description}</p>
+                <Button
+                  onClick={() => {
+                    act('applyGNot', {
+                      gnot: preset.setup,
+                    });
+                    setConfigModalOpen(false);
+                  }}>
+                  Apply
+                </Button>
+              </Flex.Item>
+            </Flex> */
+
+const PresetsTab = (_props, context) => {
+  const { act, data } = useBackend<BoardgameData>(context);
+  const [configModalOpen, setConfigModalOpen] = useLocalState(context, 'configModalOpen', false);
+
+  // Orgainize the presets by game, key is the game name, value is the presets for that game
+
+  return (
+    <Flex className="boardgame__presets">
+      {presets.map((preset, i) => {
+        return (
+          <Flex.Item
+            key={i}
+            className="boardgame__preset"
+            onClick={() => {
+              act('applyGNot', {
+                gnot: preset.setup,
+              });
+              setConfigModalOpen(false);
+            }}>
+            <Tooltip position="top" content={preset.name}>
+              <Flex position="relative">
+                <Flex.Item>
+                  <GenerateSvgBoard preset={preset.setup} />
+                </Flex.Item>
+              </Flex>
+            </Tooltip>
+          </Flex.Item>
+        );
+      })}
+    </Flex>
   );
 };

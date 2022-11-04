@@ -14,9 +14,16 @@ export type BoardgameData = {
     tileColour2: string;
   };
   board: string[];
+  pieces: Piece[];
 
   users: User[];
   currentUser: User;
+};
+
+export type Piece = {
+  code: string;
+  x: number;
+  y: number;
 };
 
 export type StartingPosition = {

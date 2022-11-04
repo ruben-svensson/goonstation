@@ -110,6 +110,11 @@ export const Boardgame = (_props, context) => {
     y: number;
   }>(context, 'mouseCoords', { x: 0, y: 0 });
 
+  const [boardSize, setBoardSize] = useLocalState(context, 'boardSize', {
+    width: 250,
+    height: 250,
+  });
+
   // Run a function once without using React
 
   return (
@@ -118,13 +123,37 @@ export const Boardgame = (_props, context) => {
 
       <Window.Content
         onFocusIn={() => {
-          adjustWindowSize(width, height);
+          // adjustWindowSize(width, height);
+          const board = document.getElementsByClassName('boardgame__board-inner')[0];
+          if (board) {
+            const boardRect = board.getBoundingClientRect();
+            setBoardSize({
+              width: boardRect.width - 48,
+              height: boardRect.height - 48,
+            });
+          }
         }}
         onFocusOut={() => {
-          adjustWindowSize(width, height);
+          // adjustWindowSize(width, height);
+          const board = document.getElementsByClassName('boardgame__board-inner')[0];
+          if (board) {
+            const boardRect = board.getBoundingClientRect();
+            setBoardSize({
+              width: boardRect.width - 48,
+              height: boardRect.height - 48,
+            });
+          }
         }}
         onMouseMove={(e) => {
           // adjustWindowSize(width, height);
+          const board = document.getElementsByClassName('boardgame__board-inner')[0];
+          if (board) {
+            const boardRect = board.getBoundingClientRect();
+            setBoardSize({
+              width: boardRect.width - 48,
+              height: boardRect.height - 48,
+            });
+          }
           setMouseCoords({
             x: e.clientX,
             y: e.clientY,
@@ -140,7 +169,6 @@ export const Boardgame = (_props, context) => {
         <GhostPiecesContainer />
         <HeldPieceRenderer />
         <Box className="boardgame__debug">
-          <span>{testNumber}</span>
           <span>Flip board</span>
           <Button.Checkbox checked={flip} onClick={() => setFlip(!flip)} />
           <Button title={'Setup'} icon={'cog'} onClick={() => setConfigModalOpen(true)} />

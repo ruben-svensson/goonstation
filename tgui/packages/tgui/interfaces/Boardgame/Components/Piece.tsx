@@ -15,22 +15,23 @@ export type PieceProps = {
     y: number;
   };
 };
+
+export const getTwemojiSrc = (code: string) => {
+  const image = twemoji.parse(code); // img as with src set to twemoji image
+  // Get src from image
+  // Example string: <img class="emoji" draggable="false" alt="😀" src="https://twemoji.maxcdn.com/v/14.0.2/72x72/1f600.png">
+  let src = '';
+  if (image.includes('src')) {
+    src = image.split('src="')[1].split('"')[0];
+  }
+  return src;
+};
+
 export const Piece = ({ piece, isSetPiece, position }: PieceProps, context) => {
   const { act, data } = useBackend<BoardgameData>(context);
   const { currentUser } = data;
   const { fenCode, name, game, image } = piece;
   const { x, y } = position || { x: -1, y: -1 }; // Default to 0,0 if no position is provided
-
-  const getTwemojiSrc = (code: string) => {
-    const image = twemoji.parse(code); // img as with src set to twemoji image
-    // Get src from image
-    // Example string: <img class="emoji" draggable="false" alt="😀" src="https://twemoji.maxcdn.com/v/14.0.2/72x72/1f600.png">
-    let src = '';
-    if (image.includes('src')) {
-      src = twemoji.parse(fenCode).split('src="')[1].split('"')[0];
-    }
-    return src;
-  };
 
   return (
     <Box

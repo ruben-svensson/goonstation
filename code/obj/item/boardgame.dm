@@ -3,7 +3,7 @@
 	desc = "A generic game board?"
 	icon = 'icons/obj/items/gameboard.dmi'
 	icon_state = "chessboard"
-	w_class = W_CLASS_HUGE
+	w_class = W_CLASS_NORMAL
 	layer = 2.9
 	// The old game kit did this too, we should keep a piece of its dead corpse with us forever - DisturbHerb
 	stamina_damage = 5
@@ -13,7 +13,6 @@
 	var/game = "chess"
 	var/pattern = "checkerboard"
 
-
 	var/board_width = 8
 	var/board_height = 8
 
@@ -21,21 +20,24 @@
 	/// If true, the board will be drawn with a checkerboard pattern automatically
 	/// If false, the board will be drawn with the icon provided
 	var/draw_custom_icon = TRUE
+	var/lock_pieces_to_tile = TRUE // If true, pieces will be locked to the center of the tile they're on, otherwise they'll be free to move around
 
-	var/board = list() // single dimensional board
-
+	var/pieces = list(
+		list(
+			"code" = "K",
+			"x" = 3,
+			"y" = 1,
+		)
+	)
+	var/board = list() // single dimensional board with json specs
 	/// Apply custom styling, matches both in dm and tgui releated code
 	var/styling = list(
 		"tileColour1" = rgb(255, 224, 175),
 		"tileColour2" = rgb(181,136,99),
 	)
-
-	var/starting_positions = list()
-
 	// Store the users who are currently using the board
 	// also track pawns they have selected and moving
 	var/active_users = list()
-
 	/**
 	 * Removes all the pieces from the board
 	 */
@@ -45,25 +47,42 @@
 		for (var/i in 1 to board_height * board_width)
 			src.board += ""
 
-	/**
-	 * Generates an empty starting position for any sized board
-	 * with no pieces on it. Works like a clear board
-	 */
-	proc/setupEmptyStartingPosition()
-		// Automatically generate preset for an empty board
-		// Example of a 8x8 board
-		// Fen: 8/8/8/8/8/8/8/8
-		var/fen = ""
-		for(var/y in 1 to src.board_height)
-			fen += "[src.board_width]/"
-		fen = copytext(fen, 1, length(fen)) // Remove the last slash
 
-		src.starting_positions["Empty"] = fen
+	proc/applyGNot(gnot)
+		// Like FEN but comma seperated
+		// Apply a GNot string and parse each value as a piece and set its x and y
+		// Example GNOT of a 3x3 board: P,P,P,3,p,p,p the true length is 9
 
-	/**
-	 * Applies Forsyth-Edwards Notation (FEN) to the board
-	 * FEN is a standard notation for describing a particular board position of a chess game.
-	 */
+		// Clear the board
+		src.pieces = list()
+
+		// Split the string into a list
+		var/list/gnot_pieces = splittext(gnot, ",")
+		var/piece_index = 1 // Used to keep track of the piece we're on, a number increases it by that value
+		for (var/piece in gnot_pieces)
+			// If the piece is a number, increase the index by that number
+			if (isnum(text2num_safe(piece)))
+				// Get value of piece, string to number
+				piece_index += text2num_safe(piece)
+				continue
+			// If the piece is a letter or string
+			if (piece)
+				// Get the x and y of the piece
+				var/x = ((piece_index - 1) % board_width)
+				var/y = round((piece_index - 1) / board_width)
+				// Add the piece to the list
+				src.pieces += list(
+					list(
+						"code" = piece,
+						"x" = x,
+						"y" = y,
+					)
+				)
+				// Increase the index by 1
+				piece_index += 1
+
+
+
 	proc/applyFen(fen)
 		src.board = list()
 		var/filtered_fen = replacetext(fen, "/", "")
@@ -203,7 +222,6 @@
 			"name" = src.name,
 			"game" = src.game,
 			"pattern" = src.pattern,
-			"startingPositions" = src.starting_positions,
 			"width" = src.board_width,
 			"height" = src.board_height,
 		)
@@ -212,6 +230,7 @@
 	ui_data(mob/user)
 		. = list()
 		.["board"] = src.board
+		.["pieces"] = src.pieces
 		.["styling"] = src.styling
 		.["users"] = src.active_users
 		.["currentUser"] = src.active_users[user.ckey]
@@ -271,6 +290,10 @@
 				var/fen = params["fen"]
 				src.applyFen(fen)
 				. = TRUE
+			if("applyGNot")
+				var/gnot = params["gnot"]
+				src.applyGNot(gnot)
+				. = TRUE
 
 	ui_close(mob/user)
 		src.active_users -= user
@@ -280,6 +303,11 @@
 		. = ..()
 		if(. <= UI_CLOSE || !IN_RANGE(src, user, 10))
 			return UI_CLOSE
+
+	examine(mob/user)
+		. = ..()
+		if(IN_RANGE(src, user, 10))
+			src.ui_interact(user)
 
 	mouse_drop(var/mob/user)
 		if((istype(user,/mob/living/carbon/human))&&(!user.stat)&&!(src in user.contents))
@@ -298,25 +326,10 @@
 
 		New()
 			..()
-			src.starting_positions["Chess"] = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
-			src.starting_positions["Checkers"] = "1D1D1D1D/D1D1D1D1/1D1D1D1D/8/8/d1d1d1d1/1d1d1d1d/d1d1d1d1"
-
-	chesstiny
-		name = "tiny chess board"
-		desc = "It's a board for playing tiny chess and checkers!"
-		board_width = 4
-		board_height = 4
-
-	chessweird
-		name = "wide chess board"
-		desc = "It's a board for playing wide chess and checkers!"
-		board_width = 12
-		board_height = 6
 
 	New()
 		..()
 		src.generateEmptyBoard()
-		src.setupEmptyStartingPosition()
 		src.drawBoardIcon()
 
 /obj/item/boardgame_clock

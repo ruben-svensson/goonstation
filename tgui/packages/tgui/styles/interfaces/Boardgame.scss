@@ -52,6 +52,7 @@
 .boardgame__settingspart {
   overflow-y: scroll;
   flex-grow: 1;
+  padding: 10px;
 }
 
 .boardgame__settings-input {
@@ -403,8 +404,8 @@
 }
 
 .boardgame__presets {
-  overflow-y: scroll;
-  max-height: 80%;
+  width: 100%;
+  flex-wrap: wrap;
 }
 
 .boardgame__preset {
@@ -413,4 +414,10 @@
 
 .boardgame__presetdetails {
   padding: 4px;
+}
+
+.boardgame__pattern {
+  background: red;
+  width: 100%;
+  height: 100%;
 }
