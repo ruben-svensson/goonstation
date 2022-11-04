@@ -334,29 +334,39 @@
 	var/const/maxTime = 1800 SECONDS
 	var/const/minTime = 0
 
-	proc/setTime(var/new_white_time as num, var/new_black_time as num)
-		src.whiteTime = clamp(new_white_time, src.minTime, src.maxTime)
-		src.blackTime = clamp(new_black_time, src.minTime, src.maxTime)
+	proc/setTime(var/newWhiteTime as num, var/newBlackTime as num)
+		src.whiteTime = clamp(newWhiteTime, src.minTime, src.maxTime)
+		src.blackTime = clamp(newBlackTime, src.minTime, src.maxTime)
+
+	proc/tickDown(var/timeValue as num)
+		var/passedTime = TIME - src.lastTick
+		if (timeValue > 0)
+			timeValue -= passedTime
+		else
+			timeValue = 0
+			src.timing = FALSE
+			src.lastTick = 0
+		return timeValue
+
+	proc/returnMaxOfTimeOrZero()
+		if (turn) // returns true if it's white's turn, false if it's black's turn
+			src.whiteTime = max(src.whiteTime, 0)
+		else
+			src.blackTime = max(src.blackTime, 0)
 
 	process()
 		if (src.timing)
 			if (!src.lastTick)
 				src.lastTick = TIME
-			var/passedTime = TIME - src.lastTick
-
-			if (src.whiteTime > 0)
-				src.whiteTime -= passedTime
+			if (src.turn) // returns true if it's white's turn, false if it's black's turn
+				src.whiteTime = tickDown(src.whiteTime)
 			else
-				src.whiteTime = 0
-				src.timing = FALSE
-				src.lastTick = 0
-
+				src.blackTime = tickDown(src.blackTime)
 			src.lastTick = TIME
-
 		else
 			processing_items.Remove(src)
 			src.lastTick = 0
-		src.whiteTime = max(src.whiteTime, 0)
+		returnMaxOfTimeOrZero()
 
 	ui_interact(mob/user, datum/tgui/ui)
 		ui = tgui_process.try_update_ui(user, src, ui)
@@ -383,6 +393,9 @@
 				src.timing = !src.timing
 				if(src.timing)
 					processing_items |= src
+				. = TRUE
+			if ("end_turn")
+				src.turn = !src.turn
 				. = TRUE
 
 	mouse_drop(var/mob/user)

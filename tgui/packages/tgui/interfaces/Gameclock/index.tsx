@@ -77,7 +77,7 @@ export const Gameclock = (_props, context) => {
           <Flex.Item>
             <Flex direction={'column'} className="gameclock__mid">
               <Button className="gameclock__utilbutton" icon="cog" onClick={() => { setConfigModalOpen(true); setWhiteTimeBuffer(data.whiteTime); setBlackTimeBuffer(data.blackTime); }} />
-              <Button className="gameclock__utilbutton" icon="pause" />
+              <Button className="gameclock__utilbutton" icon="pause" onClick={() => act('toggle_timing')} />
               <Button className="gameclock__utilbutton" icon="exchange-alt" />
             </Flex>
           </Flex.Item>
@@ -106,7 +106,7 @@ const SidePart = (props: SidePartProps, context) => {
   return (
     <Flex direction={'column'} className="gameclock__side">
       <Icon className="gameclock__sideicon" name={`circle${team === 'white' ? "-o" : ''}`} />
-      <Button className="gameclock__timebutton" onClick={() => act('toggle_timing')}>
+      <Button className="gameclock__timebutton" onClick={() => act('end_turn')}>
         <Flex className="gameclock__timeflex">
           <AnimatedNumber value={team === 'white' ? data.whiteTime : data.blackTime} format={showTime} />
         </Flex>
