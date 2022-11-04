@@ -6,9 +6,8 @@
 	w_class = W_CLASS_HUGE
 	layer = 2.9
 	// The old game kit did this too, we should keep a piece of its dead corpse with us forever - DisturbHerb
-	stamina_damage = 5
-	stamina_cost = 5
-	stamina_crit_chance = 5
+	stamina_damage = 30
+	stamina_cost = 20
 
 	var/game = "chess"
 	var/pattern = "checkerboard"
@@ -291,6 +290,9 @@
 
 	attackby(var/obj/item/I, mob/user)
 
+	examine(mob/user)
+		. = ..()
+		ui_interact(user)
 
 	chess
 		name = "chess board"
@@ -325,6 +327,7 @@
 	icon = 'icons/obj/items/gameboard.dmi'
 	icon_state = "chessclock"
 	var/timing = FALSE
+	var/turn = TRUE // TRUE for white, FALSE for black
 	var/whiteTime = 0
 	var/blackTime = 0
 	var/lastTick = 0
@@ -351,6 +354,7 @@
 			src.lastTick = TIME
 
 		else
+			processing_items.Remove(src)
 			src.lastTick = 0
 		src.whiteTime = max(src.whiteTime, 0)
 
@@ -361,6 +365,7 @@
 			ui.open()
 
 	ui_data(mob/user)
+		src.process()
 		. = list(
 			"timing" = src.timing,
 			"whiteTime" = round(src.whiteTime / 10),
@@ -376,6 +381,9 @@
 				. = TRUE
 			if ("toggle_timing")
 				src.timing = !src.timing
+				if(src.timing)
+					processing_items |= src
+				. = TRUE
 
 	mouse_drop(var/mob/user)
 		if((istype(user,/mob/living/carbon/human))&&(!user.stat)&&!(src in user.contents))
