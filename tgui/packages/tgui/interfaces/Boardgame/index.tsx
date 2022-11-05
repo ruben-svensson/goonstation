@@ -53,7 +53,8 @@ export const GhostPiecesContainer = (_props, context) => {
 
   const additionalWidth = 24;
   const additionalHeight = 32 + 24;
-
+  return <Box />;
+  /*
   if (users) {
     return (
       <Box>
@@ -91,14 +92,14 @@ export const GhostPiecesContainer = (_props, context) => {
         })}
       </Box>
     );
-  }
+  }*/
 };
 
 export const Boardgame = (_props, context) => {
   const { act, data } = useBackend<BoardgameData>(context);
 
   const { name, game, pattern, width, height } = data.boardInfo;
-  const { currentUser } = data;
+  const { currentUser, pieces } = data;
 
   const [configModalOpen, setConfigModalOpen] = useLocalState(context, 'configModalOpen', false);
   const [flip, setFlip] = useLocalState(context, 'flip', false);
@@ -160,9 +161,9 @@ export const Boardgame = (_props, context) => {
           });
         }}
         onMouseUp={() => {
-          act('pawnDeselect', {
+          /* act('pawnDeselect', {
             ckey: currentUser.ckey,
-          });
+          });*/
         }}
         fitted
         className="boardgame__window">

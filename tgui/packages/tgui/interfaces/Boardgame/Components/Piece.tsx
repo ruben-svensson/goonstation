@@ -29,22 +29,20 @@ export const getTwemojiSrc = (code: string) => {
 
 export const Piece = ({ piece, isSetPiece, position }: PieceProps, context) => {
   const { act, data } = useBackend<BoardgameData>(context);
-  const { currentUser } = data;
+  const { currentUser, pieces } = data;
   const { fenCode, name, game, image } = piece;
   const { x, y } = position || { x: -1, y: -1 }; // Default to 0,0 if no position is provided
 
   return (
     <Box
-      onMouseDown={() => {
+      /* onMouseDown={() => {
         act('pawnSelect', {
           ckey: currentUser.ckey,
-          pCode: fenCode,
+          pId: pieces[piece],
           pTeam: '',
           pGame: game,
-          x: x,
-          y: y,
         });
-      }}
+      }}*/
       className={`boardgame__piece`}>
       {image ? <img src={image} /> : <img src={getTwemojiSrc(fenCode)} />}
     </Box>

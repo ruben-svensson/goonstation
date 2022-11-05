@@ -24,6 +24,7 @@ export type Piece = {
   code: string;
   x: number;
   y: number;
+  selected: User;
 };
 
 export type StartingPosition = {

@@ -12,7 +12,7 @@ import { render } from 'inferno';
 export const CheckerBoard = (_props, context) => {
   const { act, data } = useBackend<BoardgameData>(context);
 
-  const { pieces } = data;
+  const { pieces, currentUser } = data;
 
   const { tileColour1, tileColour2 } = data.styling;
 
@@ -27,7 +27,27 @@ export const CheckerBoard = (_props, context) => {
   const pieceRecords = fenCodeRecordFromPieces(fetchPieces());
 
   return (
-    <svg width="100%" height="100%">
+    <svg
+      onmouseup={(e) => {
+        const x = e.clientX;
+        const y = e.clientY;
+
+        const [mouseCoords, setMouseCoords] = useLocalState<{
+          x: number;
+          y: number;
+        }>(context, 'mouseCoords', { x: 0, y: 0 });
+
+        const boardX = Math.floor((x / boardSize.width) * data.boardInfo.width);
+        const boardY = Math.floor((y / boardSize.height) * data.boardInfo.height);
+
+        act('pawnPlace', {
+          ckey: currentUser.ckey,
+          x: boardX,
+          y: boardY,
+        });
+      }}
+      width="100%"
+      height="100%">
       <pattern
         id="pattern-checkerboard"
         x="0"
@@ -44,17 +64,54 @@ export const CheckerBoard = (_props, context) => {
 
       {
         // Draw a 😊 emoji
-        pieces.map((piece, index) => {
+        // Map through every piece in pieces by Object key
+        Object.keys(pieces).map((val, index) => {
+          const { x, y, code } = pieces[val];
+          const pieceType = pieceRecords[code];
+
+          return (
+            <svg
+              onmousedown={() => {
+                act('pawnSelect', {
+                  ckey: currentUser.ckey,
+                  pId: val,
+                });
+              }}
+              key={index}
+              x={width * x + '%'}
+              y={height * y + '%'}
+              width={width + '%'}
+              height={height + '%'}>
+              <g transform="scale(1, 1)">
+                <image x="0%" y="0%" width="100%" height="100%" xlinkHref={pieceType?.image} />
+                {
+                  // if selected, draw a red border
+                  pieces[val].selected ? (
+                    <svg x="0%" y="0%" width="100%" height="100%">
+                      <text y="50%">{pieces[val].selected.name}</text>
+                    </svg>
+                  ) : (
+                    ''
+                  )
+                }
+                <rect x="0" y="0" width="100%" height="100%" fill="transparent" />
+              </g>
+            </svg>
+          );
+        })
+
+        /* pieces.map((piece, index) => {
           const { x, y, code } = piece;
           const pieceType = pieceRecords[code];
           return (
             <svg key={index} x={width * x + '%'} y={height * y + '%'} width={width + '%'} height={height + '%'}>
               <g transform="scale(1, 1)">
                 <image x="0%" y="0%" width="100%" height="100%" xlinkHref={pieceType?.image} />
+                <text>{piece}</text>
               </g>
             </svg>
           );
-        })
+        })*/
       }
     </svg>
   );
