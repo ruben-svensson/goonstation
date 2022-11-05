@@ -7,28 +7,33 @@ import { formatTime } from '../../format';
 const MAX_TIME = 1800;
 
 export const Gameclock = (_props, context) => {
-  const { act, data } = useBackend<GameClockData>(context);
+  const { act } = useBackend<GameClockData>(context);
 
   const [configModalOpen, setConfigModalOpen] = useLocalState(context, 'configModalOpen', false);
+  const [turnBuffer, setTurnBuffer] = useLocalState(context, 'turnBuffer', true);
   const [whiteTimeBuffer] = useLocalState(context, 'whiteTimeBuffer', 0);
   const [blackTimeBuffer] = useLocalState(context, 'blackTimeBuffer', 0);
 
+
   const setTime = (whiteTime, blackTime) => {
-    act("set_time", {
+    act('set_time', {
       'whiteTime': whiteTime * 10,
       'blackTime': blackTime * 10,
     });
   };
 
   return (
-    <Window
-      title={"Board Game Clock"}
-      width={400}
-      height={200}>
+    <Window title={'Board Game Clock'} width={400} height={230}>
       <Window.Content scrollable>
         {configModalOpen && (
           <Dimmer className="gameclock__configmodal">
             <LabeledList>
+              <LabeledList.Item label="Current Turn">
+                <Button
+                  content={turnBuffer ? "White" : "Black"}
+                  onClick={() => setTurnBuffer(!turnBuffer)}
+                />
+              </LabeledList.Item>
               <LabeledList.Item label="Time (White)">
                 <TimeInput team={'white'} />
               </LabeledList.Item>
@@ -42,12 +47,10 @@ export const Gameclock = (_props, context) => {
                 onClick={() => {
                   setConfigModalOpen(false);
                   setTime(whiteTimeBuffer, blackTimeBuffer);
+                  act('set_turn', { 'nextTurn': turnBuffer });
                 }}
               />
-              <Button
-                content="Close without applying"
-                onClick={() => setConfigModalOpen(false)}
-              />
+              <Button content="Close without applying" onClick={() => setConfigModalOpen(false)} />
             </Box>
           </Dimmer>
         )}
@@ -76,7 +79,6 @@ type TeamProps = {
 };
 
 const TimeInput = (props: TeamProps, context) => {
-
   const { team } = props;
 
   const [whiteTimeBuffer, setWhiteTimeBuffer] = useLocalState(context, 'whiteTimeBuffer', 0);
@@ -88,7 +90,9 @@ const TimeInput = (props: TeamProps, context) => {
 
   return (
     <NumberInput
-      onDrag={(_e, value) => { team === 'white' ? setWhiteTimeBuffer(value) : setBlackTimeBuffer(value); }}
+      onDrag={(_e, value) => {
+        team === 'white' ? setWhiteTimeBuffer(value) : setBlackTimeBuffer(value);
+      }}
       format={showTime}
       value={team === 'white' ? whiteTimeBuffer : blackTimeBuffer}
       minValue={0}
@@ -102,6 +106,7 @@ const ConfigButton = (_, context) => {
   const { data } = useBackend<GameClockData>(context);
 
   const [, setConfigModalOpen] = useLocalState(context, 'configModalOpen', false);
+  const [, setTurnBuffer] = useLocalState(context, 'turnBuffer', true);
   const [, setWhiteTimeBuffer] = useLocalState(context, 'whiteTimeBuffer', 0);
   const [, setBlackTimeBuffer] = useLocalState(context, 'blackTimeBuffer', 0);
 
@@ -112,6 +117,7 @@ const ConfigButton = (_, context) => {
       icon="cog"
       onClick={() => {
         setConfigModalOpen(true);
+        setTurnBuffer(data.turn);
         setWhiteTimeBuffer(data.whiteTime);
         setBlackTimeBuffer(data.blackTime);
       }}
@@ -125,8 +131,8 @@ const PauseButton = (_, context) => {
   return (
     <Button
       className="gameclock__utilbutton"
-      icon={data.timing ? "pause" : "play"}
-      color={data.timing ? "orange" : ""}
+      icon={data.timing ? 'pause' : 'play'}
+      color={data.timing ? 'orange' : ''}
       onClick={() => act('toggle_timing')}
     />
   );
@@ -156,13 +162,12 @@ const SidePart = (props: TeamProps, context) => {
 
   return (
     <Flex direction={'column'} className="gameclock__side">
-      <Icon className="gameclock__sideicon" name={`circle${team === 'white' ? "-o" : ''}`} />
+      <Icon className="gameclock__sideicon" name={`circle${team === 'white' ? '-o' : ''}`} />
       <Button
         color="orange"
-        disabled={!data.timing || data.turn === (team === 'white' ? 0 : 1)}
+        disabled={!data.timing || data.turn === (team === 'white' ? false : true)}
         className="gameclock__timebutton"
-        onClick={() => act('end_turn')}
-      >
+        onClick={() => act('end_turn')}>
         <Flex className="gameclock__timeflex">
           <AnimatedNumber value={team === 'white' ? data.whiteTime : data.blackTime} format={showTime} />
         </Flex>

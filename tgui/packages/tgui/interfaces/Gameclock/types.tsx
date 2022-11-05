@@ -2,7 +2,7 @@ import { BooleanLike } from 'common/react';
 
 export interface GameClockData {
   timing: BooleanLike;
-  turn: BooleanLike;
+  turn: boolean;
   whiteTime: number;
   blackTime: number;
 }

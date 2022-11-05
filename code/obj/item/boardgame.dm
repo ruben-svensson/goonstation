@@ -354,6 +354,18 @@
 		else
 			src.blackTime = max(src.blackTime, 0)
 
+	// examine()
+	// 	. = list("A set of clocks used to track time for two player board games. Fancy!")
+	// 	if(src.timing)
+	// 		var/whiteSecond = src.whiteTime % 60
+	// 		var/whiteMinute = (src.whiteTime - whiteSecond) / 60
+	// 		var/blackSecond = src.blackTime % 60
+	// 		var/blackMinute = (src.blackTime - blackSecond) / 60
+	// 		// anyone know a good way of doing conditionals in DM?
+	// 		. += "White's remaining time is <b>[(whiteMinute ? text("[whiteMinute]:") : null)][whiteSecond] [whiteMinute ? null : text("seconds")]</b> and Black's remaining time is <b>[(blackMinute ? text("[blackMinute]:") : null)][blackSecond] [blackMinute ? null : text("seconds")]</b>"
+	// 	else
+	// 		. += "The clocks are currently paused."
+
 	process()
 		if (src.timing)
 			if (!src.lastTick)
@@ -385,6 +397,9 @@
 
 	ui_act(action, params)
 		switch(action)
+			if ("set_turn")
+				src.turn = text2num_safe(params["nextTurn"])
+				. = TRUE
 			if ("set_time")
 				var/whiteTime = text2num_safe(params["whiteTime"])
 				var/blackTime = text2num_safe(params["blackTime"])
