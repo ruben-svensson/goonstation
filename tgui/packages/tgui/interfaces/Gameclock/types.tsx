@@ -5,4 +5,6 @@ export interface GameClockData {
   turn: boolean;
   whiteTime: number;
   blackTime: number;
+  minTime: number;
+  maxTime: number;
 }

@@ -328,8 +328,9 @@
 	icon_state = "chessclock"
 	var/timing = FALSE
 	var/turn = TRUE // TRUE for white, FALSE for black
-	var/whiteTime = 0
-	var/blackTime = 0
+	// Defaults to 5 minutes per side
+	var/whiteTime = 5 MINUTES
+	var/blackTime = 5 MINUTES
 	var/lastTick = 0
 	var/const/maxTime = 1800 SECONDS
 	var/const/minTime = 0
@@ -354,17 +355,20 @@
 		else
 			src.blackTime = max(src.blackTime, 0)
 
-	// examine()
-	// 	. = list("A set of clocks used to track time for two player board games. Fancy!")
-	// 	if(src.timing)
-	// 		var/whiteSecond = src.whiteTime % 60
-	// 		var/whiteMinute = (src.whiteTime - whiteSecond) / 60
-	// 		var/blackSecond = src.blackTime % 60
-	// 		var/blackMinute = (src.blackTime - blackSecond) / 60
-	// 		// anyone know a good way of doing conditionals in DM?
-	// 		. += "White's remaining time is <b>[(whiteMinute ? text("[whiteMinute]:") : null)][whiteSecond] [whiteMinute ? null : text("seconds")]</b> and Black's remaining time is <b>[(blackMinute ? text("[blackMinute]:") : null)][blackSecond] [blackMinute ? null : text("seconds")]</b>"
-	// 	else
-	// 		. += "The clocks are currently paused."
+	proc/formatTimeText(var/timeValue as num) // FIX THIS SHIT
+		var/second = timeValue % 60
+		var/minute = (timeValue - second) / 60
+		var/trailingZero = FALSE
+		if (second > 10)
+			trailingZero = TRUE
+		return "[(minute ? text("[minute]:") : null)][(trailingZero ? "0": null)][second] [minute ? null : text("seconds")]"
+
+	examine()
+		. = ..()
+		if (src.timing)
+			. += "White's remaining time is <b>[formatTimeText(src.whiteTime)]</b> and Black's remaining time is <b>[formatTimeText(src.blackTime)]</b>."
+		else
+			. += "The clocks are currently paused."
 
 	process()
 		if (src.timing)
@@ -393,6 +397,8 @@
 			"turn" = src.turn,
 			"whiteTime" = round(src.whiteTime / 10),
 			"blackTime" = round(src.blackTime / 10),
+			"maxTime" = src.maxTime,
+			"minTime" = src.minTime,
 		)
 
 	ui_act(action, params)

@@ -143,10 +143,10 @@ const SwapButton = (_, context) => {
 
   return (
     <Button
-      disabled={data.timing}
-      onClick={() => act('swap_teams')}
       className="gameclock__utilbutton"
+      disabled={data.timing}
       icon="exchange-alt"
+      onClick={() => act('swap_teams')}
     />
   );
 };
@@ -165,7 +165,7 @@ const SidePart = (props: TeamProps, context) => {
       <Icon className="gameclock__sideicon" name={`circle${team === 'white' ? '-o' : ''}`} />
       <Button
         color="orange"
-        disabled={!data.timing || data.turn === (team === 'white' ? false : true)}
+        disabled={!data.timing || (data.turn ? team === 'black' : team === 'white')}
         className="gameclock__timebutton"
         onClick={() => act('end_turn')}>
         <Flex className="gameclock__timeflex">
