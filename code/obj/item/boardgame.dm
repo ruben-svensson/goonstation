@@ -318,12 +318,33 @@
 	icon_state = "chessclock"
 	var/timing = FALSE
 	var/turn = TRUE // TRUE for white, FALSE for black
-	// Defaults to 5 minutes per side
+	var/swap = FALSE // for swapping the layout of the clocks
 	var/whiteTime = 5 MINUTES
 	var/blackTime = 5 MINUTES
 	var/lastTick = 0
-	var/const/maxTime = 1800 SECONDS
+	var/const/maxTime = 60 MINUTES
 	var/const/minTime = 0
+
+	proc/buttonState()
+		if ((src.turn + src.swap) % 2 == 0) // It is Right Player's turn if the turn and swap values sum to an even integer
+			icon_state = "chessclock_R"
+		else
+			icon_state = "chessclock_L"
+
+	proc/formatTimeText(var/timeValue as num) // FIX THIS SHIT
+		var/seconds = round((timeValue / 10) % 60)
+		var/minutes = round(((timeValue / 10) - seconds) / 60)
+		if (minutes < 10)
+			minutes = "0[minutes]"
+		if (seconds < 10)
+			seconds = "0[seconds]"
+		return "[minutes]:[seconds]"
+
+	proc/returnMaxOfTimeOrZero()
+		if (src.turn) // Returns true if it's white's turn, false if it's black's turn
+			src.whiteTime = max(src.whiteTime, 0)
+		else
+			src.blackTime = max(src.blackTime, 0)
 
 	proc/setTime(var/newWhiteTime as num, var/newBlackTime as num)
 		src.whiteTime = clamp(newWhiteTime, src.minTime, src.maxTime)
@@ -337,21 +358,22 @@
 			timeValue = 0
 			src.timing = FALSE
 			src.lastTick = 0
+			timeFlag()
 		return timeValue
 
-	proc/returnMaxOfTimeOrZero()
-		if (turn) // returns true if it's white's turn, false if it's black's turn
-			src.whiteTime = max(src.whiteTime, 0)
+	proc/timeFlag()
+		var/winner
+		var/loser
+		if (src.blackTime == 0)
+			winner = "White"
+			loser = "Black"
 		else
-			src.blackTime = max(src.blackTime, 0)
-
-	proc/formatTimeText(var/timeValue as num) // FIX THIS SHIT
-		var/second = timeValue % 60
-		var/minute = (timeValue - second) / 60
-		var/trailingZero = FALSE
-		if (second > 10)
-			trailingZero = TRUE
-		return "[(minute ? text("[minute]:") : null)][(trailingZero ? "0": null)][second] [minute ? null : text("seconds")]"
+			winner = "Black"
+			loser = "White"
+		var/map_text = make_chat_maptext(src, "[winner] wins on time.", "color: #A8E9F0;", alpha = 215)
+		for (var/mob/O in hearers(src))
+			O.show_message(assoc_maptext = map_text)
+		src.visible_message("[src] stops. [loser] has flagged and [winner] wins on time.")
 
 	examine()
 		. = ..()
@@ -385,29 +407,45 @@
 		. = list(
 			"timing" = src.timing,
 			"turn" = src.turn,
+			"swap" = src.swap,
 			"whiteTime" = round(src.whiteTime / 10),
 			"blackTime" = round(src.blackTime / 10),
-			"maxTime" = src.maxTime,
-			"minTime" = src.minTime,
+			"maxTime" = round(src.maxTime / 10),
+			"minTime" = round(src.minTime / 10),
 		)
 
 	ui_act(action, params)
 		switch(action)
 			if ("set_turn")
+				src.add_fingerprint(usr)
 				src.turn = text2num_safe(params["nextTurn"])
 				. = TRUE
 			if ("set_time")
+				src.add_fingerprint(usr)
 				var/whiteTime = text2num_safe(params["whiteTime"])
 				var/blackTime = text2num_safe(params["blackTime"])
 				src.setTime(round(whiteTime), round(blackTime))
 				. = TRUE
+			if ("swap")
+				src.add_fingerprint(usr)
+				src.swap = !src.swap
+				. = TRUE
 			if ("toggle_timing")
+				src.add_fingerprint(usr)
+				if (src.whiteTime == 0 || src.blackTime == 0)
+					. = TRUE
+					return
 				src.timing = !src.timing
 				if(src.timing)
 					processing_items |= src
+					buttonState()
+				else
+					icon_state = "chessclock"
 				. = TRUE
 			if ("end_turn")
+				src.add_fingerprint(usr)
 				src.turn = !src.turn
+				buttonState()
 				. = TRUE
 
 	mouse_drop(var/mob/user)

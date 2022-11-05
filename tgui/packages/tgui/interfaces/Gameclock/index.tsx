@@ -1,13 +1,15 @@
 import { useBackend, useLocalState } from '../../backend';
 import { GameClockData } from './types';
-import { AnimatedNumber, Box, Button, Dimmer, Flex, Icon, LabeledList, NumberInput } from '../../components';
+import { AnimatedNumber, Box, Button, Dimmer, Flex, Icon, LabeledList, NumberInput, Tooltip } from '../../components';
 import { Window } from '../../layouts';
 import { formatTime } from '../../format';
 
-const MAX_TIME = 1800;
+type TeamProps = {
+  team: 'white' | 'black';
+};
 
 export const Gameclock = (_props, context) => {
-  const { act } = useBackend<GameClockData>(context);
+  const { data, act } = useBackend<GameClockData>(context);
 
   const [configModalOpen, setConfigModalOpen] = useLocalState(context, 'configModalOpen', false);
   const [turnBuffer, setTurnBuffer] = useLocalState(context, 'turnBuffer', true);
@@ -56,7 +58,7 @@ export const Gameclock = (_props, context) => {
         )}
         <Flex>
           <Flex.Item grow={1}>
-            <SidePart team={'white'} />
+            <SidePart team={data.swap ? 'black' : 'white'} />
           </Flex.Item>
           <Flex.Item>
             <Flex direction={'column'} className="gameclock__mid">
@@ -66,7 +68,7 @@ export const Gameclock = (_props, context) => {
             </Flex>
           </Flex.Item>
           <Flex.Item grow={1}>
-            <SidePart team={'black'} />
+            <SidePart team={data.swap ? 'white' : 'black'} />
           </Flex.Item>
         </Flex>
       </Window.Content>
@@ -74,11 +76,9 @@ export const Gameclock = (_props, context) => {
   );
 };
 
-type TeamProps = {
-  team: 'white' | 'black';
-};
-
 const TimeInput = (props: TeamProps, context) => {
+  const { data } = useBackend<GameClockData>(context);
+
   const { team } = props;
 
   const [whiteTimeBuffer, setWhiteTimeBuffer] = useLocalState(context, 'whiteTimeBuffer', 0);
@@ -95,9 +95,10 @@ const TimeInput = (props: TeamProps, context) => {
       }}
       format={showTime}
       value={team === 'white' ? whiteTimeBuffer : blackTimeBuffer}
-      minValue={0}
-      maxValue={MAX_TIME}
+      minValue={data.minTime}
+      maxValue={data.maxTime}
       step={15}
+      stepPixelSize={2}
     />
   );
 };
@@ -112,8 +113,10 @@ const ConfigButton = (_, context) => {
 
   return (
     <Button
-      disabled={data.timing}
       className="gameclock__utilbutton"
+      disabled={data.timing}
+      tooltip="Setup"
+      tooltipPosition="top"
       icon="cog"
       onClick={() => {
         setConfigModalOpen(true);
@@ -131,6 +134,9 @@ const PauseButton = (_, context) => {
   return (
     <Button
       className="gameclock__utilbutton"
+      disabled={data.whiteTime === 0 || data.blackTime === 0}
+      tooltip={data.timing? "Pause" : "Unpause"}
+      tooltipPosition="top"
       icon={data.timing ? 'pause' : 'play'}
       color={data.timing ? 'orange' : ''}
       onClick={() => act('toggle_timing')}
@@ -145,8 +151,10 @@ const SwapButton = (_, context) => {
     <Button
       className="gameclock__utilbutton"
       disabled={data.timing}
+      tooltip="Swap sides"
+      tooltipPosition="top"
       icon="exchange-alt"
-      onClick={() => act('swap_teams')}
+      onClick={() => act('swap')}
     />
   );
 };
@@ -162,7 +170,12 @@ const SidePart = (props: TeamProps, context) => {
 
   return (
     <Flex direction={'column'} className="gameclock__side">
-      <Icon className="gameclock__sideicon" name={`circle${team === 'white' ? '-o' : ''}`} />
+      <Tooltip position="bottom" content={team === 'white' ? "White" : "Black"}>
+        <Icon
+          className="gameclock__sideicon"
+          name={`circle${team === 'white' ? '-o' : ''}`}
+        />
+      </Tooltip>
       <Button
         color="orange"
         disabled={!data.timing || (data.turn ? team === 'black' : team === 'white')}
