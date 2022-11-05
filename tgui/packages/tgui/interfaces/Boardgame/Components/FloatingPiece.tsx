@@ -23,7 +23,7 @@ export const FloatingPiece = ({ user, piece, x, y }: FloatingPieceProps, context
         left: `${x}px`,
       }}>
       <Flex.Item grow={1}>
-        <img src={piece.image} />
+        <img src={piece?.image} />
       </Flex.Item>
     </Flex>
   );
