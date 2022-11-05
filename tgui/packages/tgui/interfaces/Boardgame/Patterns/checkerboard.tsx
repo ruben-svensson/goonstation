@@ -3,9 +3,8 @@ declare const React;
 import { Flex, Box } from '../../../components';
 import { useBackend, useLocalState } from '../../../backend';
 import { fenCodeRecordFromPieces, fetchPieces, getPiece, getPiecesByGame, PieceType } from '../Pieces';
-import { BoardgameData, User } from '../types';
+import { BoardgameData, Piece, User } from '../types';
 import { classes } from 'common/react';
-import { Piece } from '../Components/Piece';
 import { render } from 'inferno';
 
 // Draw the board using svg
@@ -13,12 +12,18 @@ export const CheckerBoard = (_props, context) => {
   const { act, data } = useBackend<BoardgameData>(context);
 
   const { pieces, currentUser } = data;
+  const { lock } = data.boardInfo;
 
   const { tileColour1, tileColour2 } = data.styling;
 
   const [boardSize, setBoardSize] = useLocalState(context, 'boardSize', {
     width: 250,
     height: 250,
+  });
+
+  const [tileSize, setTileSize] = useLocalState(context, 'tileSize', {
+    width: 0,
+    height: 0,
   });
 
   const width = 100 / data.boardInfo.width;
@@ -34,13 +39,22 @@ export const CheckerBoard = (_props, context) => {
 
         const board = document.getElementById('pattern-checkerboard');
         const boardRect = board.getBoundingClientRect();
+
+        const boardTileWidth = boardRect.width / 8;
+        const boardTileHeight = boardRect.height / 8;
+
+        setTileSize({
+          width: boardTileWidth,
+          height: boardTileHeight,
+        });
+
         // convert from mouse coords to board coords minus offset for centering
         const boardX = ((x - boardRect.left) / boardRect.width) * 2 - 0.5;
         const boardY = ((y - boardRect.top) / boardRect.height) * 2 - 0.5;
         act('pawnPlace', {
           ckey: currentUser.ckey,
-          x: Math.round(boardX),
-          y: Math.round(boardY),
+          x: lock ? Math.round(boardX) : boardX,
+          y: lock ? Math.round(boardY) : boardY,
         });
       }}
       width="100%"
@@ -68,7 +82,8 @@ export const CheckerBoard = (_props, context) => {
 
           return (
             <svg
-              onmousedown={() => {
+              className="boardgame__piecesvg"
+              onmousedown={(e) => {
                 act('pawnSelect', {
                   ckey: currentUser.ckey,
                   pId: val,
@@ -79,22 +94,25 @@ export const CheckerBoard = (_props, context) => {
               y={height * y + '%'}
               width={width + '%'}
               height={height + '%'}
+              viewBox="0 0 100 100"
               style={{
                 'opacity': pieces[val].selected ? 0.5 : 1,
               }}>
-              <g transform="scale(1, 1)">
+              <g>
                 <image x="0%" y="0%" width="100%" height="100%" xlinkHref={pieceType?.image} />
+                <text y="50%" stroke="white">
+                  {val}
+                </text>
                 {
                   // if selected, draw a red border
                   pieces[val].selected ? (
-                    <svg x="0%" y="0%" width="100%" height="100%">
+                    <svg>
                       <text y="50%">{pieces[val].selected.name}</text>
                     </svg>
                   ) : (
                     ''
                   )
                 }
-                <rect x="0" y="0" width="100%" height="100%" fill="transparent" />
               </g>
             </svg>
           );
@@ -116,6 +134,17 @@ export const CheckerBoard = (_props, context) => {
     </svg>
   );
 };
+
+type PieceSvgProps = {
+  piece: Piece;
+  pieceType: PieceType;
+};
+
+/* export const PieceSvg = ({ piece, pieceType }: PieceSvgProps, context) => {
+  return (
+
+  );
+};*/
 
 /* export const CheckerBoard = (_props, context) => {
   const { act, data } = useBackend<BoardgameData>(context);

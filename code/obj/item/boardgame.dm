@@ -23,8 +23,8 @@
 
 	/// Apply custom styling, matches both in dm and tgui releated code
 	var/styling = list(
-		"tileColour1" = rgb(255, 224, 175),
-		"tileColour2" = rgb(181,136,99),
+		"tileColour1" = rgb(226,195,122),
+		"tileColour2" = rgb(95,61,45),
 	)
 	// Store the users who are currently using the board
 	// also track pawns they have selected and moving
@@ -59,6 +59,7 @@
 				// Increase the index by 1
 				piece_index += 1
 
+		playsound(src.loc, 'sound/effects/sine_boop.ogg', 30, 1)
 
 
 
@@ -97,44 +98,63 @@
 	proc/removePiece(var/id)
 		src.pieces -= id
 
+	proc/removePieceAt(var/x, var/y)
+		for (var/id in src.pieces)
+			var/list/pawn = src.getPawnById(id)
+			if (pawn["x"] == x && pawn["y"] == y)
+				src.removePiece(id)
+				return
+		return
+
 	proc/selectPawn(ckey, pId)
 		src.active_users[ckey]["selected"] = pId
 		pieces[pId]["selected"] = src.active_users[ckey]
 
 	proc/deselectPawn(ckey)
 		var/id = src.active_users[ckey]["selected"]
+		// return if piece doesn't exist
+		if (!id)
+			return
+
 		src.active_users[ckey]["selected"] = null
 		pieces[id]["selected"] = FALSE
+
+	proc/getPawnAt(x, y)
+		for (var/id in src.pieces)
+			var/list/pawn = src.pieces[id]
+			if (pawn["x"] == round(x) && pawn["y"] == round(y))
+				return pawn
+		return null
 
 	proc/placePawn(ckey, x, y)
 		if (!src.active_users[ckey]["selected"])
 			return
 		var/pawn = getPawnById(src.active_users[ckey]["selected"])
-		src.deselectPawn(ckey)
-		if(lock_pieces_to_tile)
-			// Round
-			x = round(x)
-			y = round(y)
+		//Check if pawn hasn't moved
+		if (pawn["x"] == round(x) && pawn["y"] == round(y))
+			return
 
-			// Check if a pawn is already there
-			for (var/pId in src.pieces)
-				var/pawn = getPawnById(pId)
-				if (pawn["x"] == x && pawn["y"] == y)
-					src.capturePawn(pawn)
+
+		// Place pawn, capture pawn if there is one
+		src.deselectPawn(ckey)
+
+		if(src.getPawnAt(x, y))
+			src.removePieceAt(x, y)
+			playsound(src.loc, 'sound/effects/capture.ogg', 30, 1)
+		else
+			playsound(src.loc, 'sound/impact_sounds/Wood_Tap.ogg', 30, 1)
 
 		pawn["x"] = x
 		pawn["y"] = y
 
 		//src.drawBoardIcon()
-		playsound(src.loc, 'sound/impact_sounds/Wood_Tap.ogg', 30, 1)
+
 
 	proc/capturePawn(var/pawn)
 		//src.drawBoardIcon()
-		playsound(src.loc, 'sound/impact_sounds/Wood_Tap.ogg', 30, 1)
+		playsound(src.loc, 'sound/effects/capture.ogg', 30, 1)
 		src.removePiece(pawn["id"])
 
-	proc/testSound()
-		playsound(src.loc, 'sound/impact_sounds/Wood_Tap.ogg', 30, 1)
 	/*
 	proc/drawBoardIcon()
 		if(!draw_custom_icon) return
@@ -217,6 +237,7 @@
 			"pattern" = src.pattern,
 			"width" = src.board_width,
 			"height" = src.board_height,
+			"lock" = src.lock_pieces_to_tile
 		)
 
 
@@ -266,9 +287,6 @@
 			if("applyGNot")
 				var/gnot = params["gnot"]
 				src.applyGNot(gnot)
-				. = TRUE
-			if("testSound")
-				src.testSound()
 				. = TRUE
 
 	ui_close(mob/user)

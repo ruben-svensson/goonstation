@@ -30,8 +30,8 @@ export const Notations = ({ direction }: NotationsProps, context) => {
   return (
     <Flex.Item
       style={{
-        'background-color': tileColour1,
-        'color': tileColour2,
+        'background-color': tileColour2,
+        'color': tileColour1,
       }}
       className={classes(['boardgame__notations', notationDirectionClass])}>
       {Array.from(Array(direction === 'vertical' ? height : width).keys()).map((i) => (
