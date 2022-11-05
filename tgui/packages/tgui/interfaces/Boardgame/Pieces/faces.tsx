@@ -27,4 +27,15 @@ facesPieces.push({
   game: 'faces',
 });
 
-export default facesPieces;
+// export default facesPieces;
+
+const otherPieces: PieceType[] = [];
+
+otherPieces.push({
+  fenCode: 'rabbit',
+  name: 'Rabbit',
+  game: 'animals',
+  image: '...',
+});
+
+export default otherPieces;

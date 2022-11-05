@@ -44,6 +44,7 @@ export const GhostPiecesContainer = (_props, context) => {
   const { act, data } = useBackend<BoardgameData>(context);
   const { users } = data;
   const { width, height } = data.boardInfo;
+
   const [flip, setFlip] = useLocalState(context, 'flip', false);
   // Loop through every object in users
 
@@ -52,11 +53,11 @@ export const GhostPiecesContainer = (_props, context) => {
 
   const additionalWidth = 24;
   const additionalHeight = 32 + 24;
-
+  return <Box />;
+  /*
   if (users) {
     return (
       <Box>
-        {users.length}
         {Object.keys(users).map((key) => {
           const user: User = users[key];
           const { selected } = user;
@@ -91,48 +92,78 @@ export const GhostPiecesContainer = (_props, context) => {
         })}
       </Box>
     );
-  }
+  }*/
 };
 
 export const Boardgame = (_props, context) => {
   const { act, data } = useBackend<BoardgameData>(context);
 
   const { name, game, pattern, width, height } = data.boardInfo;
-  const { currentUser } = data;
+  const { currentUser, pieces } = data;
 
   const [configModalOpen, setConfigModalOpen] = useLocalState(context, 'configModalOpen', false);
   const [flip, setFlip] = useLocalState(context, 'flip', false);
+
+  const [testNumber, setTestNumber] = useLocalState(context, 'testNumber', 0);
 
   const [mouseCoords, setMouseCoords] = useLocalState<{
     x: number;
     y: number;
   }>(context, 'mouseCoords', { x: 0, y: 0 });
 
+  const [boardSize, setBoardSize] = useLocalState(context, 'boardSize', {
+    width: 250,
+    height: 250,
+  });
+
+  // Run a function once without using React
+
   return (
     <Window title={name} width={400} height={550}>
-      {configModalOpen && (
-        <Dimmer full className="boardgame__configmodal">
-          <Box className="boardgame__settings">
-            <Button onClick={() => setConfigModalOpen(false)}>Close</Button>
-            <FenCodeSettings />
-          </Box>
-        </Dimmer>
-      )}
+      <FenCodeSettings />
+
       <Window.Content
         onFocusIn={() => {
-          adjustWindowSize(width, height);
+          // adjustWindowSize(width, height);
+          const board = document.getElementsByClassName('boardgame__board-inner')[0];
+          if (board) {
+            const boardRect = board.getBoundingClientRect();
+            setBoardSize({
+              width: boardRect.width - 48,
+              height: boardRect.height - 48,
+            });
+          }
+        }}
+        onFocusOut={() => {
+          // adjustWindowSize(width, height);
+          const board = document.getElementsByClassName('boardgame__board-inner')[0];
+          if (board) {
+            const boardRect = board.getBoundingClientRect();
+            setBoardSize({
+              width: boardRect.width - 48,
+              height: boardRect.height - 48,
+            });
+          }
         }}
         onMouseMove={(e) => {
           // adjustWindowSize(width, height);
+          const board = document.getElementsByClassName('boardgame__board-inner')[0];
+          if (board) {
+            const boardRect = board.getBoundingClientRect();
+            setBoardSize({
+              width: boardRect.width - 48,
+              height: boardRect.height - 48,
+            });
+          }
           setMouseCoords({
             x: e.clientX,
             y: e.clientY,
           });
         }}
         onMouseUp={() => {
-          act('pawnDeselect', {
+          /* act('pawnDeselect', {
             ckey: currentUser.ckey,
-          });
+          });*/
         }}
         fitted
         className="boardgame__window">

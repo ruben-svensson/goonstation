@@ -3,7 +3,7 @@
 	desc = "A generic game board?"
 	icon = 'icons/obj/items/gameboard.dmi'
 	icon_state = "chessboard"
-	w_class = W_CLASS_HUGE
+	w_class = W_CLASS_NORMAL
 	layer = 2.9
 	// The old game kit did this too, we should keep a piece of its dead corpse with us forever - DisturbHerb
 	stamina_damage = 30
@@ -12,58 +12,57 @@
 	var/game = "chess"
 	var/pattern = "checkerboard"
 
-
 	var/board_width = 8
 	var/board_height = 8
 
 	var/icon/custom_board = null
 	/// If true, the board will be drawn with a checkerboard pattern automatically
 	/// If false, the board will be drawn with the icon provided
-	var/draw_custom_icon = TRUE
-
-	var/board = list() // single dimensional board
+	var/draw_custom_icon = FALSE
+	var/lock_pieces_to_tile = TRUE // If true, pieces will be locked to the center of the tile they're on, otherwise they'll be free to move around
 
 	/// Apply custom styling, matches both in dm and tgui releated code
 	var/styling = list(
 		"tileColour1" = rgb(255, 224, 175),
 		"tileColour2" = rgb(181,136,99),
 	)
-
-	var/starting_positions = list()
-
 	// Store the users who are currently using the board
 	// also track pawns they have selected and moving
 	var/active_users = list()
+	var/pieces = list()
 
-	/**
-	 * Removes all the pieces from the board
-	 */
-	proc/generateEmptyBoard()
-		src.board = list()
-		// Generate empty board
-		for (var/i in 1 to board_height * board_width)
-			src.board += ""
 
-	/**
-	 * Generates an empty starting position for any sized board
-	 * with no pieces on it. Works like a clear board
-	 */
-	proc/setupEmptyStartingPosition()
-		// Automatically generate preset for an empty board
-		// Example of a 8x8 board
-		// Fen: 8/8/8/8/8/8/8/8
-		var/fen = ""
-		for(var/y in 1 to src.board_height)
-			fen += "[src.board_width]/"
-		fen = copytext(fen, 1, length(fen)) // Remove the last slash
+	proc/applyGNot(gnot)
+		// Like FEN but comma seperated
+		// Apply a GNot string and parse each value as a piece and set its x and y
+		// Example GNOT of a 3x3 board: P,P,P,3,p,p,p the true length is 9
 
-		src.starting_positions["Empty"] = fen
+		// Clear the board
+		src.pieces = list()
 
-	/**
-	 * Applies Forsyth-Edwards Notation (FEN) to the board
-	 * FEN is a standard notation for describing a particular board position of a chess game.
-	 */
-	proc/applyFen(fen)
+		// Split the string into a list
+		var/list/gnot_pieces = splittext(gnot, ",")
+		var/piece_index = 1 // Used to keep track of the piece we're on, a number increases it by that value
+		for (var/piece in gnot_pieces)
+			// If the piece is a number, increase the index by that number
+			if (isnum(text2num_safe(piece)))
+				// Get value of piece, string to number
+				piece_index += text2num_safe(piece)
+				continue
+			// If the piece is a letter or string
+			if (piece)
+				// Get the x and y of the piece
+				var/x = ((piece_index - 1) % board_width)
+				var/y = round((piece_index - 1) / board_width)
+				// Add the piece to the list
+				src.createPiece(piece, x, y)
+				// Increase the index by 1
+				piece_index += 1
+
+
+
+
+	/*proc/applyFen(fen)
 		src.board = list()
 		var/filtered_fen = replacetext(fen, "/", "")
 		for (var/char in splittext(filtered_fen, ""))
@@ -74,53 +73,69 @@
 				src.board += char
 
 		src.drawBoardIcon()
+	*/
 
-	proc/createPiece(var/fenCode, var/x, var/y)
-		var/index = (y - 1) * board_width + x
-		// return if index is out of bounds
-		if (index < 1 || index > board_height * board_width)
-			return
-		src.board[index] = fenCode
+	proc/uniquePieceId()
+		// create a unique random id for a piece when adding it to the board
+		var/id = ""
+		while ((id == "") || (id in src.pieces))
+			id = "[rand(1000, 9999)]"
+		return id
 
-	proc/movePiece(var/x1, var/y1, var/x2, var/y2)
-		var/index1 = (y1 - 1) * board_width + x
-		var/index2 = (y2 - 1) * board_width + x2
-		// return if index is out of bounds
-		if (index1 < 1 || index1 > board_height * board_width)
-			return
-		if (index2 < 1 || index2 > board_height * board_width)
-			return
-		src.board[index2] = src.board[index1]
-		src.board[index1] = ""
-
-	proc/removePiece(var/x, var/y)
-		var/index = (y - 1) * board_width + x
-		// return if index is out of bounds
-		if (index < 1 || index > board_height * board_width)
-			return
-		src.board[index] = ""
-		src.drawBoardIcon()
-
-	proc/selectPawn(ckey, pCode, pTeam, pGame, x, y)
-		src.active_users[ckey]["selected"] = list(
-			"code" = pCode,
-			"team" = pTeam,
-			"game" = pGame,
+	proc/createPiece(var/code, var/x, var/y)
+		var/id = src.uniquePieceId()
+		src.pieces[id] = list(
+			"code" = code,
 			"x" = x,
-			"y" = y
+			"y" = y,
+			"selected" = FALSE,
 		)
 
+	proc/getPawnById(var/id)
+		return src.pieces[id]
+
+	proc/removePiece(var/id)
+		src.pieces -= id
+
+	proc/selectPawn(ckey, pId)
+		src.active_users[ckey]["selected"] = pId
+		pieces[pId]["selected"] = src.active_users[ckey]
+
 	proc/deselectPawn(ckey)
+		var/id = src.active_users[ckey]["selected"]
 		src.active_users[ckey]["selected"] = null
+		pieces[id]["selected"] = FALSE
 
 	proc/placePawn(ckey, x, y)
 		if (!src.active_users[ckey]["selected"])
 			return
-		var/pawn = src.active_users[ckey]["selected"]
-		src.createPiece(pawn["code"], x, y)
-		src.drawBoardIcon()
+		var/pawn = getPawnById(src.active_users[ckey]["selected"])
+		src.deselectPawn(ckey)
+		if(lock_pieces_to_tile)
+			// Round
+			x = round(x)
+			y = round(y)
+
+			// Check if a pawn is already there
+			for (var/pId in src.pieces)
+				var/pawn = getPawnById(pId)
+				if (pawn["x"] == x && pawn["y"] == y)
+					src.capturePawn(pawn)
+
+		pawn["x"] = x
+		pawn["y"] = y
+
+		//src.drawBoardIcon()
 		playsound(src.loc, 'sound/impact_sounds/Wood_Tap.ogg', 30, 1)
 
+	proc/capturePawn(var/pawn)
+		//src.drawBoardIcon()
+		playsound(src.loc, 'sound/impact_sounds/Wood_Tap.ogg', 30, 1)
+		src.removePiece(pawn["id"])
+
+	proc/testSound()
+		playsound(src.loc, 'sound/impact_sounds/Wood_Tap.ogg', 30, 1)
+	/*
 	proc/drawBoardIcon()
 		if(!draw_custom_icon) return
 
@@ -179,7 +194,7 @@
 
 
 			src.icon = custom_board
-
+	*/
 
 	ui_interact(mob/user, datum/tgui/ui)
 		ui = tgui_process.try_update_ui(user, src, ui)
@@ -191,8 +206,6 @@
 				src.active_users[user.ckey] = list(
 					"ckey" = user.ckey,
 					"name" = user.name,
-					"mouseX" = 0,
-					"mouseY" = 0,
 					"selected" = null
 				)
 
@@ -202,7 +215,6 @@
 			"name" = src.name,
 			"game" = src.game,
 			"pattern" = src.pattern,
-			"startingPositions" = src.starting_positions,
 			"width" = src.board_width,
 			"height" = src.board_height,
 		)
@@ -210,43 +222,31 @@
 
 	ui_data(mob/user)
 		. = list()
-		.["board"] = src.board
+		.["pieces"] = src.pieces
 		.["styling"] = src.styling
 		.["users"] = src.active_users
 		.["currentUser"] = src.active_users[user.ckey]
 
 	ui_act(action, list/params, datum/tgui/ui, datum/ui_state/state)
 		. = ..()
-		if(.)
+		if(. || !IN_RANGE(src, ui.user, 1))
 			return
 		switch(action)
-			if("pawnMove")
-				var/x1 = text2num(params["x1"]) + 1 //Convert to dm array
-				var/y1 = text2num(params["y1"]) + 1 //Convert to dm array
-				var/x2 = text2num(params["x2"]) + 1 //Convert to dm array
-				var/y2 = text2num(params["y2"]) + 1 //Convert to dm array
-				src.movePiece(x1, y1, x2, y2)
-				. = TRUE
 			if("pawnCreate")
 				var/fenCode = params["fenCode"]
-				var/x = text2num(params["x"]) + 1 //Convert to dm array
-				var/y = text2num(params["y"]) + 1 //Convert to dm array
+				var/x = text2num(params["x"])
+				var/y = text2num(params["y"])
 				src.createPiece(fenCode, x, y)
 				. = TRUE
 			if("pawnRemove")
-				var/x = text2num(params["x"]) + 1 //Convert to dm array
-				var/y = text2num(params["y"]) + 1 //Convert to dm array
-				src.removePiece(x, y)
+				var/id = params["id"]
+				src.removePiece(id)
 				. = TRUE
 			if("pawnSelect")
-				var/x = text2num(params["x"]) + 1 //Convert to dm array
-				var/y = text2num(params["y"]) + 1 //Convert to dm array
 				var/ckey = params["ckey"]
-				var/pCode = params["pCode"]
-				var/pTeam = params["pTeam"]
-				var/pGame = params["pGame"]
-				src.selectPawn(ckey, pCode, pTeam, pGame, x, y)
-				src.removePiece(x, y)
+				var/pId = params["pId"]
+				src.selectPawn(ckey, pId)
+				//src.removePiece
 				. = TRUE
 			if("pawnDeselect")
 				var/ckey = params["ckey"]
@@ -255,20 +255,20 @@
 			if("pawnPlace")
 				// Place the pawn on the board currently selected
 				var/ckey = params["ckey"]
-				var/x = text2num(params["x"]) + 1 //Convert to dm array
-				var/y = text2num(params["y"]) + 1 //Convert to dm array
-				src.placePawn(ckey, x, y)
-				. = TRUE
-			if("mouseMove")
 				var/x = text2num(params["x"])
 				var/y = text2num(params["y"])
-				var/ckey = params["ckey"]
-				src.active_users[ckey]["mouseX"] = x
-				src.active_users[ckey]["mouseY"] = y
+				src.placePawn(ckey, x, y)
 				. = TRUE
-			if("applyFen")
+			/*if("applyFen")
 				var/fen = params["fen"]
 				src.applyFen(fen)
+				. = TRUE*/
+			if("applyGNot")
+				var/gnot = params["gnot"]
+				src.applyGNot(gnot)
+				. = TRUE
+			if("testSound")
+				src.testSound()
 				. = TRUE
 
 	ui_close(mob/user)
@@ -279,6 +279,11 @@
 		. = ..()
 		if(. <= UI_CLOSE || !IN_RANGE(src, user, 10))
 			return UI_CLOSE
+
+	examine(mob/user)
+		. = ..()
+		if(IN_RANGE(src, user, 10))
+			src.ui_interact(user)
 
 	mouse_drop(var/mob/user)
 		if((istype(user,/mob/living/carbon/human))&&(!user.stat)&&!(src in user.contents))
@@ -300,26 +305,11 @@
 
 		New()
 			..()
-			src.starting_positions["Chess"] = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
-			src.starting_positions["Checkers"] = "1D1D1D1D/D1D1D1D1/1D1D1D1D/8/8/d1d1d1d1/1d1d1d1d/d1d1d1d1"
-
-	chesstiny
-		name = "tiny chess board"
-		desc = "It's a board for playing tiny chess and checkers!"
-		board_width = 4
-		board_height = 4
-
-	chessweird
-		name = "wide chess board"
-		desc = "It's a board for playing wide chess and checkers!"
-		board_width = 12
-		board_height = 6
 
 	New()
 		..()
-		src.generateEmptyBoard()
-		src.setupEmptyStartingPosition()
-		src.drawBoardIcon()
+		//src.generateEmptyBoard()
+		//src.drawBoardIcon()
 
 /obj/item/boardgame_clock
 	name = "board game clock"
