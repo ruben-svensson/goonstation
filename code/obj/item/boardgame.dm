@@ -61,6 +61,7 @@
 
 
 
+
 	/*proc/applyFen(fen)
 		src.board = list()
 		var/filtered_fen = replacetext(fen, "/", "")
@@ -110,11 +111,27 @@
 			return
 		var/pawn = getPawnById(src.active_users[ckey]["selected"])
 		src.deselectPawn(ckey)
+		if(lock_pieces_to_tile)
+			// Round
+			x = round(x)
+			y = round(y)
+
+			// Check if a pawn is already there
+			for (var/pId in src.pieces)
+				var/pawn = getPawnById(pId)
+				if (pawn["x"] == x && pawn["y"] == y)
+					src.capturePawn(pawn)
+
 		pawn["x"] = x
 		pawn["y"] = y
 
 		//src.drawBoardIcon()
 		playsound(src.loc, 'sound/impact_sounds/Wood_Tap.ogg', 30, 1)
+
+	proc/capturePawn(var/pawn)
+		//src.drawBoardIcon()
+		playsound(src.loc, 'sound/impact_sounds/Wood_Tap.ogg', 30, 1)
+		src.removePiece(pawn["id"])
 
 	proc/testSound()
 		playsound(src.loc, 'sound/impact_sounds/Wood_Tap.ogg', 30, 1)

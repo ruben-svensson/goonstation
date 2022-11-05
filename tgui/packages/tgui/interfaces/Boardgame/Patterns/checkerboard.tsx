@@ -32,18 +32,15 @@ export const CheckerBoard = (_props, context) => {
         const x = e.clientX;
         const y = e.clientY;
 
-        const [mouseCoords, setMouseCoords] = useLocalState<{
-          x: number;
-          y: number;
-        }>(context, 'mouseCoords', { x: 0, y: 0 });
-
-        const boardX = Math.floor((x / boardSize.width) * data.boardInfo.width);
-        const boardY = Math.floor((y / boardSize.height) * data.boardInfo.height);
-
+        const board = document.getElementById('pattern-checkerboard');
+        const boardRect = board.getBoundingClientRect();
+        // convert from mouse coords to board coords minus offset for centering
+        const boardX = ((x - boardRect.left) / boardRect.width) * 2 - 0.5;
+        const boardY = ((y - boardRect.top) / boardRect.height) * 2 - 0.5;
         act('pawnPlace', {
           ckey: currentUser.ckey,
-          x: boardX,
-          y: boardY,
+          x: Math.round(boardX),
+          y: Math.round(boardY),
         });
       }}
       width="100%"
@@ -81,7 +78,10 @@ export const CheckerBoard = (_props, context) => {
               x={width * x + '%'}
               y={height * y + '%'}
               width={width + '%'}
-              height={height + '%'}>
+              height={height + '%'}
+              style={{
+                'opacity': pieces[val].selected ? 0.5 : 1,
+              }}>
               <g transform="scale(1, 1)">
                 <image x="0%" y="0%" width="100%" height="100%" xlinkHref={pieceType?.image} />
                 {
