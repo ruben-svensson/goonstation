@@ -6,9 +6,8 @@
 	w_class = W_CLASS_HUGE
 	layer = 2.9
 	// The old game kit did this too, we should keep a piece of its dead corpse with us forever - DisturbHerb
-	stamina_damage = 5
-	stamina_cost = 5
-	stamina_crit_chance = 5
+	stamina_damage = 30
+	stamina_cost = 20
 
 	var/game = "chess"
 	var/pattern = "checkerboard"
@@ -291,6 +290,9 @@
 
 	attackby(var/obj/item/I, mob/user)
 
+	examine(mob/user)
+		. = ..()
+		ui_interact(user)
 
 	chess
 		name = "chess board"
@@ -325,34 +327,58 @@
 	icon = 'icons/obj/items/gameboard.dmi'
 	icon_state = "chessclock"
 	var/timing = FALSE
+	var/turn = TRUE // TRUE for white, FALSE for black
 	var/whiteTime = 0
 	var/blackTime = 0
 	var/lastTick = 0
 	var/const/maxTime = 1800 SECONDS
 	var/const/minTime = 0
 
-	proc/setTime(var/new_white_time as num, var/new_black_time as num)
-		src.whiteTime = clamp(new_white_time, src.minTime, src.maxTime)
-		src.blackTime = clamp(new_black_time, src.minTime, src.maxTime)
+	proc/setTime(var/newWhiteTime as num, var/newBlackTime as num)
+		src.whiteTime = clamp(newWhiteTime, src.minTime, src.maxTime)
+		src.blackTime = clamp(newBlackTime, src.minTime, src.maxTime)
+
+	proc/tickDown(var/timeValue as num)
+		var/passedTime = TIME - src.lastTick
+		if (timeValue > 0)
+			timeValue -= passedTime
+		else
+			timeValue = 0
+			src.timing = FALSE
+			src.lastTick = 0
+		return timeValue
+
+	proc/returnMaxOfTimeOrZero()
+		if (turn) // returns true if it's white's turn, false if it's black's turn
+			src.whiteTime = max(src.whiteTime, 0)
+		else
+			src.blackTime = max(src.blackTime, 0)
+
+	// examine()
+	// 	. = list("A set of clocks used to track time for two player board games. Fancy!")
+	// 	if(src.timing)
+	// 		var/whiteSecond = src.whiteTime % 60
+	// 		var/whiteMinute = (src.whiteTime - whiteSecond) / 60
+	// 		var/blackSecond = src.blackTime % 60
+	// 		var/blackMinute = (src.blackTime - blackSecond) / 60
+	// 		// anyone know a good way of doing conditionals in DM?
+	// 		. += "White's remaining time is <b>[(whiteMinute ? text("[whiteMinute]:") : null)][whiteSecond] [whiteMinute ? null : text("seconds")]</b> and Black's remaining time is <b>[(blackMinute ? text("[blackMinute]:") : null)][blackSecond] [blackMinute ? null : text("seconds")]</b>"
+	// 	else
+	// 		. += "The clocks are currently paused."
 
 	process()
 		if (src.timing)
 			if (!src.lastTick)
 				src.lastTick = TIME
-			var/passedTime = TIME - src.lastTick
-
-			if (src.whiteTime > 0)
-				src.whiteTime -= passedTime
+			if (src.turn) // returns true if it's white's turn, false if it's black's turn
+				src.whiteTime = tickDown(src.whiteTime)
 			else
-				src.whiteTime = 0
-				src.timing = FALSE
-				src.lastTick = 0
-
+				src.blackTime = tickDown(src.blackTime)
 			src.lastTick = TIME
-
 		else
+			processing_items.Remove(src)
 			src.lastTick = 0
-		src.whiteTime = max(src.whiteTime, 0)
+		returnMaxOfTimeOrZero()
 
 	ui_interact(mob/user, datum/tgui/ui)
 		ui = tgui_process.try_update_ui(user, src, ui)
@@ -361,14 +387,19 @@
 			ui.open()
 
 	ui_data(mob/user)
+		src.process()
 		. = list(
 			"timing" = src.timing,
+			"turn" = src.turn,
 			"whiteTime" = round(src.whiteTime / 10),
 			"blackTime" = round(src.blackTime / 10),
 		)
 
 	ui_act(action, params)
 		switch(action)
+			if ("set_turn")
+				src.turn = text2num_safe(params["nextTurn"])
+				. = TRUE
 			if ("set_time")
 				var/whiteTime = text2num_safe(params["whiteTime"])
 				var/blackTime = text2num_safe(params["blackTime"])
@@ -376,6 +407,12 @@
 				. = TRUE
 			if ("toggle_timing")
 				src.timing = !src.timing
+				if(src.timing)
+					processing_items |= src
+				. = TRUE
+			if ("end_turn")
+				src.turn = !src.turn
+				. = TRUE
 
 	mouse_drop(var/mob/user)
 		if((istype(user,/mob/living/carbon/human))&&(!user.stat)&&!(src in user.contents))
