@@ -79,6 +79,8 @@ export const Gameclock = (_props, context) => {
 const TimeInput = (props: TeamProps, context) => {
   const { data } = useBackend<GameClockData>(context);
 
+  const { minTime, maxTime } = data.clockStatic;
+
   const { team } = props;
 
   const [whiteTimeBuffer, setWhiteTimeBuffer] = useLocalState(context, 'whiteTimeBuffer', 0);
@@ -95,8 +97,8 @@ const TimeInput = (props: TeamProps, context) => {
       }}
       format={showTime}
       value={team === 'white' ? whiteTimeBuffer : blackTimeBuffer}
-      minValue={data.minTime}
-      maxValue={data.maxTime}
+      minValue={minTime}
+      maxValue={maxTime}
       step={15}
       stepPixelSize={2}
     />

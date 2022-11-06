@@ -402,6 +402,13 @@
 			ui = new(user, src, "Gameclock")
 			ui.open()
 
+	ui_static_data(mob/user)
+		. = list()
+		.["clockStatic"] = list(
+			"maxTime" = round(src.maxTime / 10),
+			"minTime" = round(src.minTime / 10),
+		)
+
 	ui_data(mob/user)
 		src.process()
 		. = list(
@@ -410,8 +417,6 @@
 			"swap" = src.swap,
 			"whiteTime" = round(src.whiteTime / 10),
 			"blackTime" = round(src.blackTime / 10),
-			"maxTime" = round(src.maxTime / 10),
-			"minTime" = round(src.minTime / 10),
 		)
 
 	ui_act(action, params)
