@@ -341,11 +341,33 @@
 	icon_state = "chessclock"
 	var/timing = FALSE
 	var/turn = TRUE // TRUE for white, FALSE for black
-	var/whiteTime = 0
-	var/blackTime = 0
+	var/swap = FALSE // for swapping the layout of the clocks
+	var/whiteTime = 5 MINUTES
+	var/blackTime = 5 MINUTES
 	var/lastTick = 0
-	var/const/maxTime = 1800 SECONDS
+	var/const/maxTime = 60 MINUTES
 	var/const/minTime = 0
+
+	proc/buttonState()
+		if ((src.turn + src.swap) % 2 == 0) // It is Right Player's turn if the turn and swap values sum to an even integer
+			icon_state = "chessclock_R"
+		else
+			icon_state = "chessclock_L"
+
+	proc/formatTimeText(var/timeValue as num) // FIX THIS SHIT
+		var/seconds = round((timeValue / 10) % 60)
+		var/minutes = round(((timeValue / 10) - seconds) / 60)
+		if (minutes < 10)
+			minutes = "0[minutes]"
+		if (seconds < 10)
+			seconds = "0[seconds]"
+		return "[minutes]:[seconds]"
+
+	proc/returnMaxOfTimeOrZero()
+		if (src.turn) // Returns true if it's white's turn, false if it's black's turn
+			src.whiteTime = max(src.whiteTime, 0)
+		else
+			src.blackTime = max(src.blackTime, 0)
 
 	proc/setTime(var/newWhiteTime as num, var/newBlackTime as num)
 		src.whiteTime = clamp(newWhiteTime, src.minTime, src.maxTime)
@@ -359,25 +381,31 @@
 			timeValue = 0
 			src.timing = FALSE
 			src.lastTick = 0
+			timeFlag()
 		return timeValue
 
-	proc/returnMaxOfTimeOrZero()
-		if (turn) // returns true if it's white's turn, false if it's black's turn
-			src.whiteTime = max(src.whiteTime, 0)
+	proc/timeFlag()
+		var/winner
+		var/loser
+		if (src.blackTime == 0)
+			winner = "White"
+			loser = "Black"
 		else
-			src.blackTime = max(src.blackTime, 0)
+			winner = "Black"
+			loser = "White"
+		var/map_text = make_chat_maptext(src, "[winner] wins on time.", "color: #A8E9F0;", alpha = 215)
+		for (var/mob/O in hearers(src))
+			O.show_message(assoc_maptext = map_text)
+		src.visible_message("[src] stops. [loser] has flagged and [winner] wins on time.")
+		src.icon_state = "[src.icon_state]_stopped"
+		playsound(src.loc, 'sound/effects/sine_boop.ogg', 30, null, null, 4 )
 
-	// examine()
-	// 	. = list("A set of clocks used to track time for two player board games. Fancy!")
-	// 	if(src.timing)
-	// 		var/whiteSecond = src.whiteTime % 60
-	// 		var/whiteMinute = (src.whiteTime - whiteSecond) / 60
-	// 		var/blackSecond = src.blackTime % 60
-	// 		var/blackMinute = (src.blackTime - blackSecond) / 60
-	// 		// anyone know a good way of doing conditionals in DM?
-	// 		. += "White's remaining time is <b>[(whiteMinute ? text("[whiteMinute]:") : null)][whiteSecond] [whiteMinute ? null : text("seconds")]</b> and Black's remaining time is <b>[(blackMinute ? text("[blackMinute]:") : null)][blackSecond] [blackMinute ? null : text("seconds")]</b>"
-	// 	else
-	// 		. += "The clocks are currently paused."
+	examine()
+		. = ..()
+		if (src.timing)
+			. += "White's remaining time is <b>[formatTimeText(src.whiteTime)]</b> and Black's remaining time is <b>[formatTimeText(src.blackTime)]</b>."
+		else
+			. += "The clocks are currently paused."
 
 	process()
 		if (src.timing)
@@ -399,11 +427,19 @@
 			ui = new(user, src, "Gameclock")
 			ui.open()
 
+	ui_static_data(mob/user)
+		. = list()
+		.["clockStatic"] = list(
+			"maxTime" = round(src.maxTime / 10),
+			"minTime" = round(src.minTime / 10),
+		)
+
 	ui_data(mob/user)
 		src.process()
 		. = list(
 			"timing" = src.timing,
 			"turn" = src.turn,
+			"swap" = src.swap,
 			"whiteTime" = round(src.whiteTime / 10),
 			"blackTime" = round(src.blackTime / 10),
 		)
@@ -411,20 +447,35 @@
 	ui_act(action, params)
 		switch(action)
 			if ("set_turn")
+				src.add_fingerprint(usr)
 				src.turn = text2num_safe(params["nextTurn"])
 				. = TRUE
 			if ("set_time")
+				src.add_fingerprint(usr)
 				var/whiteTime = text2num_safe(params["whiteTime"])
 				var/blackTime = text2num_safe(params["blackTime"])
 				src.setTime(round(whiteTime), round(blackTime))
 				. = TRUE
+			if ("swap")
+				src.add_fingerprint(usr)
+				src.swap = !src.swap
+				. = TRUE
 			if ("toggle_timing")
+				src.add_fingerprint(usr)
+				if (src.whiteTime == 0 || src.blackTime == 0)
+					. = TRUE
+					return
 				src.timing = !src.timing
 				if(src.timing)
 					processing_items |= src
+					buttonState()
+				else
+					icon_state = "chessclock"
 				. = TRUE
 			if ("end_turn")
+				src.add_fingerprint(usr)
 				src.turn = !src.turn
+				buttonState()
 				. = TRUE
 
 	mouse_drop(var/mob/user)

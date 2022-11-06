@@ -1,44 +1,87 @@
 @use '../base.scss';
 
-.gameclock__configmodal {
-  z-index: 20;
-}
+.gameclock__ {
+  &window {
+    display: flex;
+    flex-direction: column;
 
-.gameclock__configmodal > .Dimmer__inner {
-  background-color: rgba(0, 0, 0, 0.8);
-  padding: 5%;
-  width: 80%;
-  height: 70%;
-}
+    padding: 5px;
+  }
 
-.gameclock__configmodalbuttoncontainer {
-  padding-top: 5%;
-}
+  &wrapper {
+    flex-grow: 1;
+  }
 
-.gameclock__side {
-  padding: 8px;
-}
+  &sidewrapper {
+    display: flex;
+    flex-grow: 1;
+    flex-direction: column;
+  }
 
-.gameclock__sideicon {
-  text-align: center;
-  font-size: 24px;
-  padding-bottom: 8px;
-}
+  &configmodal {
+    z-index: 20;
 
-.gameclock__timebutton {
-  width: 100%;
-  height: 130px;
-  margin: 2px;
-  text-align: center;
-  font-size: 2em;
-}
+    & > .Dimmer__inner {
+      background-color: rgba(0, 0, 0, 0.8);
+      padding: 5%;
+      width: 80%;
+      height: 70%;
+    }
 
+    &gameclock__configmodalbuttoncontainer {
+      padding-top: 5%;
+    }
+  }
+
+  &teamicon {
+    text-align: center;
+    font-size: 24px;
+    margin: 5px;
+  }
+
+  &sidepart {
+    flex-grow: 1;
+    padding: 5px;
+  }
+
+  &timebutton {
+    width: 100%;
+    height: 100%;
+    text-align: center;
+  }
+
+  &mid {
+    margin-top: 30px;
+    padding: 5px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &utilbutton {
+    height: 30px;
+    width: 30px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    & > i {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100%;
+    }
+  }
+}
 .gameclock__timeflex {
   flex-direction: column;
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100%;
+  font-size: 2em;
 }
 
 .gameclock__timebutton > i {
@@ -48,23 +91,8 @@
   height: 100%;
 }
 
-.gameclock__swap {
-  padding-top: 16px;
-}
-
-.gameclock__utilbutton {
-  width: 28px;
-  height: 28px;
-  margin: 6px;
-}
-
 .gameclock__utilbutton > i {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100%;
-}
-
-.gameclock__mid {
-  padding-top: 36px;
 }
