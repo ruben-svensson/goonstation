@@ -375,7 +375,7 @@
 			O.show_message(assoc_maptext = map_text)
 		src.visible_message("[src] stops. [loser] has flagged and [winner] wins on time.")
 		src.icon_state = "[src.icon_state]_stopped"
-		playsound(src.loc, 'sound/effects/sine_boop.ogg', 30, null, null, 4 )
+		playsound(src.loc, 'sound/effects/sine_boop.ogg', 30, null, null, 2 )
 
 	examine()
 		. = ..()
