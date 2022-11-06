@@ -17,8 +17,8 @@ export const FloatingPiecesContainer = (_props, context) => {
           const user: User = users[key];
           const { selected } = user;
           if (selected) {
-            const { code, game } = selected;
-            const piece = getPiece(code, game);
+            const { code } = selected;
+            const piece = getPiece(code);
             return <FloatingPiece key={key} user={user} piece={piece} x={200} y={200} />;
           }
         })}

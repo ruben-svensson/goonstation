@@ -13,6 +13,7 @@ export type BoardgameData = {
   styling: {
     tileColour1: string;
     tileColour2: string;
+    border: string;
   };
   board: string[];
   pieces: Piece[];

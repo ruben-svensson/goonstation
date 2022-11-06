@@ -25,7 +25,10 @@ export const CheckerBoard = (_props, context) => {
     width: 0,
     height: 0,
   });
-
+  const [mouseCoords, setMouseCoords] = useLocalState<{
+    x: number;
+    y: number;
+  }>(context, 'mouseCoords', { x: 0, y: 0 });
   const width = 100 / data.boardInfo.width;
   const height = 100 / data.boardInfo.height;
 
@@ -33,6 +36,7 @@ export const CheckerBoard = (_props, context) => {
 
   return (
     <svg
+      onmousedown={(e) => {}}
       onmouseup={(e) => {
         const x = e.clientX;
         const y = e.clientY;
@@ -80,18 +84,31 @@ export const CheckerBoard = (_props, context) => {
           const { x, y, code } = pieces[val];
           const pieceType = pieceRecords[code];
 
+          // Is the piece selected by currentUser?
+          const selected = currentUser.selected?.code === code;
+
           return (
             <svg
               className="boardgame__piecesvg"
               onmousedown={(e) => {
-                act('pawnSelect', {
-                  ckey: currentUser.ckey,
-                  pId: val,
-                });
+                // if the user has a piece selected, and this piece is not the selected piece, place the selected piece
+                if (currentUser.selected && currentUser.selected.code !== code) {
+                } else {
+                  act('pawnSelect', {
+                    ckey: currentUser.ckey,
+                    pId: val,
+                  });
+                }
               }}
+              onmouseup={(e) => {
+                // Deselect the pawn if it is itself
+              }}
+              ondblclick={(e) => {}}
               key={index}
               x={width * x + '%'}
               y={height * y + '%'}
+              // x={currentUser.selected ? mouseCoords.x : width * x + '%'}
+              // y={currentUser.selected ? mouseCoords.y : height * y + '%'}
               width={width + '%'}
               height={height + '%'}
               viewBox="0 0 100 100"

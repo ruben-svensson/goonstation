@@ -23,8 +23,9 @@
 
 	/// Apply custom styling, matches both in dm and tgui releated code
 	var/styling = list(
-		"tileColour1" = rgb(226,195,122),
-		"tileColour2" = rgb(95,61,45),
+		"tileColour1" = rgb(240, 217, 181),
+		"tileColour2" = rgb(181, 136, 99),
+		"border" = rgb(131, 100, 74),
 	)
 	// Store the users who are currently using the board
 	// also track pawns they have selected and moving
@@ -130,9 +131,13 @@
 		if (!src.active_users[ckey]["selected"])
 			return
 		var/pawn = getPawnById(src.active_users[ckey]["selected"])
-		//Check if pawn hasn't moved
-		if (pawn["x"] == round(x) && pawn["y"] == round(y))
-			return
+		//Check if pawn exists
+		if (!pawn)
+			if(pawn["x"]&& pawn["y"])
+				var/px = text2num_safe(pawn["x"])
+				var/py = text2num_safe(pawn["y"])
+				if (round(px) == round(x) && round(py) == round(y))
+					return
 
 
 		// Place pawn, capture pawn if there is one

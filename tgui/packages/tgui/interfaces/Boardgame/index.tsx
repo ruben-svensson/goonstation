@@ -110,7 +110,10 @@ export const Boardgame = (_props, context) => {
     x: number;
     y: number;
   }>(context, 'mouseCoords', { x: 0, y: 0 });
-
+  const [tileSize, setTileSize] = useLocalState(context, 'tileSize', {
+    width: 0,
+    height: 0,
+  });
   const [boardSize, setBoardSize] = useLocalState(context, 'boardSize', {
     width: 250,
     height: 250,
@@ -124,7 +127,7 @@ export const Boardgame = (_props, context) => {
 
       <Window.Content
         onFocusIn={() => {
-          // adjustWindowSize(width, height);
+          // adjustWindowSize(width, height, tileSize);
           const board = document.getElementsByClassName('boardgame__board-inner')[0];
           if (board) {
             const boardRect = board.getBoundingClientRect();
@@ -135,7 +138,7 @@ export const Boardgame = (_props, context) => {
           }
         }}
         onFocusOut={() => {
-          // adjustWindowSize(width, height);
+          // adjustWindowSize(width, height, tileSize);
           const board = document.getElementsByClassName('boardgame__board-inner')[0];
           if (board) {
             const boardRect = board.getBoundingClientRect();

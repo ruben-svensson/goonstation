@@ -13,7 +13,7 @@ export const Notations = ({ direction }: NotationsProps, context) => {
   const { act, data } = useBackend<BoardgameData>(context);
   const { boardInfo } = data;
   const { height, width } = boardInfo;
-  const { tileColour1, tileColour2 } = data.styling;
+  const { tileColour1, tileColour2, border } = data.styling;
   const chars = 'abcdefghijklmnopqrstuvwxyz'.split('');
 
   const heightPercentage = 100 / height;
@@ -30,7 +30,7 @@ export const Notations = ({ direction }: NotationsProps, context) => {
   return (
     <Flex.Item
       style={{
-        'background-color': tileColour2,
+        'background-color': border || tileColour2,
         'color': tileColour1,
       }}
       className={classes(['boardgame__notations', notationDirectionClass])}>
