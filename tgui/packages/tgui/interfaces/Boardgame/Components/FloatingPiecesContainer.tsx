@@ -10,7 +10,9 @@ export const FloatingPiecesContainer = (_props, context) => {
   const { act, data } = useBackend<BoardgameData>(context);
   const { users } = data;
   // Loop through every object in users
-  if (users) {
+  return <Box />;
+
+  /* if (users) {
     return (
       <Box>
         {Object.keys(users).map((key) => {
@@ -24,5 +26,5 @@ export const FloatingPiecesContainer = (_props, context) => {
         })}
       </Box>
     );
-  }
+  }*/
 };
