@@ -27,9 +27,18 @@ export const getSmallestTileSize = (tile: TileSize) => {
   return dimensions;
 };
 
-export const getProperDimensions = (width: number, height: number) => {
-  const firstTile = getFirstTileDimensions();
-  const size = getSmallestTileSize(firstTile);
+type getProperDimensionsProps = {
+  width: number;
+  height: number;
+  tileSize: {
+    width: number;
+    height: number;
+  };
+};
+
+export const getProperDimensions = (props: getProperDimensionsProps) => {
+  const { width, height, tileSize } = props;
+  const size = getSmallestTileSize(tileSize);
 
   if (size.width === 0 && size.height === 0) return;
 
@@ -45,8 +54,15 @@ export const getProperDimensions = (width: number, height: number) => {
   };
 };
 
-export const adjustWindowSize = (width: number, height: number) => {
-  const dim = getProperDimensions(width, height);
+export const adjustWindowSize = (
+  width: number,
+  height: number,
+  tileSize: {
+    width: number;
+    height: number;
+  }
+) => {
+  const dim = getProperDimensions({ width, height, tileSize });
 
   if (!dim) return; // Dimensions already good if 0
 

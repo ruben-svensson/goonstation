@@ -5,13 +5,13 @@ import { Window } from '../../layouts';
 import { Box, Button, Dimmer, Flex } from '../../components';
 import { useBackend, useLocalState } from '../../backend';
 import { Pattern } from './Patterns';
-import { BoardgameData, User } from './types';
+import { BoardgameData, Piece, User } from './types';
 
 import { adjustWindowSize, getFirstTileDimensions } from './helpers';
 import { PieceDrawer } from './Components/PieceDrawer';
 
 import { FenCodeSettings, FloatingPiece, Notations } from './Components';
-import { getPiece, PieceType } from './Pieces';
+import { fenCodeRecordFromPieces, fetchPieces, getPiece, PieceType } from './Pieces';
 
 export type GhostPieceProps = {
   user: User;
@@ -110,7 +110,10 @@ export const Boardgame = (_props, context) => {
     x: number;
     y: number;
   }>(context, 'mouseCoords', { x: 0, y: 0 });
-
+  const [tileSize, setTileSize] = useLocalState(context, 'tileSize', {
+    width: 0,
+    height: 0,
+  });
   const [boardSize, setBoardSize] = useLocalState(context, 'boardSize', {
     width: 250,
     height: 250,
@@ -124,7 +127,7 @@ export const Boardgame = (_props, context) => {
 
       <Window.Content
         onFocusIn={() => {
-          // adjustWindowSize(width, height);
+          // adjustWindowSize(width, height, tileSize);
           const board = document.getElementsByClassName('boardgame__board-inner')[0];
           if (board) {
             const boardRect = board.getBoundingClientRect();
@@ -135,7 +138,7 @@ export const Boardgame = (_props, context) => {
           }
         }}
         onFocusOut={() => {
-          // adjustWindowSize(width, height);
+          // adjustWindowSize(width, height, tileSize);
           const board = document.getElementsByClassName('boardgame__board-inner')[0];
           if (board) {
             const boardRect = board.getBoundingClientRect();
@@ -146,7 +149,7 @@ export const Boardgame = (_props, context) => {
           }
         }}
         onMouseMove={(e) => {
-          // adjustWindowSize(width, height);
+          // adjustWindowSize(width,  height);
           const board = document.getElementsByClassName('boardgame__board-inner')[0];
           if (board) {
             const boardRect = board.getBoundingClientRect();
@@ -168,8 +171,9 @@ export const Boardgame = (_props, context) => {
         fitted
         className="boardgame__window">
         <GhostPiecesContainer />
-        <HeldPieceRenderer />
+        {currentUser?.selected && <HeldPieceRenderer piece={currentUser.selected} />}
         <Box className="boardgame__debug">
+          {mouseCoords.x} {mouseCoords.y}
           <span>Flip board</span>
           <Button.Checkbox checked={flip} onClick={() => setFlip(!flip)} />
           <Button title={'Setup'} icon={'cog'} onClick={() => setConfigModalOpen(true)} />
@@ -191,7 +195,11 @@ export const Boardgame = (_props, context) => {
   );
 };
 
-const HeldPieceRenderer = (_props, context) => {
+type HeldPieceRendererProps = {
+  piece: Piece;
+};
+
+const HeldPieceRenderer = ({ piece }: HeldPieceRendererProps, context) => {
   const { act, data } = useBackend<BoardgameData>(context);
   const { currentUser } = data;
 
@@ -200,11 +208,31 @@ const HeldPieceRenderer = (_props, context) => {
     y: number;
   }>(context, 'mouseCoords', { x: 0, y: 0 });
 
+  const [selectedPawnSize, setSelectedPawnSize] = useLocalState(context, 'selectedPawnSize', {
+    width: 50,
+    height: 50,
+  });
+
   if (currentUser && currentUser.selected) {
-    const { code, game } = currentUser.selected;
+    const { code } = currentUser.selected;
 
-    const piece = getPiece(code, game);
+    const pieces = fetchPieces();
+    const piece: PieceType = fenCodeRecordFromPieces(pieces)[code];
 
-    return <FloatingPiece user={currentUser} piece={piece} x={mouseCoords.x} y={mouseCoords.y} />;
+    // Draw the piece with svg fixed to the mouse
+
+    return (
+      <Box
+        className="boardgame__heldpiece"
+        style={{
+          top: mouseCoords.y + 'px',
+          left: mouseCoords.x + 'px',
+          width: selectedPawnSize.width + 'px',
+          height: selectedPawnSize.height + 'px',
+        }}>
+        <img src={piece?.image} />
+        <span>{piece?.name}</span>
+      </Box>
+    );
   }
 };

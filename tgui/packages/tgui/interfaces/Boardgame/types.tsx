@@ -8,10 +8,12 @@ export type BoardgameData = {
     startingPositions: { [key: string]: string };
     width: number;
     height: number;
+    lock: boolean;
   };
   styling: {
     tileColour1: string;
     tileColour2: string;
+    border: string;
   };
   board: string[];
   pieces: Piece[];
@@ -37,13 +39,7 @@ export type User = {
   name: string;
   mouseX: number;
   mouseY: number;
-  selected?: {
-    code: string;
-    team: string;
-    game: string;
-    x: number;
-    y: number;
-  };
+  selected?: Piece;
 };
 
 export type TileSize = {
