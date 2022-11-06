@@ -1,6 +1,18 @@
 import { useBackend, useLocalState } from '../../backend';
 import { GameClockData } from './types';
-import { AnimatedNumber, Box, Button, Dimmer, Flex, Icon, LabeledList, NumberInput, Section, Stack, Tooltip } from '../../components';
+import {
+  AnimatedNumber,
+  Box,
+  Button,
+  Dimmer,
+  Flex,
+  Icon,
+  LabeledList,
+  NumberInput,
+  Section,
+  Stack,
+  Tooltip,
+} from '../../components';
 import { Window } from '../../layouts';
 import { formatTime } from '../../format';
 
@@ -8,6 +20,32 @@ type TeamProps = {
   team: 'white' | 'black';
 };
 
+export const Gameclock = (_props, context) => {
+  const { data } = useBackend<GameClockData>(context);
+
+  const [configModalOpen] = useLocalState(context, 'configModalOpen', false);
+
+  return (
+    <Window title={'Board Game Clock'} width={400} height={230}>
+      <Window.Content className="gameclock__window" fitted>
+        {configModalOpen && <ConfigModal />}
+        <Flex className="gameclock__wrapper">
+          <Flex.Item className="gameclock__sidewrapper">
+            <TeamIcon team={data.swap ? 'black' : 'white'} />
+            <SidePart team={data.swap ? 'black' : 'white'} />
+          </Flex.Item>
+          <MidPart />
+          <Flex.Item className="gameclock__sidewrapper">
+            <TeamIcon team={data.swap ? 'white' : 'black'} />
+            <SidePart team={data.swap ? 'white' : 'black'} />
+          </Flex.Item>
+        </Flex>
+      </Window.Content>
+    </Window>
+  );
+};
+
+/*
 export const Gameclock = (_props, context) => {
   const { data } = useBackend<GameClockData>(context);
 
@@ -47,6 +85,7 @@ export const Gameclock = (_props, context) => {
     </Window>
   );
 };
+*/
 
 const ConfigModal = (_, context) => {
   const { act } = useBackend<GameClockData>(context);
@@ -67,10 +106,7 @@ const ConfigModal = (_, context) => {
     <Dimmer className="gameclock__configmodal">
       <LabeledList>
         <LabeledList.Item label="Current Turn">
-          <Button
-            content={turnBuffer ? "White" : "Black"}
-            onClick={() => setTurnBuffer(!turnBuffer)}
-          />
+          <Button content={turnBuffer ? 'White' : 'Black'} onClick={() => setTurnBuffer(!turnBuffer)} />
         </LabeledList.Item>
         <LabeledList.Item label="Time (White)">
           <TimeInput team={'white'} />
@@ -124,16 +160,12 @@ const TimeInput = (props: TeamProps, context) => {
 };
 
 const TeamIcon = (props: TeamProps, context) => {
-
   const { team } = props;
 
   return (
     <Stack direction={'column'}>
-      <Tooltip position="bottom" content={team === 'white' ? "White" : "Black"}>
-        <Icon
-          className="gameclock__teamicon"
-          name={`circle${team === 'white' ? '-o' : ''}`}
-        />
+      <Tooltip position="bottom" content={team === 'white' ? 'White' : 'Black'}>
+        <Icon className="gameclock__teamicon" name={`circle${team === 'white' ? '-o' : ''}`} />
       </Tooltip>
     </Stack>
   );
@@ -165,7 +197,7 @@ const MidPart = (_, context) => {
       <Button
         className="gameclock__utilbutton"
         disabled={data.whiteTime === 0 || data.blackTime === 0}
-        tooltip={data.timing? "Pause" : "Unpause"}
+        tooltip={data.timing ? 'Pause' : 'Unpause'}
         tooltipPosition="top"
         icon={data.timing ? 'pause' : 'play'}
         color={data.timing ? 'orange' : ''}
