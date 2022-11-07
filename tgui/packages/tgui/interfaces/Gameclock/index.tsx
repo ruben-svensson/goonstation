@@ -9,7 +9,6 @@ import {
   Icon,
   LabeledList,
   NumberInput,
-  Section,
   Stack,
   Tooltip,
 } from '../../components';
@@ -44,48 +43,6 @@ export const Gameclock = (_props, context) => {
     </Window>
   );
 };
-
-/*
-export const Gameclock = (_props, context) => {
-  const { data } = useBackend<GameClockData>(context);
-
-  const [configModalOpen] = useLocalState(context, 'configModalOpen', false);
-
-  return (
-    <Window title={'Board Game Clock'} width={400} height={230}>
-      <Window.Content className="gameclock__fuckyouifthisworks">
-        {configModalOpen && (
-          <ConfigModal />
-        )}
-        <Flex className="gameclock__wrapper">
-          <Section fill>
-            <Stack>
-              <Stack.Item grow={4}>
-                <TeamIcon team={data.swap ? 'black' : 'white'} />
-              </Stack.Item>
-              <Stack.Item grow={1} />
-              <Stack.Item grow={4}>
-                <TeamIcon team={data.swap ? 'white' : 'black'} />
-              </Stack.Item>
-            </Stack>
-            <Stack>
-              <Stack.Item grow={4}>
-                <SidePart team={data.swap ? 'black' : 'white'} />
-              </Stack.Item>
-              <Stack.Item grow={1}>
-                <MidPart />
-              </Stack.Item>
-              <Stack.Item grow={4}>
-                <SidePart team={data.swap ? 'white' : 'black'} />
-              </Stack.Item>
-            </Stack>
-          </Section>
-        </Flex>
-      </Window.Content>
-    </Window>
-  );
-};
-*/
 
 const ConfigModal = (_, context) => {
   const { act } = useBackend<GameClockData>(context);
