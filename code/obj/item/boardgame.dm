@@ -345,7 +345,7 @@
 	var/whiteTime = 5 MINUTES
 	var/blackTime = 5 MINUTES
 	var/lastTick = 0
-	var/const/maxTime = 60 MINUTES
+	var/const/maxTime = 1 HOUR
 	var/const/minTime = 0
 
 	proc/buttonState()
@@ -393,12 +393,12 @@
 		else
 			winner = "Black"
 			loser = "White"
-		var/map_text = make_chat_maptext(src, "[winner] wins on time.", "color: #A8E9F0;", alpha = 215)
+		var/map_text = make_chat_maptext(src, "[winner] wins on time.", "color: #A8E9F0;", alpha = 150)
 		for (var/mob/O in hearers(src))
 			O.show_message(assoc_maptext = map_text)
 		src.visible_message("[src] stops. [loser] has flagged and [winner] wins on time.")
 		src.icon_state = "[src.icon_state]_stopped"
-		playsound(src.loc, 'sound/effects/sine_boop.ogg', 30, null, null, 2 )
+		playsound(src.loc, 'sound/effects/bell_high_pitch.ogg', 30)
 
 	examine()
 		. = ..()
@@ -475,6 +475,7 @@
 			if ("end_turn")
 				src.add_fingerprint(usr)
 				src.turn = !src.turn
+				playsound(src.loc, 'sound/impact_sounds/Clock_slap.ogg', 30)
 				buttonState()
 				. = TRUE
 
