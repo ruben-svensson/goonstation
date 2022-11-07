@@ -23,14 +23,14 @@
 
     & > .Dimmer__inner {
       background-color: rgba(0, 0, 0, 0.8);
-      padding: 5%;
-      width: 80%;
-      height: 70%;
+      padding: 20px;
+      width: 320px;
+      height: 140px;
     }
+  }
 
-    &gameclock__configmodalbuttoncontainer {
-      padding-top: 5%;
-    }
+  &configmodalbuttoncontainer {
+    padding-top: 12px;
   }
 
   &teamicon {

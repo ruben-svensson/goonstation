@@ -9,7 +9,6 @@ import {
   Icon,
   LabeledList,
   NumberInput,
-  Section,
   Stack,
   Tooltip,
 } from '../../components';
@@ -44,48 +43,6 @@ export const Gameclock = (_props, context) => {
     </Window>
   );
 };
-
-/*
-export const Gameclock = (_props, context) => {
-  const { data } = useBackend<GameClockData>(context);
-
-  const [configModalOpen] = useLocalState(context, 'configModalOpen', false);
-
-  return (
-    <Window title={'Board Game Clock'} width={400} height={230}>
-      <Window.Content className="gameclock__fuckyouifthisworks">
-        {configModalOpen && (
-          <ConfigModal />
-        )}
-        <Flex className="gameclock__wrapper">
-          <Section fill>
-            <Stack>
-              <Stack.Item grow={4}>
-                <TeamIcon team={data.swap ? 'black' : 'white'} />
-              </Stack.Item>
-              <Stack.Item grow={1} />
-              <Stack.Item grow={4}>
-                <TeamIcon team={data.swap ? 'white' : 'black'} />
-              </Stack.Item>
-            </Stack>
-            <Stack>
-              <Stack.Item grow={4}>
-                <SidePart team={data.swap ? 'black' : 'white'} />
-              </Stack.Item>
-              <Stack.Item grow={1}>
-                <MidPart />
-              </Stack.Item>
-              <Stack.Item grow={4}>
-                <SidePart team={data.swap ? 'white' : 'black'} />
-              </Stack.Item>
-            </Stack>
-          </Section>
-        </Flex>
-      </Window.Content>
-    </Window>
-  );
-};
-*/
 
 const ConfigModal = (_, context) => {
   const { act } = useBackend<GameClockData>(context);
@@ -181,36 +138,42 @@ const MidPart = (_, context) => {
 
   return (
     <Stack direction={'column'} className="gameclock__mid">
-      <Button
-        className="gameclock__utilbutton"
-        disabled={data.timing}
-        tooltip="Setup"
-        tooltipPosition="top"
-        icon="cog"
-        onClick={() => {
-          setConfigModalOpen(true);
-          setTurnBuffer(data.turn);
-          setWhiteTimeBuffer(data.whiteTime);
-          setBlackTimeBuffer(data.blackTime);
-        }}
-      />
-      <Button
-        className="gameclock__utilbutton"
-        disabled={data.whiteTime === 0 || data.blackTime === 0}
-        tooltip={data.timing ? 'Pause' : 'Unpause'}
-        tooltipPosition="top"
-        icon={data.timing ? 'pause' : 'play'}
-        color={data.timing ? 'orange' : ''}
-        onClick={() => act('toggle_timing')}
-      />
-      <Button
-        className="gameclock__utilbutton"
-        disabled={data.timing}
-        tooltip="Swap sides"
-        tooltipPosition="top"
-        icon="exchange-alt"
-        onClick={() => act('swap')}
-      />
+      <Box>
+        <Button
+          className="gameclock__utilbutton"
+          disabled={data.timing}
+          tooltip="Setup"
+          tooltipPosition="top"
+          icon="cog"
+          onClick={() => {
+            setConfigModalOpen(true);
+            setTurnBuffer(data.turn);
+            setWhiteTimeBuffer(data.whiteTime);
+            setBlackTimeBuffer(data.blackTime);
+          }}
+        />
+      </Box>
+      <Box>
+        <Button
+          className="gameclock__utilbutton"
+          disabled={data.whiteTime === 0 || data.blackTime === 0}
+          tooltip={data.timing ? 'Pause' : 'Unpause'}
+          tooltipPosition="top"
+          icon={data.timing ? 'pause' : 'play'}
+          color={data.timing ? 'orange' : ''}
+          onClick={() => act('toggle_timing')}
+        />
+      </Box>
+      <Box>
+        <Button
+          className="gameclock__utilbutton"
+          disabled={data.timing}
+          tooltip="Swap sides"
+          tooltipPosition="top"
+          icon="exchange-alt"
+          onClick={() => act('swap')}
+        />
+      </Box>
     </Stack>
   );
 };
