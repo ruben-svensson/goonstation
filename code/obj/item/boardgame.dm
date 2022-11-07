@@ -91,6 +91,7 @@
 			"x" = x,
 			"y" = y,
 			"selected" = FALSE,
+			"palette" = FALSE,
 		)
 
 	proc/getPawnById(var/id)
@@ -133,17 +134,12 @@
 		var/pawn = getPawnById(src.active_users[ckey]["selected"])
 		//Check if pawn exists
 		if (!pawn)
-			if(pawn["x"]&& pawn["y"])
-				var/px = text2num_safe(pawn["x"])
-				var/py = text2num_safe(pawn["y"])
-				if (round(px) == round(x) && round(py) == round(y))
-					return
-
+			return
 
 		// Place pawn, capture pawn if there is one
 		src.deselectPawn(ckey)
 
-		if(src.getPawnAt(x, y))
+		if(src.getPawnAt(x, y) != pawn)
 			src.removePieceAt(x, y)
 			playsound(src.loc, 'sound/effects/capture.ogg', 30, 1)
 		else
@@ -268,6 +264,12 @@
 				var/id = params["id"]
 				src.removePiece(id)
 				. = TRUE
+			if("pawnRemoveHeld")
+				var/ckey = params["ckey"]
+				var/id = src.active_users[ckey]["selected"]
+				src.deselectPawn(ckey)
+				src.removePiece(id)
+				. = TRUE
 			if("pawnSelect")
 				var/ckey = params["ckey"]
 				var/pId = params["pId"]
@@ -325,6 +327,19 @@
 	chess
 		name = "chess board"
 		desc = "It's a board for playing chess and checkers!"
+
+		New()
+			..()
+
+	go
+		name = "go board"
+		desc = "It's a board for playing go!"
+
+		pattern="go"
+		icon_state = "goboard"
+		board_width = 19
+		board_height = 19
+
 
 		New()
 			..()

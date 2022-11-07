@@ -212,12 +212,17 @@ const HeldPieceRenderer = ({ piece }: HeldPieceRendererProps, context) => {
     width: 50,
     height: 50,
   });
+  const [tileSize, setTileSize] = useLocalState(context, 'tileSize', {
+    width: 0,
+    height: 0,
+  });
+  const [paletteSelected, setPaletteSelected] = useLocalState(context, 'paletteSelected', '');
 
-  if (currentUser && currentUser.selected) {
+  if (paletteSelected.length > 0) {
     const { code } = currentUser.selected;
 
     const pieces = fetchPieces();
-    const piece: PieceType = fenCodeRecordFromPieces(pieces)[code];
+    const piece: PieceType = fenCodeRecordFromPieces(pieces)[paletteSelected];
 
     // Draw the piece with svg fixed to the mouse
 
@@ -227,8 +232,8 @@ const HeldPieceRenderer = ({ piece }: HeldPieceRendererProps, context) => {
         style={{
           top: mouseCoords.y + 'px',
           left: mouseCoords.x + 'px',
-          width: selectedPawnSize.width + 'px',
-          height: selectedPawnSize.height + 'px',
+          width: tileSize.width + 'px',
+          height: tileSize.height + 'px',
         }}>
         <img src={piece?.image} />
         <span>{piece?.name}</span>

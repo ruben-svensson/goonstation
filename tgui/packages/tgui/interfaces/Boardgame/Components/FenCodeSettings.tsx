@@ -14,7 +14,7 @@ import {
 } from '../../../components';
 import { fenCodeRecordFromPieces, fetchPieces, getPiece, getPiecesByGame, PieceType } from '../Pieces';
 import { BoardgameData, Piece } from '../types';
-import { presets } from '../Presets';
+import { presets, presetsByGame } from '../Presets';
 import { getTwemojiSrc } from './Piece';
 
 declare const React;
@@ -102,8 +102,50 @@ const ConfigTooltip = ({ text, tooltip, link }: ConfigTooltipProps) => {
   );
 };
 
+const convertBoardToGNot = (width: number, height: number, pieces: Piece[]) => {
+  // Convert the pieces on a board into a GNot string, comma separated
+  // For example, if the board is 8x8 a string could formatted like this:
+  // r,n,b,q,k,b,n,r,p,p,p,p,p,p,p,p,32,P,P,P,P,P,P,P,P,R,N,B,Q,K,B,N,R
+  // The numbers are the number of empty spaces
+
+  // The pieces have x and y coordinates, but we need to convert them to a 1D array
+  // and place them in the correct order, filled with empty spaces in between
+
+  let boardArray = Array(width * height).fill('');
+
+  Object.keys(pieces).forEach((pieceKey) => {
+    const piece = pieces[pieceKey];
+    const index = piece.y * width + piece.x;
+    boardArray[index] = piece.code;
+  });
+
+  let gNotString = '';
+  let emptySpaces = 0;
+
+  for (const piece of boardArray) {
+    if (piece === '') {
+      emptySpaces++;
+    } else {
+      if (emptySpaces > 0) {
+        gNotString += `${emptySpaces},`;
+        emptySpaces = 0;
+      }
+      gNotString += `${piece},`;
+    }
+  }
+
+  // Remove the last comma
+  gNotString = gNotString.slice(0, -1);
+
+  return gNotString;
+};
+
 const ConfigTab = (_props, context) => {
   const { act, data } = useBackend<BoardgameData>(context);
+  const [configModalOpen, setConfigModalOpen] = useLocalState(context, 'configModalOpen', false);
+  const { width, height } = data.boardInfo;
+  const { pieces } = data;
+  const [gnot, setGnot] = useLocalState(context, 'gnot', '');
 
   return (
     <Stack vertical>
@@ -119,8 +161,23 @@ const ConfigTab = (_props, context) => {
         <ConfigTooltip text="PGN" tooltip="Portable Game Notation (coming later)" />
         <ConfigTooltip text="PDN" tooltip="Portable Draughts Notation (coming later)" />
       </Box>
-      <TextArea style={{ 'height': '250px', 'margin': '6px' }}>Code</TextArea>
-      <Button>Apply and close</Button>
+      <TextArea value={gnot} style={{ 'height': '250px', 'margin': '6px' }} />
+      <Button
+        onClick={() => {
+          act('applyGNot', {
+            gnot: gnot,
+          });
+          setConfigModalOpen(false);
+        }}>
+        Apply and close
+      </Button>
+      <Button
+        onClick={() => {
+          const gnotString = convertBoardToGNot(width, height, pieces);
+          setGnot(gnotString);
+        }}>
+        Fetch GNot from board
+      </Button>
     </Stack>
   );
 };
@@ -382,14 +439,14 @@ const GenerateSvgBoard = ({ preset }: GenerateSvgBoardProps, context) => {
   const presetArray = preset.split(',');
   let currentIndex = 0;
   return (
-    <svg width="160" height="160" viewBox="0 0 160 160">
-      <pattern id="pattern-checkerboard-preset" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
-        <rect width="20" height="20" fill={tileColour1} />
-        <rect x="20" y="20" width="20" height="20" fill={tileColour1} />
-        <rect x="20" width="20" height="20" fill={tileColour2} />
-        <rect y="20" width="20" height="20" fill={tileColour2} />
+    <svg width="80" height="80" viewBox="0 0 80 80">
+      <pattern id="pattern-checkerboard-preset" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+        <rect width="10" height="10" fill={tileColour1} />
+        <rect x="10" y="10" width="10" height="10" fill={tileColour1} />
+        <rect x="10" width="10" height="10" fill={tileColour2} />
+        <rect y="10" width="10" height="10" fill={tileColour2} />
       </pattern>
-      <rect width="160" height="160" fill="url(#pattern-checkerboard-preset)" />
+      <rect width="80" height="80" fill="url(#pattern-checkerboard-preset)" />
 
       {
         // Draw the pieces on the board
@@ -408,8 +465,8 @@ const GenerateSvgBoard = ({ preset }: GenerateSvgBoardProps, context) => {
           }
 
           return (
-            <g key={index} transform={`translate(${x * 20}, ${y * 20})`}>
-              <PieceSVGImage width={20} height={20} pieceData={pieceData} />
+            <g key={index} transform={`translate(${x * 10}, ${y * 10})`}>
+              <PieceSVGImage width={10} height={10} pieceData={pieceData} />
             </g>
           );
         })
@@ -494,6 +551,66 @@ const PresetsTab = (_props, context) => {
 const PresetsTab = (_props, context) => {
   const { act, data } = useBackend<BoardgameData>(context);
   const [configModalOpen, setConfigModalOpen] = useLocalState(context, 'configModalOpen', false);
+  const [selectedGame, setSelectedGame] = useLocalState(context, 'selectedGame', null);
+  const presets = presetsByGame();
+  // Orgainize the presets by game, key is the game name, value is the presets for that game
+
+  // Style it in a grid
+
+  return (
+    <Flex className="boardgame__presets">
+      <Dropdown />
+      {Object.keys(presets).map((game, i) => {
+        return (
+          <Flex.Item key={i}>
+            <h3>{game}</h3>
+            <Flex direction="column">
+              {presets[game].map((preset, i) => {
+                return (
+                  <Flex.Item key={i} className="boardgame__preset">
+                    <Flex>
+                      <Flex.Item>
+                        <GenerateSvgBoard preset={preset.setup} />
+                      </Flex.Item>
+                      <Flex.Item grow={1} className="boardgame__presetdetails">
+                        <h4>{preset.name}</h4>
+                        <p>{preset.description}</p>
+                      </Flex.Item>
+                      <Flex.Item>
+                        <Button
+                          onClick={() => {
+                            act('applyGNot', {
+                              gnot: preset.setup,
+                            });
+                            setConfigModalOpen(false);
+                          }}>
+                          Play
+                        </Button>
+                        <Button
+                          onClick={() => {
+                            act('applyGNot', {
+                              gnot: preset.setup,
+                            });
+                            setConfigModalOpen(false);
+                          }}>
+                          Info
+                        </Button>
+                      </Flex.Item>
+                    </Flex>
+                  </Flex.Item>
+                );
+              })}
+            </Flex>
+          </Flex.Item>
+        );
+      })}
+    </Flex>
+  );
+};
+
+/** const PresetsTab = (_props, context) => {
+  const { act, data } = useBackend<BoardgameData>(context);
+  const [configModalOpen, setConfigModalOpen] = useLocalState(context, 'configModalOpen', false);
 
   // Orgainize the presets by game, key is the game name, value is the presets for that game
 
@@ -522,4 +639,4 @@ const PresetsTab = (_props, context) => {
       })}
     </Flex>
   );
-};
+}; */
