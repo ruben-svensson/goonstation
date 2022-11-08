@@ -1,3 +1,6 @@
+#define BLACK FALSE
+#define WHITE TRUE
+
 /obj/item/boardgame
 	name = "game board"
 	desc = "A generic game board?"
@@ -340,7 +343,7 @@
 	icon = 'icons/obj/items/gameboard.dmi'
 	icon_state = "chessclock"
 	var/timing = FALSE
-	var/turn = TRUE // TRUE for white, FALSE for black
+	var/turn = WHITE
 	var/swap = FALSE // for swapping the layout of the clocks
 	var/whiteTime = 5 MINUTES
 	var/blackTime = 5 MINUTES
@@ -364,7 +367,7 @@
 		return "[minutes]:[seconds]"
 
 	proc/returnMaxOfTimeOrZero()
-		if (src.turn) // Returns true if it's white's turn, false if it's black's turn
+		if (src.turn)
 			src.whiteTime = max(src.whiteTime, 0)
 		else
 			src.blackTime = max(src.blackTime, 0)
@@ -373,7 +376,7 @@
 		src.whiteTime = clamp(newWhiteTime, src.minTime, src.maxTime)
 		src.blackTime = clamp(newBlackTime, src.minTime, src.maxTime)
 
-	proc/tickDown(var/timeValue as num)
+	proc/tickDown(var/timeValue as num) // Decrements the given timeValue by the time passed since the proc was last called
 		var/passedTime = TIME - src.lastTick
 		if (timeValue > 0)
 			timeValue -= passedTime
@@ -381,18 +384,12 @@
 			timeValue = 0
 			src.timing = FALSE
 			src.lastTick = 0
-			timeFlag()
+			src.timeFlag()
 		return timeValue
 
 	proc/timeFlag()
-		var/winner
-		var/loser
-		if (src.blackTime == 0)
-			winner = "White"
-			loser = "Black"
-		else
-			winner = "Black"
-			loser = "White"
+		var/winner = src.turn ? "Black" : "White"
+		var/loser = !src.turn ? "Black" : "White"
 		var/map_text = make_chat_maptext(src, "[winner] wins on time.", "color: #A8E9F0;", alpha = 150)
 		for (var/mob/O in hearers(src))
 			O.show_message(assoc_maptext = map_text)
@@ -411,7 +408,7 @@
 		if (src.timing)
 			if (!src.lastTick)
 				src.lastTick = TIME
-			if (src.turn) // returns true if it's white's turn, false if it's black's turn
+			if (src.turn)
 				src.whiteTime = tickDown(src.whiteTime)
 			else
 				src.blackTime = tickDown(src.blackTime)
@@ -419,7 +416,7 @@
 		else
 			processing_items.Remove(src)
 			src.lastTick = 0
-		returnMaxOfTimeOrZero()
+		src.returnMaxOfTimeOrZero()
 
 	ui_interact(mob/user, datum/tgui/ui)
 		ui = tgui_process.try_update_ui(user, src, ui)
@@ -468,7 +465,7 @@
 				src.timing = !src.timing
 				if(src.timing)
 					processing_items |= src
-					buttonState()
+					src.buttonState()
 				else
 					icon_state = "chessclock"
 				. = TRUE
@@ -476,7 +473,7 @@
 				src.add_fingerprint(usr)
 				src.turn = !src.turn
 				playsound(src.loc, 'sound/impact_sounds/Clock_slap.ogg', 30)
-				buttonState()
+				src.buttonState()
 				. = TRUE
 
 	mouse_drop(var/mob/user)
