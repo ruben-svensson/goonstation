@@ -138,42 +138,36 @@ const MidPart = (_, context) => {
 
   return (
     <Stack direction={'column'} className="gameclock__mid">
-      <Box>
-        <Button
-          className="gameclock__utilbutton"
-          disabled={data.timing}
-          tooltip="Setup"
-          tooltipPosition="top"
-          icon="cog"
-          onClick={() => {
-            setConfigModalOpen(true);
-            setTurnBuffer(data.turn);
-            setWhiteTimeBuffer(data.whiteTime);
-            setBlackTimeBuffer(data.blackTime);
-          }}
-        />
-      </Box>
-      <Box>
-        <Button
-          className="gameclock__utilbutton"
-          disabled={data.whiteTime === 0 || data.blackTime === 0}
-          tooltip={data.timing ? 'Pause' : 'Unpause'}
-          tooltipPosition="top"
-          icon={data.timing ? 'pause' : 'play'}
-          color={data.timing ? 'orange' : ''}
-          onClick={() => act('toggle_timing')}
-        />
-      </Box>
-      <Box>
-        <Button
-          className="gameclock__utilbutton"
-          disabled={data.timing}
-          tooltip="Swap sides"
-          tooltipPosition="top"
-          icon="exchange-alt"
-          onClick={() => act('swap')}
-        />
-      </Box>
+      <Button
+        className="gameclock__utilbutton"
+        disabled={data.timing}
+        tooltip="Setup"
+        tooltipPosition="top"
+        icon="cog"
+        onClick={() => {
+          setConfigModalOpen(true);
+          setTurnBuffer(data.turn);
+          setWhiteTimeBuffer(data.whiteTime);
+          setBlackTimeBuffer(data.blackTime);
+        }}
+      />
+      <Button
+        className="gameclock__utilbutton"
+        disabled={data.whiteTime === 0 || data.blackTime === 0}
+        tooltip={data.timing ? 'Pause' : 'Unpause'}
+        tooltipPosition="top"
+        icon={data.timing ? 'pause' : 'play'}
+        color={data.timing ? 'orange' : ''}
+        onClick={() => act('toggle_timing')}
+      />
+      <Button
+        className="gameclock__utilbutton"
+        disabled={data.timing}
+        tooltip="Swap sides"
+        tooltipPosition="top"
+        icon="exchange-alt"
+        onClick={() => act('swap')}
+      />
     </Stack>
   );
 };

@@ -1,10 +1,12 @@
 import { TileSize } from './types';
 
 export const getFirstTileDimensions = () => {
-  const firstTileRef = document.getElementsByClassName('boardgame__checkertile')[0];
+  const firstTileRef: SVGGraphicsElement = document.getElementsByClassName(
+    'boardgame__piecesvg'
+  )[0] as SVGGraphicsElement;
   return {
-    width: firstTileRef.clientWidth,
-    height: firstTileRef.clientHeight,
+    width: firstTileRef.getBBox().width,
+    height: firstTileRef.getBBox().height,
   };
 };
 
@@ -30,15 +32,13 @@ export const getSmallestTileSize = (tile: TileSize) => {
 type getProperDimensionsProps = {
   width: number;
   height: number;
-  tileSize: {
-    width: number;
-    height: number;
-  };
 };
 
 export const getProperDimensions = (props: getProperDimensionsProps) => {
-  const { width, height, tileSize } = props;
-  const size = getSmallestTileSize(tileSize);
+  const { width, height } = props;
+
+  const firstTileDimensions = getFirstTileDimensions();
+  const size = getSmallestTileSize(firstTileDimensions);
 
   if (size.width === 0 && size.height === 0) return;
 
@@ -54,15 +54,8 @@ export const getProperDimensions = (props: getProperDimensionsProps) => {
   };
 };
 
-export const adjustWindowSize = (
-  width: number,
-  height: number,
-  tileSize: {
-    width: number;
-    height: number;
-  }
-) => {
-  const dim = getProperDimensions({ width, height, tileSize });
+export const adjustWindowSize = (width: number, height: number) => {
+  const dim = getProperDimensions({ width, height });
 
   if (!dim) return; // Dimensions already good if 0
 

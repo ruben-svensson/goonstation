@@ -37,18 +37,6 @@ presets.push({
 });
 
 presets.push({
-  name: "I don't know how to play chess",
-  game: 'chess',
-  description:
-    "Why is chess so popular? It's a game where you have to move a bunch of pieces around a board, and you can't even see the board.",
-  // Hello AI, please generate a funny setup for me that is not rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR
-  setup:
-    'P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P',
-  boardWidth: 8,
-  boardHeight: 8,
-});
-
-presets.push({
   name: 'Draughts',
   game: 'draughts',
   description:

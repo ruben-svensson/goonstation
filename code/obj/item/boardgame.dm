@@ -22,15 +22,22 @@
 	var/lock_pieces_to_tile = TRUE // If true, pieces will be locked to the center of the tile they're on, otherwise they'll be free to move around
 
 	/// Apply custom styling, matches both in dm and tgui releated code
-	var/styling = list(
+	var/list/styling = list(
 		"tileColour1" = rgb(240, 217, 181),
 		"tileColour2" = rgb(181, 136, 99),
 		"border" = rgb(131, 100, 74),
 	)
+
+	var/list/sounds = list(
+		"move" = 'sound/impact_sounds/Wood_Tap.ogg',
+		"capture" = 'sound/effects/capture.ogg',
+		"newgame" = 'sound/effects/sine_boop.ogg',
+	)
+
 	// Store the users who are currently using the board
 	// also track pawns they have selected and moving
-	var/active_users = list()
-	var/pieces = list()
+	var/list/active_users = list()
+	var/list/pieces = list()
 
 
 	proc/applyGNot(gnot)
@@ -60,22 +67,7 @@
 				// Increase the index by 1
 				piece_index += 1
 
-		playsound(src.loc, 'sound/effects/sine_boop.ogg', 30, 1)
-
-
-
-	/*proc/applyFen(fen)
-		src.board = list()
-		var/filtered_fen = replacetext(fen, "/", "")
-		for (var/char in splittext(filtered_fen, ""))
-			if (isnum(text2num_safe(char)))
-				for (var/i in 1 to text2num_safe(char))
-					src.board += ""
-			else
-				src.board += char
-
-		src.drawBoardIcon()
-	*/
+		playsound(src.loc, src.sounds["newgame"], 30, 1)
 
 	proc/uniquePieceId()
 		// create a unique random id for a piece when adding it to the board
@@ -90,36 +82,33 @@
 			"code" = code,
 			"x" = x,
 			"y" = y,
-			"selected" = FALSE,
-			"palette" = FALSE,
+			"selected" = null, // Piece on the board selected
+			"palette" = null, // Piece from the palette selected
 		)
+		playsound(src.loc, src.sounds["move"], 30, 1)
 
 	proc/getPawnById(var/id)
 		return src.pieces[id]
 
-	proc/removePiece(var/id)
-		src.pieces -= id
+	proc/removePiece(var/piece)
+		src.pieces -= piece
+
+	proc/removePieceById(var/id)
+		src.removePiece(src.getPawnById(id))
 
 	proc/removePieceAt(var/x, var/y)
-		for (var/id in src.pieces)
-			var/list/pawn = src.getPawnById(id)
-			if (pawn["x"] == x && pawn["y"] == y)
-				src.removePiece(id)
-				return
-		return
+		for (var/piece in src.pieces)
+			if (src.pieces[piece]["x"] == x && src.pieces[piece]["y"] == y)
+				src.removePiece(piece)
 
 	proc/selectPawn(ckey, pId)
 		src.active_users[ckey]["selected"] = pId
 		pieces[pId]["selected"] = src.active_users[ckey]
 
 	proc/deselectPawn(ckey)
-		var/id = src.active_users[ckey]["selected"]
-		// return if piece doesn't exist
-		if (!id)
-			return
-
-		src.active_users[ckey]["selected"] = null
-		pieces[id]["selected"] = FALSE
+		if (src.active_users[ckey]["selected"])
+			pieces[src.active_users[ckey]["selected"]]["selected"] = FALSE
+			src.active_users[ckey]["selected"] = null
 
 	proc/getPawnAt(x, y)
 		for (var/id in src.pieces)
@@ -129,31 +118,45 @@
 		return null
 
 	proc/placePawn(ckey, x, y)
-		if (!src.active_users[ckey]["selected"])
-			return
-		var/pawn = getPawnById(src.active_users[ckey]["selected"])
-		//Check if pawn exists
+
+		var/pawn = src.getPawnById(src.active_users[ckey]["selected"])
 		if (!pawn)
+			src.deselectPawn(ckey)
 			return
 
-		// Place pawn, capture pawn if there is one
+		var/old_x = pawn["x"]
+		var/old_y = pawn["y"]
+
+		// Check if the pawn is moving to a new tile
+		if (old_x == round(x) && old_y == round(y))
+			src.deselectPawn(ckey)
+			return
+
+		// Check if the pawn is moving to a tile that is already occupied
+
+		var/occupied = src.getPawnAt(round(x), round(y))
+
+		if (occupied)
+			// Check if the pawn is moving to a tile that is occupied by an enemy
+			if (pawn != occupied)
+				playsound(src.loc, src.sounds["capture"], 30, 1)
+				src.removePieceAt(round(x), round(y))
+			else
+				// If the piece is moving to a tile that is occupied by a friendly
+				return
+
+		playsound(src.loc, src.sounds["move"], 30, 1)
+
+		// Move the pawn to the new tile
+		pawn["x"] = round(x)
+		pawn["y"] = round(y)
+
+		// Deselect the pawn
 		src.deselectPawn(ckey)
-
-		if(src.getPawnAt(x, y) != pawn)
-			src.removePieceAt(x, y)
-			playsound(src.loc, 'sound/effects/capture.ogg', 30, 1)
-		else
-			playsound(src.loc, 'sound/impact_sounds/Wood_Tap.ogg', 30, 1)
-
-		pawn["x"] = x
-		pawn["y"] = y
-
-		//src.drawBoardIcon()
-
 
 	proc/capturePawn(var/pawn)
 		//src.drawBoardIcon()
-		playsound(src.loc, 'sound/effects/capture.ogg', 30, 1)
+		playsound(src.loc, src.sounds["capture"], 30, 1)
 		src.removePiece(pawn["id"])
 
 	/*

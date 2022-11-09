@@ -14,14 +14,12 @@ type PatternToUseProps = {
   pattern: string;
 };
 
-const PatternToUse = ({ pattern }: PatternToUseProps) => {
+const PatternToUse = ({ pattern }: PatternToUseProps, context) => {
   switch (pattern) {
-    case 'checkerboard':
+    case 'checkerboard': // 4 tiles per square, handles translation
       return <CheckerBoard />;
-      break;
     case 'go':
       return <Go />;
-      break;
   }
 };
 
@@ -35,11 +33,6 @@ export const Pattern = ({ pattern }: PatternProps, context) => {
   const width = 100 / data.boardInfo.width;
   const height = 100 / data.boardInfo.height;
 
-  const [boardSize, setBoardSize] = useLocalState(context, 'boardSize', {
-    width: 250,
-    height: 250,
-  });
-
   const [tileSize, setTileSize] = useLocalState(context, 'tileSize', {
     width: 0,
     height: 0,
@@ -49,48 +42,75 @@ export const Pattern = ({ pattern }: PatternProps, context) => {
     y: number;
   }>(context, 'mouseCoords', { x: 0, y: 0 });
 
+  const [translateCoords, setTranslateCoords] = useLocalState<{
+    x: number;
+    y: number;
+  }>(context, 'translateCoords', { x: 0, y: 0 });
+
   const pieceRecords = fenCodeRecordFromPieces(fetchPieces());
   const [paletteSelected, setPaletteSelected] = useLocalState(context, 'paletteSelected', '');
-
+  const [patternMulti, setPatternMulti] = useLocalState(context, 'patternMulti', 1);
   return (
     <svg
       onmousedown={(e) => {}}
       onmouseup={(e) => {
-        const x = e.clientX;
-        const y = e.clientY;
-
         const board = document.getElementById('pattern');
         const boardRect = board.getBoundingClientRect();
 
-        const boardTileWidth = boardRect.width / data.boardInfo.width;
-        const boardTileHeight = boardRect.height / data.boardInfo.height;
+        const x = e.clientX; // Mouse x
+        const y = e.clientY; // Mouse y
+
+        const boardWidth = boardRect.width; // Full width of the board
+        const boardHeight = boardRect.height; // Full height of the board
+
+        const tileWidth = boardWidth / data.boardInfo.width; // Width of a single tile
+        const tileHeight = boardHeight / data.boardInfo.height; // Height of a single tile
 
         // Convert the mouse coords to board coords
-        const boardX = Math.floor((x - boardRect.left) / boardTileWidth);
-        const boardY = Math.floor((y - boardRect.top) / boardTileHeight);
+        // If the board is 8 tiles wide, and the mouse is at 50% of the board width, the board coord is 4
+        // Use x,y, boardWidth, boardHeight, tileWidth, tileHeight only, boardRect.x and boardRect.y are not needed
 
-        // const boardX = ((x - boardRect.left) / boardRect.width) * 2 - 0.5;
-        // const boardY = ((y - boardRect.top) / boardRect.height) * 2 - 0.5;
+        let patternMulti = 1; // Divide by this to get the board coord
+        let patternOffset = 0; // Used to offset the board coord, for games like go
+        switch (pattern) {
+          case 'checkerboard': // 4 tiles per square, handles translation
+            patternMulti = 4;
+            break;
+          case 'go':
+            patternOffset = 0.5; // Half a tile
+        }
+
+        let boardX = x / tileWidth / patternMulti - 1 - patternOffset;
+        let boardY = y / tileHeight / patternMulti - 1 - patternOffset;
+
+        // Round the board coords to the nearest integer
+        // if lock is true, round to the nearest integer
+
+        if (lock) {
+          boardX = Math.round(boardX);
+          boardY = Math.round(boardY);
+        }
+
+        setTranslateCoords({
+          x: boardX,
+          y: boardY,
+        });
+
         if (paletteSelected.length > 0) {
-          act('pawnCreate', {
-            fenCode: paletteSelected,
-            x: lock ? Math.round(boardX) : boardX,
-            y: lock ? Math.round(boardY) : boardY,
-          });
+          if (currentUser.selected) {
+            act('pawnPlace', {
+              ckey: currentUser.ckey,
+              x: boardX,
+              y: boardY,
+            });
+          } else {
+            act('pawnCreate', {
+              fenCode: paletteSelected,
+              x: boardX,
+              y: boardY,
+            });
+          }
           setPaletteSelected('');
-        } else {
-          setTileSize({
-            width: boardTileWidth,
-            height: boardTileHeight,
-          });
-
-          // convert from mouse coords to board coords minus offset for centering
-
-          act('pawnPlace', {
-            ckey: currentUser.ckey,
-            x: lock ? Math.round(boardX) : boardX,
-            y: lock ? Math.round(boardY) : boardY,
-          });
         }
       }}
       width="100%"
@@ -107,7 +127,7 @@ export const Pattern = ({ pattern }: PatternProps, context) => {
           const pieceType = pieceRecords[code];
 
           // Is the piece selected by currentUser?
-          const selectedByUser = currentUser?.name === pieces[val].selected?.name;
+          const selected = pieces[val].selected;
 
           return (
             <svg
@@ -115,38 +135,62 @@ export const Pattern = ({ pattern }: PatternProps, context) => {
               onmousedown={(e) => {
                 // if the user has a piece selected, and this piece is not the selected piece, place the selected piece
 
-                act('pawnSelect', {
-                  ckey: currentUser.ckey,
-                  pId: val,
-                });
+                if (!selected) {
+                  act('pawnSelect', {
+                    ckey: currentUser.ckey,
+                    pId: val,
+                  });
+                  setPaletteSelected(code);
+                }
               }}
               onmouseup={(e) => {
+                setPaletteSelected('');
+
                 // Deselect the pawn if it is itself
               }}
               ondblclick={(e) => {}}
               key={index}
               x={width * x + '%'}
               y={height * y + '%'}
-              // x={currentUser.selected.code === pieces[val].code ? mouseCoords.x : width * x + '%'}
-              // y={currentUser.selected.code === pieces[val].code ? mouseCoords.y : height * y + '%'}
               width={width + '%'}
               height={height + '%'}
+              overflow="visible"
               viewBox="0 0 100 100"
               style={{
                 'cursor': 'pointer',
               }}>
-              <g>
-                <image x="0%" y="0%" width="100%" height="100%" xlinkHref={pieceType?.image} />
-                <text y="50%" stroke="white" />
+              <g overflow="visible">
+                <image
+                  style={{
+                    'cursor': 'pointer',
+                    'opacity': selected ? 0.5 : 1,
+                  }}
+                  x="0%"
+                  y="0%"
+                  width="100%"
+                  height="100%"
+                  xlinkHref={pieceType?.image}
+                />
                 {
-                  // if selected, draw a red border
+                  // if selected make it more opaque
+                  // center a text element with the holder's name
+                  // like a tooltip
                   pieces[val].selected ? (
-                    <svg
-                      style={{
-                        'overflow': 'visible',
-                        'box-shadow': '0px -0px 10000px transparent',
-                      }}>
-                      <text y="50%" fontSize="24px">
+                    <svg overflow="visible">
+                      <text
+                        x="50%"
+                        y="50%"
+                        fontSize="18px"
+                        text-anchor="middle"
+                        dominant-baseline="middle"
+                        style={{
+                          'text-align': 'center',
+                          'cursor': 'pointer',
+                          'fill': 'black',
+                          'font-weight': 'bold',
+                          'stroke': 'white',
+                          'stroke-width': '1px',
+                        }}>
                         {pieces[val].selected.name}
                       </text>
                     </svg>
@@ -158,19 +202,6 @@ export const Pattern = ({ pattern }: PatternProps, context) => {
             </svg>
           );
         })
-
-        /* pieces.map((piece, index) => {
-          const { x, y, code } = piece;
-          const pieceType = pieceRecords[code];
-          return (
-            <svg key={index} x={width * x + '%'} y={height * y + '%'} width={width + '%'} height={height + '%'}>
-              <g transform="scale(1, 1)">
-                <image x="0%" y="0%" width="100%" height="100%" xlinkHref={pieceType?.image} />
-                <text>{piece}</text>
-              </g>
-            </svg>
-          );
-        })*/
       }
     </svg>
   );
