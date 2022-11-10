@@ -1,6 +1,3 @@
-#define BLACK FALSE
-#define WHITE TRUE
-
 /obj/item/boardgame
 	name = "game board"
 	desc = "A generic game board?"

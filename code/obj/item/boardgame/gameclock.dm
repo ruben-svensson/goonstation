@@ -1,3 +1,6 @@
+#define BLACK FALSE
+#define WHITE TRUE
+
 /obj/item/gameclock
 	name = "board game clock"
 	desc = "A set of clocks used to track time for two player board games. Fancy!"
