@@ -9,10 +9,18 @@ import { Piece } from './Piece';
 
 export const PieceDrawer = (orps, context) => {
   const { act, data } = useBackend<BoardgameData>(context);
+  const { currentUser } = data;
   const [expandedSets, setExpandedSets] = useLocalState<boolean[]>(context, `expandedSets`, []);
-
+  const [paletteSelected, setPaletteSelected] = useLocalState(context, 'paletteSelected', '');
   return (
-    <Box className={'boardgame__piece-set-wrapper'}>
+    <Box
+      onMouseUp={() => {
+        act('pawnRemoveHeld', {
+          ckey: currentUser.ckey,
+        });
+        setPaletteSelected('');
+      }}
+      className={'boardgame__piece-set-wrapper'}>
       {sets.map((set, i) => (
         <Box key={set.name}>
           <Box
@@ -28,7 +36,12 @@ export const PieceDrawer = (orps, context) => {
             direction={'row'}
             className={`boardgame__piece-set  ${!expandedSets[i] ? 'boardgame__piece-set-minimized' : ''}`}>
             {set.pieces.map((piece) => (
-              <Flex.Item className="boardgame__piece-set__piece" key={piece.name}>
+              <Flex.Item
+                className="boardgame__piece-set__piece"
+                key={piece.name}
+                onMouseDown={() => {
+                  setPaletteSelected(piece.fenCode);
+                }}>
                 <Piece piece={piece} isSetPiece />
               </Flex.Item>
             ))}

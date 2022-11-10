@@ -33,20 +33,7 @@ export const Piece = ({ piece, isSetPiece, position }: PieceProps, context) => {
   const { fenCode, name, game, image } = piece;
   const { x, y } = position || { x: -1, y: -1 }; // Default to 0,0 if no position is provided
 
-  return (
-    <Box
-      /* onMouseDown={() => {
-        act('pawnSelect', {
-          ckey: currentUser.ckey,
-          pId: pieces[piece],
-          pTeam: '',
-          pGame: game,
-        });
-      }}*/
-      className={`boardgame__piece`}>
-      {image ? <img src={image} /> : <img src={getTwemojiSrc(fenCode)} />}
-    </Box>
-  );
+  return <Box className={`boardgame__piece`}>{image ? <img src={image} /> : <img src={getTwemojiSrc(fenCode)} />}</Box>;
 };
 
 type SvgFenRendererProps = {

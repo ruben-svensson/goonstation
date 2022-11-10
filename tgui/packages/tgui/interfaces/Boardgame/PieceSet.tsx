@@ -16,3 +16,8 @@ sets.push({
   name: 'Draughts',
   pieces: getPiecesByGame('draughts'),
 });
+
+sets.push({
+  name: 'Go',
+  pieces: getPiecesByGame('go'),
+});

@@ -119,10 +119,16 @@ export const Boardgame = (_props, context) => {
     height: 250,
   });
 
+  const [translateCoords, setTranslateCoords] = useLocalState<{
+    x: number;
+    y: number;
+  }>(context, 'translateCoords', { x: 0, y: 0 });
+
   // Run a function once without using React
+  const [paletteSelected, setPaletteSelected] = useLocalState(context, 'paletteSelected', '');
 
   return (
-    <Window title={name} width={400} height={550}>
+    <Window title={name} width={800} height={650}>
       <FenCodeSettings />
 
       <Window.Content
@@ -171,9 +177,9 @@ export const Boardgame = (_props, context) => {
         fitted
         className="boardgame__window">
         <GhostPiecesContainer />
-        {currentUser?.selected && <HeldPieceRenderer piece={currentUser.selected} />}
+        {paletteSelected && <HeldPieceRenderer />}
         <Box className="boardgame__debug">
-          {mouseCoords.x} {mouseCoords.y}
+          {translateCoords.x} {translateCoords.y}-{boardSize.width} {boardSize.height}-{mouseCoords.x} {mouseCoords.y}
           <span>Flip board</span>
           <Button.Checkbox checked={flip} onClick={() => setFlip(!flip)} />
           <Button title={'Setup'} icon={'cog'} onClick={() => setConfigModalOpen(true)} />
@@ -195,11 +201,7 @@ export const Boardgame = (_props, context) => {
   );
 };
 
-type HeldPieceRendererProps = {
-  piece: Piece;
-};
-
-const HeldPieceRenderer = ({ piece }: HeldPieceRendererProps, context) => {
+const HeldPieceRenderer = (_, context) => {
   const { act, data } = useBackend<BoardgameData>(context);
   const { currentUser } = data;
 
@@ -208,16 +210,11 @@ const HeldPieceRenderer = ({ piece }: HeldPieceRendererProps, context) => {
     y: number;
   }>(context, 'mouseCoords', { x: 0, y: 0 });
 
-  const [selectedPawnSize, setSelectedPawnSize] = useLocalState(context, 'selectedPawnSize', {
-    width: 50,
-    height: 50,
-  });
+  const [paletteSelected, setPaletteSelected] = useLocalState(context, 'paletteSelected', '');
 
-  if (currentUser && currentUser.selected) {
-    const { code } = currentUser.selected;
-
+  if (paletteSelected.length > 0) {
     const pieces = fetchPieces();
-    const piece: PieceType = fenCodeRecordFromPieces(pieces)[code];
+    const piece: PieceType = fenCodeRecordFromPieces(pieces)[paletteSelected];
 
     // Draw the piece with svg fixed to the mouse
 
@@ -227,8 +224,8 @@ const HeldPieceRenderer = ({ piece }: HeldPieceRendererProps, context) => {
         style={{
           top: mouseCoords.y + 'px',
           left: mouseCoords.x + 'px',
-          width: selectedPawnSize.width + 'px',
-          height: selectedPawnSize.height + 'px',
+          width: '30px',
+          height: '30px',
         }}>
         <img src={piece?.image} />
         <span>{piece?.name}</span>
