@@ -478,6 +478,7 @@
 				. = TRUE
 			if ("end_turn")
 				src.add_fingerprint(usr)
+				src.lastTick = null
 				src.turn = !src.turn
 				playsound(src.loc, 'sound/impact_sounds/Clock_slap.ogg', 30)
 				src.buttonState()
