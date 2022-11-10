@@ -1,10 +1,13 @@
+/* eslint-disable max-len */
 export type PresetType = {
   name: string;
   game: string;
   description: string;
-  setup: string;
+  // string or function that returns string
+  setup: string | (() => string);
   boardWidth: number;
   boardHeight: number;
+  wikiPage?: string; // Wiki page for the game from https://wiki.ss13.co/
 };
 
 export const presets: PresetType[] = [];
@@ -23,6 +26,56 @@ presets.push({
   game: 'chess',
   description: 'Apart from the usual king and pawns, one side has three queens and the other has seven knights.',
   setup: 'n,n,n,n,k,n,n,n,p,p,p,p,p,p,p,p,32,P,P,P,P,P,P,P,P,1,Q,1,Q,K,1,Q,1',
+  boardWidth: 8,
+  boardHeight: 8,
+});
+
+presets.push({
+  name: 'Horde',
+  game: 'chess',
+  description:
+    "In this variant, White's pawns on the first and second ranks may advance one or two steps, provided that the path in the file is free. Unlike in regular chess, this does not have to be the pawn's first move",
+  setup:
+    'r,n,b,q,k,b,n,r,p,p,p,p,p,p,p,p,8,1,P,P,2,P,P,1,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P',
+  boardWidth: 8,
+  boardHeight: 8,
+});
+
+presets.push({
+  name: 'Racing Kings',
+  game: 'chess',
+  description:
+    "In Racing Kings the object is not to trap or capture your opponent's king, but instead it is a race to the 8th rank! ",
+  setup: '48,k,r,b,n,N,B,R,K,q,r,b,n,N,B,R,Q',
+  boardWidth: 8,
+  boardHeight: 8,
+});
+
+presets.push({
+  name: 'Displacement chess',
+  game: 'chess',
+  description:
+    "Displacement chess is a family of chess variants in which a few pieces are transposed in the initial standard chess position. The main goal of these variants is to negate players' knowledge of standard chess openings.",
+  setup: function () {
+    let board = [];
+
+    const pawns = ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'];
+    let special = ['n', 'b', 'r', 'q', 'k', 'r', 'b', 'n'];
+
+    // Shuffle the special pieces
+    for (let i = special.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [special[i], special[j]] = [special[j], special[i]];
+    }
+
+    board.push(special);
+    board.push(pawns);
+    board.push(32);
+    board.push(pawns.map(() => 'P'));
+    board.push(special.map((v) => v.toUpperCase()));
+
+    return board.join(',');
+  },
   boardWidth: 8,
   boardHeight: 8,
 });

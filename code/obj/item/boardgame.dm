@@ -86,7 +86,6 @@
 			"x" = x,
 			"y" = y,
 			"selected" = null, // Piece on the board selected
-			"palette" = null, // Piece from the palette selected
 		)
 		playsound(src.loc, src.sounds["move"], 30, 1)
 

@@ -115,94 +115,87 @@ export const Pattern = ({ pattern }: PatternProps, context) => {
       }}
       width="100%"
       height="100%">
-      {
-        // Switch on pattern if 'checkerboard' or 'hexagon' or 'go'
-      }
       <PatternToUse pattern={pattern} />
-      {
-        // Draw a 😊 emoji
-        // Map through every piece in pieces by Object key
-        Object.keys(pieces).map((val, index) => {
-          const { x, y, code } = pieces[val];
-          const pieceType = pieceRecords[code];
+      {Object.keys(pieces).map((val, index) => {
+        const { x, y, code } = pieces[val];
+        const pieceType = pieceRecords[code];
 
-          // Is the piece selected by currentUser?
-          const selected = pieces[val].selected;
+        // Is the piece selected by currentUser?
+        const selected = pieces[val].selected;
 
-          return (
-            <svg
-              className="boardgame__piecesvg"
-              onmousedown={(e) => {
-                // if the user has a piece selected, and this piece is not the selected piece, place the selected piece
+        return (
+          <svg
+            className="boardgame__piecesvg"
+            onmousedown={(e) => {
+              // if the user has a piece selected, and this piece is not the selected piece, place the selected piece
 
-                if (!selected) {
-                  act('pawnSelect', {
-                    ckey: currentUser.ckey,
-                    pId: val,
-                  });
-                  setPaletteSelected(code);
-                }
-              }}
-              onmouseup={(e) => {
-                setPaletteSelected('');
+              if (!selected) {
+                act('pawnSelect', {
+                  ckey: currentUser.ckey,
+                  pId: val,
+                });
+                setPaletteSelected(code);
+              }
+            }}
+            onmouseup={(e) => {
+              setPaletteSelected('');
 
-                // Deselect the pawn if it is itself
-              }}
-              ondblclick={(e) => {}}
-              key={index}
-              x={width * x + '%'}
-              y={height * y + '%'}
-              width={width + '%'}
-              height={height + '%'}
-              overflow="visible"
-              viewBox="0 0 100 100"
-              style={{
-                'cursor': 'pointer',
-              }}>
-              <g overflow="visible">
-                <image
-                  style={{
-                    'cursor': 'pointer',
-                    'opacity': selected ? 0.5 : 1,
-                  }}
-                  x="0%"
-                  y="0%"
-                  width="100%"
-                  height="100%"
-                  xlinkHref={pieceType?.image}
-                />
-                {
-                  // if selected make it more opaque
-                  // center a text element with the holder's name
-                  // like a tooltip
-                  pieces[val].selected ? (
-                    <svg overflow="visible">
-                      <text
-                        x="50%"
-                        y="50%"
-                        fontSize="18px"
-                        text-anchor="middle"
-                        dominant-baseline="middle"
-                        style={{
-                          'text-align': 'center',
-                          'cursor': 'pointer',
-                          'fill': 'black',
-                          'font-weight': 'bold',
-                          'stroke': 'white',
-                          'stroke-width': '1px',
-                        }}>
-                        {pieces[val].selected.name}
-                      </text>
-                    </svg>
-                  ) : (
-                    ''
-                  )
-                }
-              </g>
-            </svg>
-          );
-        })
-      }
+              // Deselect the pawn if it is itself
+            }}
+            ondblclick={(e) => {}}
+            key={index}
+            x={width * x + '%'}
+            y={height * y + '%'}
+            width={width + '%'}
+            height={height + '%'}
+            overflow="visible"
+            viewBox="0 0 100 100"
+            style={{
+              'cursor': 'pointer',
+            }}>
+            <g overflow="visible">
+              <image
+                style={{
+                  'cursor': 'pointer',
+                  'opacity': selected ? 0.5 : 1,
+                }}
+                x="0%"
+                y="0%"
+                width="100%"
+                height="100%"
+                xlinkHref={pieceType?.image}
+              />
+              {
+                // if selected make it more opaque
+                // center a text element with the holder's name
+                // like a tooltip
+                pieces[val].selected ? (
+                  <svg overflow="visible">
+                    <text
+                      x="50%"
+                      y="50%"
+                      fontSize="18px"
+                      text-anchor="middle"
+                      dominant-baseline="middle"
+                      style={{
+                        'text-align': 'center',
+                        'cursor': 'pointer',
+                        'fill': 'black',
+                        'font-weight': 'bold',
+                        'stroke': 'white',
+                        'stroke-width': '1px',
+                      }}>
+                      {pieces[val].selected.name}
+                    </text>
+                  </svg>
+                ) : (
+                  ''
+                )
+              }
+            </g>
+          </svg>
+        );
+      })}
     </svg>
   );
 };
