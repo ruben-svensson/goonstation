@@ -7,6 +7,7 @@
 	icon = 'icons/obj/items/gameboard.dmi'
 	icon_state = "chessboard"
 	w_class = W_CLASS_NORMAL
+	two_handed = TRUE
 	layer = 2.9
 	// The old game kit did this too, we should keep a piece of its dead corpse with us forever - DisturbHerb
 	stamina_damage = 30
@@ -86,8 +87,19 @@
 			"x" = x,
 			"y" = y,
 			"selected" = null, // Piece on the board selected
+			"palette" = null, // Code of the palette
 		)
 		playsound(src.loc, src.sounds["move"], 30, 1)
+
+	// Apply a palette to the user
+	proc/setPalette(var/ckey, var/code)
+		src.active_users[ckey]["palette"] = code
+
+	proc/clearPalette(var/ckey)
+		src.active_users[ckey]["palette"] = null
+
+	proc/getActivePalette(var/ckey)
+		return src.active_users[ckey]["palette"]
 
 	proc/getPawnById(var/id)
 		return src.pieces[id]
@@ -105,12 +117,22 @@
 
 	proc/selectPawn(ckey, pId)
 		src.active_users[ckey]["selected"] = pId
-		pieces[pId]["selected"] = src.active_users[ckey]
+		if (!pId)
+			return
+		// Check if ["selected"] is null
+		if (src.active_users[ckey]["selected"])
+			pieces[pId]["selected"] = src.active_users[ckey]
+
+
 
 	proc/deselectPawn(ckey)
-		if (src.active_users[ckey]["selected"])
-			pieces[src.active_users[ckey]["selected"]]["selected"] = FALSE
-			src.active_users[ckey]["selected"] = null
+		// Check if ckey exists
+		if (ckey in src.active_users)
+			// Check if the user has a selected piece
+			if (src.active_users[ckey]["selected"])
+				// Deselect the piece
+				pieces[src.active_users[ckey]["selected"]]["selected"] = null
+				src.active_users[ckey]["selected"] = null
 
 	proc/getPawnAt(x, y)
 		for (var/id in src.pieces)
@@ -118,6 +140,17 @@
 			if (pawn["x"] == round(x) && pawn["y"] == round(y))
 				return pawn
 		return null
+
+	proc/placePalette(ckey, x, y)
+		var/palette = src.active_users[ckey]["palette"]
+		if (palette)
+			// Remove any piece at the location
+			src.removePieceAt(x, y)
+
+			src.createPiece(palette, x, y)
+			src.clearPalette(ckey)
+
+		return
 
 	proc/placePawn(ckey, x, y)
 
@@ -230,7 +263,10 @@
 				var/ckey = params["ckey"]
 				var/x = text2num(params["x"])
 				var/y = text2num(params["y"])
-				src.placePawn(ckey, x, y)
+				if(src.active_users[ckey]["selected"])
+					src.placePawn(ckey, x, y)
+				else
+					src.placePalette(ckey, x, y)
 				. = TRUE
 			/*if("applyFen")
 				var/fen = params["fen"]
@@ -239,6 +275,18 @@
 			if("applyGNot")
 				var/gnot = params["gnot"]
 				src.applyGNot(gnot)
+				. = TRUE
+
+			// Palette actions
+			if("paletteSet")
+				var/ckey = params["ckey"]
+				var/code = params["code"]
+				src.setPalette(ckey, code)
+				. = TRUE
+
+			if("paletteClear")
+				var/ckey = params["ckey"]
+				src.clearPalette(ckey)
 				. = TRUE
 
 	ui_close(mob/user)
@@ -262,8 +310,6 @@
 
 	attack_hand(var/mob/user) // open browser window when board is clicked
 		src.ui_interact(user)
-
-	attackby(var/obj/item/I, mob/user)
 
 	examine(mob/user)
 		. = ..()
@@ -291,8 +337,6 @@
 
 	New()
 		..()
-		//src.generateEmptyBoard()
-		//src.drawBoardIcon()
 
 /obj/item/boardgame_clock
 	name = "board game clock"

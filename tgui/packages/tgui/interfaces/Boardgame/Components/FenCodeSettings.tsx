@@ -20,7 +20,7 @@ import { getTwemojiSrc } from './Piece';
 declare const React;
 
 export const FenCodeSettings = (_props, context) => {
-  const [tabIndex, setTabIndex] = useLocalState(context, 'tabIndex', 0);
+  const [tabIndex, setTabIndex] = useLocalState(context, 'tabIndex', 1);
   const [configModalOpen, setConfigModalOpen] = useLocalState(context, 'configModalOpen', false);
 
   return (

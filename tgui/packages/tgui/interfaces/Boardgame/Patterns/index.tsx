@@ -33,15 +33,6 @@ export const Pattern = ({ pattern }: PatternProps, context) => {
   const width = 100 / data.boardInfo.width;
   const height = 100 / data.boardInfo.height;
 
-  const [tileSize, setTileSize] = useLocalState(context, 'tileSize', {
-    width: 0,
-    height: 0,
-  });
-  const [mouseCoords, setMouseCoords] = useLocalState<{
-    x: number;
-    y: number;
-  }>(context, 'mouseCoords', { x: 0, y: 0 });
-
   const [translateCoords, setTranslateCoords] = useLocalState<{
     x: number;
     y: number;
@@ -96,22 +87,11 @@ export const Pattern = ({ pattern }: PatternProps, context) => {
           y: boardY,
         });
 
-        if (paletteSelected.length > 0) {
-          if (currentUser.selected) {
-            act('pawnPlace', {
-              ckey: currentUser.ckey,
-              x: boardX,
-              y: boardY,
-            });
-          } else {
-            act('pawnCreate', {
-              fenCode: paletteSelected,
-              x: boardX,
-              y: boardY,
-            });
-          }
-          setPaletteSelected('');
-        }
+        act('pawnPlace', {
+          ckey: currentUser.ckey,
+          x: boardX,
+          y: boardY,
+        });
       }}
       width="100%"
       height="100%">
@@ -134,12 +114,9 @@ export const Pattern = ({ pattern }: PatternProps, context) => {
                   ckey: currentUser.ckey,
                   pId: val,
                 });
-                setPaletteSelected(code);
               }
             }}
             onmouseup={(e) => {
-              setPaletteSelected('');
-
               // Deselect the pawn if it is itself
             }}
             ondblclick={(e) => {}}

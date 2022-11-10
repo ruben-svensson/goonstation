@@ -177,7 +177,7 @@ export const Boardgame = (_props, context) => {
         fitted
         className="boardgame__window">
         <GhostPiecesContainer />
-        {paletteSelected && <HeldPieceRenderer />}
+        {(currentUser.palette || currentUser.selected) && <HeldPieceRenderer />}
         <Box className="boardgame__debug">
           {translateCoords.x} {translateCoords.y}-{boardSize.width} {boardSize.height}-{mouseCoords.x} {mouseCoords.y}
           <span>Flip board</span>
@@ -210,11 +210,11 @@ const HeldPieceRenderer = (_, context) => {
     y: number;
   }>(context, 'mouseCoords', { x: 0, y: 0 });
 
-  const [paletteSelected, setPaletteSelected] = useLocalState(context, 'paletteSelected', '');
+  const code = currentUser.palette || currentUser.selected?.code;
 
-  if (paletteSelected.length > 0) {
+  if (code) {
     const pieces = fetchPieces();
-    const piece: PieceType = fenCodeRecordFromPieces(pieces)[paletteSelected];
+    const piece: PieceType = fenCodeRecordFromPieces(pieces)[code];
 
     // Draw the piece with svg fixed to the mouse
 
