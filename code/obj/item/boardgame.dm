@@ -142,6 +142,9 @@
 		return null
 
 	proc/placePalette(ckey, x, y)
+		if (x < 0 || x >= src.board_width || y < 0 || y >= src.board_height)
+			return
+
 		var/palette = src.active_users[ckey]["palette"]
 		if (palette)
 			// Remove any piece at the location
@@ -153,6 +156,9 @@
 		return
 
 	proc/placePawn(ckey, x, y)
+		// Check if out of bounds
+		if (x < 0 || x >= src.board_width || y < 0 || y >= src.board_height)
+			return
 
 		var/pawn = src.getPawnById(src.active_users[ckey]["selected"])
 		if (!pawn)
