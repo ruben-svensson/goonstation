@@ -20,14 +20,14 @@ import { getTwemojiSrc } from './Piece';
 declare const React;
 
 export const FenCodeSettings = (_props, context) => {
-  const [tabIndex, setTabIndex] = useLocalState(context, 'tabIndex', 0);
+  const [tabIndex, setTabIndex] = useLocalState(context, 'tabIndex', 1);
   const [configModalOpen, setConfigModalOpen] = useLocalState(context, 'configModalOpen', false);
 
   return (
     configModalOpen && (
-      <Dimmer className="boardgame__configmodal">
-        <Box className="boardgame__settings">
-          <Tabs>
+      <Box className="boardgame__modal">
+        <Box className="boardgame__modal-inner">
+          <Tabs className="boardgame__modal-tabs">
             <Tabs.Tab selected={tabIndex === 1} onClick={() => setTabIndex(1)}>
               Config
             </Tabs.Tab>
@@ -36,12 +36,12 @@ export const FenCodeSettings = (_props, context) => {
             </Tabs.Tab>
             <Button onClick={() => setConfigModalOpen(false)}>Close</Button>
           </Tabs>
-          <Box className="boardgame__settingspart">
+          <Box className="boardgame__modal-config">
             {tabIndex === 1 && <ConfigTab />}
             {tabIndex === 2 && <PresetsTab />}
           </Box>
         </Box>
-      </Dimmer>
+      </Box>
     )
   );
 };
@@ -551,86 +551,30 @@ const PresetsTab = (_props, context) => {
 const PresetsTab = (_props, context) => {
   const { act, data } = useBackend<BoardgameData>(context);
   const [configModalOpen, setConfigModalOpen] = useLocalState(context, 'configModalOpen', false);
-  const [selectedGame, setSelectedGame] = useLocalState(context, 'selectedGame', null);
-  const presets = presetsByGame();
-  // Orgainize the presets by game, key is the game name, value is the presets for that game
-
-  // Style it in a grid
-
-  return (
-    <Flex className="boardgame__presets">
-      <Dropdown />
-      {Object.keys(presets).map((game, i) => {
-        return (
-          <Flex.Item key={i}>
-            <h3>{game}</h3>
-            <Flex direction="column">
-              {presets[game].map((preset, i) => {
-                return (
-                  <Flex.Item key={i} className="boardgame__preset">
-                    <Flex>
-                      <Flex.Item>
-                        <GenerateSvgBoard preset={preset.setup} />
-                      </Flex.Item>
-                      <Flex.Item grow={1} className="boardgame__presetdetails">
-                        <h4>{preset.name}</h4>
-                        <p>{preset.description}</p>
-                      </Flex.Item>
-                      <Flex.Item>
-                        <Button
-                          onClick={() => {
-                            act('applyGNot', {
-                              gnot: preset.setup,
-                            });
-                            setConfigModalOpen(false);
-                          }}>
-                          Play
-                        </Button>
-                        <Button
-                          onClick={() => {
-                            act('applyGNot', {
-                              gnot: preset.setup,
-                            });
-                            setConfigModalOpen(false);
-                          }}>
-                          Info
-                        </Button>
-                      </Flex.Item>
-                    </Flex>
-                  </Flex.Item>
-                );
-              })}
-            </Flex>
-          </Flex.Item>
-        );
-      })}
-    </Flex>
-  );
-};
-
-/** const PresetsTab = (_props, context) => {
-  const { act, data } = useBackend<BoardgameData>(context);
-  const [configModalOpen, setConfigModalOpen] = useLocalState(context, 'configModalOpen', false);
 
   // Orgainize the presets by game, key is the game name, value is the presets for that game
 
   return (
     <Flex className="boardgame__presets">
       {presets.map((preset, i) => {
+        const setup = preset.setup;
+        // if setup is a function, call it to get the setup
+        const setupString = typeof setup === 'function' ? setup() : setup;
+
         return (
           <Flex.Item
             key={i}
             className="boardgame__preset"
             onClick={() => {
               act('applyGNot', {
-                gnot: preset.setup,
+                gnot: setupString,
               });
               setConfigModalOpen(false);
             }}>
             <Tooltip position="top" content={preset.name}>
               <Flex position="relative">
                 <Flex.Item>
-                  <GenerateSvgBoard preset={preset.setup} />
+                  <GenerateSvgBoard preset={setupString} />
                 </Flex.Item>
               </Flex>
             </Tooltip>
@@ -639,4 +583,4 @@ const PresetsTab = (_props, context) => {
       })}
     </Flex>
   );
-}; */
+};

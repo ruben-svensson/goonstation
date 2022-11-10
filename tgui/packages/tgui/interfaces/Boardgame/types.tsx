@@ -40,6 +40,7 @@ export type User = {
   mouseX: number;
   mouseY: number;
   selected?: Piece;
+  palette?: string;
 };
 
 export type TileSize = {
