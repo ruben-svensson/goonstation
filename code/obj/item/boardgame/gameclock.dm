@@ -2,13 +2,12 @@
 #define WHITE TRUE
 
 /obj/item/gameclock
-	name = "board game clock"
+	name = "game clock"
 	desc = "A set of clocks used to track time for two player board games. Fancy!"
 	icon = 'icons/obj/items/gameboard.dmi'
 	icon_state = "chessclock"
 	var/timing = FALSE
 	var/turn = WHITE
-	var/swap = FALSE // for swapping the layout of the clocks
 	var/whiteTime = 5 MINUTES
 	var/blackTime = 5 MINUTES
 	var/lastTick = 0
@@ -16,7 +15,7 @@
 	var/const/minTime = 0
 
 	proc/buttonState()
-		if ((src.turn + src.swap) % 2 == 0) // It is Right Player's turn if the turn and swap values sum to an even integer
+		if (src.turn) // Apparently White is always gonna be on the left. Huh.
 			icon_state = "chessclock_R"
 		else
 			icon_state = "chessclock_L"
@@ -91,6 +90,7 @@
 	ui_static_data(mob/user)
 		. = list()
 		.["clockStatic"] = list(
+			"name" = src.name,
 			"maxTime" = round(src.maxTime / 10),
 			"minTime" = round(src.minTime / 10),
 		)
@@ -100,7 +100,6 @@
 		. = list(
 			"timing" = src.timing,
 			"turn" = src.turn,
-			"swap" = src.swap,
 			"whiteTime" = round(src.whiteTime / 10),
 			"blackTime" = round(src.blackTime / 10),
 		)
@@ -109,7 +108,7 @@
 		switch(action)
 			if ("set_turn")
 				src.add_fingerprint(usr)
-				src.turn = text2num_safe(params["nextTurn"])
+				src.turn = !src.turn
 				. = TRUE
 			if ("set_time")
 				src.add_fingerprint(usr)
@@ -117,15 +116,9 @@
 				var/blackTime = text2num_safe(params["blackTime"])
 				src.setTime(round(whiteTime), round(blackTime))
 				. = TRUE
-			if ("swap")
-				src.add_fingerprint(usr)
-				src.swap = !src.swap
-				. = TRUE
 			if ("toggle_timing")
 				src.add_fingerprint(usr)
-				if (src.whiteTime == 0 || src.blackTime == 0)
-					. = TRUE
-					return
+				src.lastTick = null
 				src.timing = !src.timing
 				if(src.timing)
 					processing_items |= src
