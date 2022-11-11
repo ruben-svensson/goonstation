@@ -5,7 +5,6 @@
 	icon_state = "chessboard"
 	w_class = W_CLASS_NORMAL
 	two_handed = TRUE
-	layer = 2.9
 	// The old game kit did this too, we should keep a piece of its dead corpse with us forever - DisturbHerb
 	stamina_damage = 30
 	stamina_cost = 20
