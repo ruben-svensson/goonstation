@@ -1,3 +1,4 @@
+import { BooleanLike } from 'common/react';
 import { BoardPattern } from './Patterns';
 
 export type BoardgameData = {
@@ -14,6 +15,8 @@ export type BoardgameData = {
     tileColour1: string;
     tileColour2: string;
     border: string;
+    aspectRatio: number;
+    useNotations: boolean;
   };
   board: string[];
   pieces: Piece[];

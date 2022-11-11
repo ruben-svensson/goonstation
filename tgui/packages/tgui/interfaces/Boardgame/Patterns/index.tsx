@@ -3,6 +3,7 @@ import { fenCodeRecordFromPieces, fetchPieces } from '../Pieces';
 import { BoardgameData } from '../types';
 import { CheckerBoard } from './checkerboard';
 import { Go } from './go';
+import { Flex, Box } from '../../../components';
 
 export type BoardPattern = 'checkerboard' | 'hexagon' | 'go';
 
@@ -33,59 +34,75 @@ export const Pattern = ({ pattern }: PatternProps, context) => {
   const width = 100 / data.boardInfo.width;
   const height = 100 / data.boardInfo.height;
 
+  const [flip, setFlip] = useLocalState(context, 'flip', false);
+
   const [translateCoords, setTranslateCoords] = useLocalState<{
     x: number;
     y: number;
   }>(context, 'translateCoords', { x: 0, y: 0 });
 
+  const [mouseCoords, setMouseCoords] = useLocalState<{
+    x: number;
+    y: number;
+  }>(context, 'mouseCoords', { x: 0, y: 0 });
+  const [tileSize, setTileSize] = useLocalState(context, 'tileSize', {
+    width: 50,
+    height: 50,
+  });
+  let { x, y } = mouseCoords;
+
   const pieceRecords = fenCodeRecordFromPieces(fetchPieces());
   const [paletteSelected, setPaletteSelected] = useLocalState(context, 'paletteSelected', '');
-  const [patternMulti, setPatternMulti] = useLocalState(context, 'patternMulti', 1);
+  // const [patternMulti, setPatternMulti] = useLocalState(context, 'patternMulti', 1);
+
+  const board = document.getElementsByClassName('boardgame__board-inner')[0];
+  let tileWidth, tileHeight;
+  if (board) {
+    const boardRect = board.getBoundingClientRect();
+
+    const boardWidth = boardRect.width - 40; // Full width of the board
+    const boardHeight = boardRect.height - 40; // Full height of the board
+
+    tileWidth = boardWidth / data.boardInfo.width; // Width of a single tile
+    tileHeight = boardHeight / data.boardInfo.height; // Height of a single tile
+  }
+
+  let patternMulti = 1; // Divide by this to get the board coord
+  let patternOffset = 0; // Used to offset the board coord, for games like go
+  switch (pattern) {
+    case 'checkerboard': // 4 tiles per square, handles translation
+      patternMulti = 1;
+      break;
+    case 'go':
+      patternOffset = 0.5; // Half a tile
+  }
+
+  let boardX = Math.floor(((x - 20) / tileWidth) * patternMulti) - patternOffset;
+  let boardY = Math.floor(((y - 52) / tileHeight) * patternMulti) - patternOffset;
+
+  // reverse the y axis if the board is flipped
+  if (flip) {
+    boardY = data.boardInfo.height - boardY - 1;
+  }
+
+  // Round the board coords to the nearest integer
+  // if lock is true, round to the nearest integer
+
   return (
     <svg
-      onmousedown={(e) => {}}
-      onmouseup={(e) => {
-        const board = document.getElementById('pattern');
-        const boardRect = board.getBoundingClientRect();
-
-        const x = e.clientX; // Mouse x
-        const y = e.clientY; // Mouse y
-
-        const boardWidth = boardRect.width; // Full width of the board
-        const boardHeight = boardRect.height; // Full height of the board
-
-        const tileWidth = boardWidth / data.boardInfo.width; // Width of a single tile
-        const tileHeight = boardHeight / data.boardInfo.height; // Height of a single tile
-
-        // Convert the mouse coords to board coords
-        // If the board is 8 tiles wide, and the mouse is at 50% of the board width, the board coord is 4
-        // Use x,y, boardWidth, boardHeight, tileWidth, tileHeight only, boardRect.x and boardRect.y are not needed
-
-        let patternMulti = 1; // Divide by this to get the board coord
-        let patternOffset = 0; // Used to offset the board coord, for games like go
-        switch (pattern) {
-          case 'checkerboard': // 4 tiles per square, handles translation
-            patternMulti = 4;
-            break;
-          case 'go':
-            patternOffset = 0.5; // Half a tile
-        }
-
-        let boardX = x / tileWidth / patternMulti - 1 - patternOffset;
-        let boardY = y / tileHeight / patternMulti - 1 - patternOffset;
-
-        // Round the board coords to the nearest integer
-        // if lock is true, round to the nearest integer
-
-        if (lock) {
-          boardX = Math.round(boardX);
-          boardY = Math.round(boardY);
-        }
-
+      className={`boardgame__pattern ${flip ? 'boardgame__patternflip' : ''}`}
+      onmousemove={(e) => {
+        setTileSize({ width: tileWidth, height: tileHeight });
         setTranslateCoords({
           x: boardX,
           y: boardY,
         });
+      }}
+      onmousedown={(e) => {}}
+      onmouseup={(e) => {
+        // Convert the mouse coords to board coords
+        // If the board is 8 tiles wide, and the mouse is at 50% of the board width, the board coord is 4
+        // Use x,y, boardWidth, boardHeight, tileWidth, tileHeight only, boardRect.x and boardRect.y are not needed
 
         act('pawnPlace', {
           ckey: currentUser.ckey,

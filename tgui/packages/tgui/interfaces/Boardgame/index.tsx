@@ -44,7 +44,6 @@ export const GhostPiecesContainer = (_props, context) => {
   const { act, data } = useBackend<BoardgameData>(context);
   const { users } = data;
   const { width, height } = data.boardInfo;
-
   const [flip, setFlip] = useLocalState(context, 'flip', false);
   // Loop through every object in users
 
@@ -100,105 +99,109 @@ export const Boardgame = (_props, context) => {
 
   const { name, game, pattern, width, height } = data.boardInfo;
   const { currentUser, pieces } = data;
+  const { useNotations } = data.styling;
 
   const [configModalOpen, setConfigModalOpen] = useLocalState(context, 'configModalOpen', false);
   const [flip, setFlip] = useLocalState(context, 'flip', false);
-
-  const [testNumber, setTestNumber] = useLocalState(context, 'testNumber', 0);
 
   const [mouseCoords, setMouseCoords] = useLocalState<{
     x: number;
     y: number;
   }>(context, 'mouseCoords', { x: 0, y: 0 });
-  const [tileSize, setTileSize] = useLocalState(context, 'tileSize', {
-    width: 0,
-    height: 0,
-  });
-  const [boardSize, setBoardSize] = useLocalState(context, 'boardSize', {
-    width: 250,
-    height: 250,
-  });
 
   const [translateCoords, setTranslateCoords] = useLocalState<{
     x: number;
     y: number;
   }>(context, 'translateCoords', { x: 0, y: 0 });
 
-  // Run a function once without using React
-  const [paletteSelected, setPaletteSelected] = useLocalState(context, 'paletteSelected', '');
+  const [tileSize, setTileSize] = useLocalState(context, 'tileSize', {
+    width: 50,
+    height: 50,
+  });
 
   return (
     <Window title={name} width={800} height={650}>
       <FenCodeSettings />
 
       <Window.Content
-        onFocusIn={() => {
-          // adjustWindowSize(width, height, tileSize);
-          const board = document.getElementsByClassName('boardgame__board-inner')[0];
-          if (board) {
-            const boardRect = board.getBoundingClientRect();
-            setBoardSize({
-              width: boardRect.width - 48,
-              height: boardRect.height - 48,
-            });
-          }
-        }}
-        onFocusOut={() => {
-          // adjustWindowSize(width, height, tileSize);
-          const board = document.getElementsByClassName('boardgame__board-inner')[0];
-          if (board) {
-            const boardRect = board.getBoundingClientRect();
-            setBoardSize({
-              width: boardRect.width - 48,
-              height: boardRect.height - 48,
-            });
-          }
-        }}
         onMouseMove={(e) => {
-          // adjustWindowSize(width,  height);
-          const board = document.getElementsByClassName('boardgame__board-inner')[0];
-          if (board) {
-            const boardRect = board.getBoundingClientRect();
-            setBoardSize({
-              width: boardRect.width - 48,
-              height: boardRect.height - 48,
-            });
-          }
           setMouseCoords({
             x: e.clientX,
             y: e.clientY,
           });
         }}
-        onMouseUp={() => {
-          /* act('pawnDeselect', {
-            ckey: currentUser.ckey,
-          });*/
-        }}
         fitted
         className="boardgame__window">
         <GhostPiecesContainer />
-        {(currentUser.palette || currentUser.selected) && <HeldPieceRenderer />}
+        <Box
+          style={{
+            'position': 'fixed',
+            'top': translateCoords.y + 20 + 32 + 'px',
+            'left': translateCoords.x + 20 + 'px',
+            'width': `${tileSize.width || 0}px`,
+            'height': `${tileSize.height || 0}px`,
+            'z-index': 100,
+            'background-color': 'rgba(255, 255, 255, 0.5)',
+          }}
+        />
+        {(currentUser?.palette || currentUser?.selected) && <HeldPieceRenderer />}
         <Box className="boardgame__debug">
-          {translateCoords.x} {translateCoords.y}-{boardSize.width} {boardSize.height}-{mouseCoords.x} {mouseCoords.y}
+          no: {useNotations ? 'Enabled' : 'Disabled'}
+          tc: {translateCoords.x}, {translateCoords.y}
+          mc: {mouseCoords.x}, {mouseCoords.y}
+          ts: {tileSize.width}, {tileSize.height}
           <span>Flip board</span>
           <Button.Checkbox checked={flip} onClick={() => setFlip(!flip)} />
           <Button title={'Setup'} icon={'cog'} onClick={() => setConfigModalOpen(true)} />
         </Box>
         <Flex className="boardgame__wrapper">
-          <Flex.Item grow={1} className={`boardgame__board-inner ${flip ? 'boardgame__boardflip' : ''}`}>
-            <Notations direction={'horizontal'} />
+          <Flex.Item grow={1} className={`boardgame__board-inner`}>
+            {!!useNotations && <Notations direction={'horizontal'} />}
+
             <Flex className={`boardgame__board`}>
-              <Notations direction={'vertical'} />
+              {!!useNotations && <Notations direction={'vertical'} />}
               <Pattern pattern={pattern} />
-              <Notations direction={'vertical'} />
+              {!!useNotations && <Notations direction={'vertical'} />}
             </Flex>
-            <Notations direction={'horizontal'} />
+            {!!useNotations && <Notations direction={'horizontal'} />}
           </Flex.Item>
           <PieceDrawer />
         </Flex>
       </Window.Content>
     </Window>
   );
+};
+
+Boardgame.defaultHooks = {
+  onComponentDidUpdate: (lastProps, nextProps) => {
+    // Adjust window size
+    const pieceSetPadding = 100; // Add 100 pixels to the width
+    const titlebarHeightPadding = 32;
+    let width = 600;
+    let height = 500;
+    // Fetch boardgame__wrapper element and get its width and height
+    const wrapper = document.getElementsByClassName('boardgame__wrapper')[0];
+    if (wrapper) {
+      const wrapperRect = wrapper.getBoundingClientRect();
+      let wrapperWidth = wrapperRect.width;
+      let wrapperHeight = wrapperRect.height;
+
+      // Return if the width and height are the same
+      if (wrapperWidth === width && wrapperHeight === height) {
+        return;
+      }
+
+      let shortestSide = wrapperWidth < wrapperHeight ? wrapperWidth : wrapperHeight;
+
+      // Set the width and height to the shortest side
+      width = shortestSide + pieceSetPadding;
+      height = shortestSide + titlebarHeightPadding;
+    }
+
+    Byond.winset(window.__windowId__, {
+      size: `${width}x${height}`,
+    });
+  },
 };
 
 const HeldPieceRenderer = (_, context) => {
@@ -210,7 +213,7 @@ const HeldPieceRenderer = (_, context) => {
     y: number;
   }>(context, 'mouseCoords', { x: 0, y: 0 });
 
-  const code = currentUser.palette || currentUser.selected?.code;
+  const code = currentUser?.palette || currentUser.selected?.code;
 
   if (code) {
     const pieces = fetchPieces();
