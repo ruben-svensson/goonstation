@@ -8,24 +8,14 @@
     padding: 5px;
   }
 
-  &wrapper {
-    flex-grow: 1;
-  }
-
-  &sidewrapper {
-    display: flex;
-    flex-grow: 1;
-    flex-direction: column;
-  }
-
   &configmodal {
     z-index: 20;
 
     & > .Dimmer__inner {
       background-color: rgba(0, 0, 0, 0.8);
-      padding: 20px;
-      width: 320px;
-      height: 140px;
+      padding: 15px;
+      width: 180px;
+      height: 110px;
     }
   }
 
@@ -51,12 +41,11 @@
   }
 
   &mid {
-    margin-top: 30px;
     padding: 5px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: space-around;
   }
 
   &utilbutton {

@@ -109,7 +109,7 @@
 		switch(action)
 			if ("set_turn")
 				src.add_fingerprint(usr)
-				src.turn = text2num_safe(params["nextTurn"])
+				src.turn = !src.turn
 				. = TRUE
 			if ("set_time")
 				src.add_fingerprint(usr)
