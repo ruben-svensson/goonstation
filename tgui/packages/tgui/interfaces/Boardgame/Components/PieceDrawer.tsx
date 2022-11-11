@@ -1,11 +1,8 @@
-declare const React;
-
 import { useBackend, useLocalState } from '../../../backend';
 import { BoardgameData } from '../types';
-
-import { sets } from '../PieceSet';
+import { Piece } from './';
+import { sets } from '../sets';
 import { Box, Button, Flex } from '../../../components';
-import { Piece } from './Piece';
 
 export const PieceDrawer = (orps, context) => {
   const { act, data } = useBackend<BoardgameData>(context);

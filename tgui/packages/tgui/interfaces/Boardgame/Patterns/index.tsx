@@ -2,8 +2,6 @@ import { useBackend, useLocalState } from '../../../backend';
 import { fenCodeRecordFromPieces, fetchPieces } from '../Pieces';
 import { BoardgameData } from '../types';
 import { CheckerBoard } from './checkerboard';
-import { Go } from './go';
-import { Flex, Box } from '../../../components';
 
 export type BoardPattern = 'checkerboard' | 'hexagon' | 'go';
 
@@ -19,8 +17,6 @@ const PatternToUse = ({ pattern }: PatternToUseProps, context) => {
   switch (pattern) {
     case 'checkerboard': // 4 tiles per square, handles translation
       return <CheckerBoard />;
-    case 'go':
-      return <Go />;
   }
 };
 
