@@ -33,6 +33,8 @@ export const Pattern = ({ pattern }: PatternProps, context) => {
   const width = 100 / data.boardInfo.width;
   const height = 100 / data.boardInfo.height;
 
+  const [flip, setFlip] = useLocalState(context, 'flip', false);
+
   const [translateCoords, setTranslateCoords] = useLocalState<{
     x: number;
     y: number;
@@ -43,6 +45,7 @@ export const Pattern = ({ pattern }: PatternProps, context) => {
   const [patternMulti, setPatternMulti] = useLocalState(context, 'patternMulti', 1);
   return (
     <svg
+      className={`boardgame__pattern ${flip ? 'boardgame__patternflip' : ''}`}
       onmousedown={(e) => {}}
       onmouseup={(e) => {
         const board = document.getElementById('pattern');
@@ -73,6 +76,11 @@ export const Pattern = ({ pattern }: PatternProps, context) => {
 
         let boardX = x / tileWidth / patternMulti - 1 - patternOffset;
         let boardY = y / tileHeight / patternMulti - 1 - patternOffset;
+
+        // reverse the y axis if the board is flipped
+        if (flip) {
+          boardY = data.boardInfo.height - boardY - 1;
+        }
 
         // Round the board coords to the nearest integer
         // if lock is true, round to the nearest integer

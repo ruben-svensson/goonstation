@@ -16,6 +16,8 @@
 	var/board_width = 8
 	var/board_height = 8
 
+	var/list/pieceSets = list("chess", "draughts", "go")
+
 	var/icon/custom_board = null
 	/// If true, the board will be drawn with a checkerboard pattern automatically
 	/// If false, the board will be drawn with the icon provided
@@ -27,6 +29,11 @@
 		"tileColour1" = rgb(240, 217, 181),
 		"tileColour2" = rgb(181, 136, 99),
 		"border" = rgb(131, 100, 74),
+		"aspectRatio" = 1, // 1 to 1 ratio, use null for auto
+		"useNotations" = TRUE, // Whether to use chess-like notation or not
+		// Set fixed width and height to null to disable
+		"tileWidth" = null,
+		"tileHeight" = null,
 	)
 
 	var/list/sounds = list(
@@ -334,9 +341,22 @@
 		board_width = 19
 		board_height = 19
 
+		New()
+			..()
+			styling["useNotations"] = FALSE
+
+	xiangqi
+		name = "xiangqi board"
+		desc = "It's a board for playing xiangqi!"
+
+		pattern="xiangqi"
+		icon_state = "xiangqiboard"
+		board_width = 9
+		board_height = 10
 
 		New()
 			..()
+			styling["useNotations"] = FALSE
 
 	New()
 		..()

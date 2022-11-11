@@ -185,14 +185,17 @@
 
 .boardgame__board-inner {
   transition: 1s all;
-  transform: rotateX(0deg);
   flex-grow: 1;
   background-color: purple;
   display: flex;
   flex-direction: column;
 }
 
-.boardgame__boardflip {
+.boardgame__pattern {
+  transition: 2s all;
+}
+
+.boardgame__patternflip {
   transform: rotateX(180deg);
 }
 
