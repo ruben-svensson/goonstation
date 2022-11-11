@@ -133,23 +133,9 @@ export const Boardgame = (_props, context) => {
         fitted
         className="boardgame__window">
         <GhostPiecesContainer />
-        <Box
-          style={{
-            'position': 'fixed',
-            'top': translateCoords.y + 20 + 32 + 'px',
-            'left': translateCoords.x + 20 + 'px',
-            'width': `${tileSize.width || 0}px`,
-            'height': `${tileSize.height || 0}px`,
-            'z-index': 100,
-            'background-color': 'rgba(255, 255, 255, 0.5)',
-          }}
-        />
+
         {(currentUser?.palette || currentUser?.selected) && <HeldPieceRenderer />}
         <Box className="boardgame__debug">
-          no: {useNotations ? 'Enabled' : 'Disabled'}
-          tc: {translateCoords.x}, {translateCoords.y}
-          mc: {mouseCoords.x}, {mouseCoords.y}
-          ts: {tileSize.width}, {tileSize.height}
           <span>Flip board</span>
           <Button.Checkbox checked={flip} onClick={() => setFlip(!flip)} />
           <Button title={'Setup'} icon={'cog'} onClick={() => setConfigModalOpen(true)} />
