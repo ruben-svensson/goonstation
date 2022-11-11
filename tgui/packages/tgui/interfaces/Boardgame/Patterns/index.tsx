@@ -136,7 +136,11 @@ export const Pattern = ({ pattern }: PatternProps, context) => {
             onmouseup={(e) => {
               // Deselect the pawn if it is itself
             }}
-            ondblclick={(e) => {}}
+            ondblclick={(e) => {
+              act('pawnRemove', {
+                id: val,
+              });
+            }}
             key={index}
             x={width * x + '%'}
             y={height * y + '%'}

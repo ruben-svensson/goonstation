@@ -14,12 +14,6 @@
 	var/board_width = 8
 	var/board_height = 8
 
-	var/list/pieceSets = list("chess", "draughts", "go")
-
-	var/icon/custom_board = null
-	/// If true, the board will be drawn with a checkerboard pattern automatically
-	/// If false, the board will be drawn with the icon provided
-	var/draw_custom_icon = FALSE
 	var/lock_pieces_to_tile = TRUE // If true, pieces will be locked to the center of the tile they're on, otherwise they'll be free to move around
 
 	/// Apply custom styling, matches both in dm and tgui releated code
@@ -29,9 +23,6 @@
 		"border" = rgb(131, 100, 74),
 		"aspectRatio" = 1, // 1 to 1 ratio, use null for auto
 		"useNotations" = TRUE, // Whether to use chess-like notation or not
-		// Set fixed width and height to null to disable
-		"tileWidth" = null,
-		"tileHeight" = null,
 	)
 
 	var/list/sounds = list(

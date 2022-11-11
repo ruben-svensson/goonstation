@@ -132,8 +132,6 @@ export const Boardgame = (_props, context) => {
         }}
         fitted
         className="boardgame__window">
-        <GhostPiecesContainer />
-
         {(currentUser?.palette || currentUser?.selected) && <HeldPieceRenderer />}
         <Box className="boardgame__debug">
           <span>Flip board</span>
