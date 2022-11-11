@@ -7,7 +7,6 @@ export type GameClockData = {
     maxTime: number;
   };
   timing: BooleanLike;
-  swap: boolean;
   turn: boolean;
   whiteTime: number;
   blackTime: number;

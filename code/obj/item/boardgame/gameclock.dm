@@ -8,7 +8,6 @@
 	icon_state = "chessclock"
 	var/timing = FALSE
 	var/turn = WHITE
-	var/swap = FALSE // for swapping the layout of the clocks
 	var/whiteTime = 5 MINUTES
 	var/blackTime = 5 MINUTES
 	var/lastTick = 0
@@ -16,7 +15,7 @@
 	var/const/minTime = 0
 
 	proc/buttonState()
-		if ((src.turn + src.swap) % 2 == 0) // It is Right Player's turn if the turn and swap values sum to an even integer
+		if (src.turn) // Apparently White is always gonna be on the left. Huh.
 			icon_state = "chessclock_R"
 		else
 			icon_state = "chessclock_L"
@@ -101,7 +100,6 @@
 		. = list(
 			"timing" = src.timing,
 			"turn" = src.turn,
-			"swap" = src.swap,
 			"whiteTime" = round(src.whiteTime / 10),
 			"blackTime" = round(src.blackTime / 10),
 		)
@@ -117,10 +115,6 @@
 				var/whiteTime = text2num_safe(params["whiteTime"])
 				var/blackTime = text2num_safe(params["blackTime"])
 				src.setTime(round(whiteTime), round(blackTime))
-				. = TRUE
-			if ("swap")
-				src.add_fingerprint(usr)
-				src.swap = !src.swap
 				. = TRUE
 			if ("toggle_timing")
 				src.add_fingerprint(usr)

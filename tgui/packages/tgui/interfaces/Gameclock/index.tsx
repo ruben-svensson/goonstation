@@ -24,16 +24,17 @@ export const Gameclock = (_props, context) => {
   const { name } = data.clockStatic;
 
   const [configModalOpen] = useLocalState(context, 'configModalOpen', false);
+  const [swap] = useLocalState(context, 'swap', false);
 
   return (
     <Window title={name} width={220} height={350}>
       <Window.Content className="gameclock__window" fitted>
         {configModalOpen && <ConfigModal />}
-        <TeamIcon team={data.swap ? 'white' : 'black'} />
-        <SidePart team={data.swap ? 'white' : 'black'} />
+        <TeamIcon team={swap ? 'white' : 'black'} />
+        <SidePart team={swap ? 'white' : 'black'} />
         <MidPart />
-        <SidePart team={data.swap ? 'black' : 'white'} />
-        <TeamIcon team={data.swap ? 'black' : 'white'} />
+        <SidePart team={swap ? 'black' : 'white'} />
+        <TeamIcon team={swap ? 'black' : 'white'} />
       </Window.Content>
     </Window>
   );
@@ -148,6 +149,7 @@ const MidPart = (_, context) => {
   const [, setConfigModalOpen] = useLocalState(context, 'configModalOpen', false);
   const [, setWhiteTimeBuffer] = useLocalState(context, 'whiteTimeBuffer', 0);
   const [, setBlackTimeBuffer] = useLocalState(context, 'blackTimeBuffer', 0);
+  const [swap, toggleSwap] = useLocalState(context, 'swap', false);
 
   return (
     <Stack direction={'row'} className="gameclock__mid">
@@ -191,10 +193,10 @@ const MidPart = (_, context) => {
         <Button
           className="gameclock__utilbutton"
           disabled={data.timing}
-          tooltip="Swap sides"
+          tooltip="Rotate view"
           tooltipPosition="top"
-          icon="exchange-alt"
-          onClick={() => act('swap')}
+          icon="rotate"
+          onClick={() => toggleSwap(!swap)}
         />
       </Box>
     </Stack>
