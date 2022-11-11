@@ -77,8 +77,8 @@ export const Pattern = ({ pattern }: PatternProps, context) => {
       patternOffset = 0.5; // Half a tile
   }
 
-  let boardX = Math.floor(((x - 20) / tileWidth) * patternMulti) - patternOffset;
-  let boardY = Math.floor(((y - 52) / tileHeight) * patternMulti) - patternOffset;
+  let boardX = Math.floor(((x - 20) / tileWidth) * patternMulti + patternOffset);
+  let boardY = Math.floor(((y - 52) / tileHeight) * patternMulti + patternOffset);
 
   // reverse the y axis if the board is flipped
   if (flip) {
