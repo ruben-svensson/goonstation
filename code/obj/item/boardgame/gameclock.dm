@@ -118,9 +118,7 @@
 				. = TRUE
 			if ("toggle_timing")
 				src.add_fingerprint(usr)
-				if (src.whiteTime == 0 || src.blackTime == 0)
-					. = TRUE
-					return
+				src.lastTick = null
 				src.timing = !src.timing
 				if(src.timing)
 					processing_items |= src
