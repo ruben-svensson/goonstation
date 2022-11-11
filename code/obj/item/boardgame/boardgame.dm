@@ -146,12 +146,19 @@
 		if (x < 0 || x >= src.board_width || y < 0 || y >= src.board_height)
 			return
 
+		var/_x = x
+		var/_y = y
+
+		if(src.lock_pieces_to_tile)
+			_x = round(x)
+			_y = round(y)
+
 		var/palette = src.active_users[ckey]["palette"]
 		if (palette)
 			// Remove any piece at the location
-			src.removePieceAt(x, y)
+			src.removePieceAt(_x, _y)
 
-			src.createPiece(palette, x, y)
+			src.createPiece(palette, _x, _y)
 			src.clearPalette(ckey)
 
 		return
@@ -160,6 +167,14 @@
 		// Check if out of bounds
 		if (x < 0 || x >= src.board_width || y < 0 || y >= src.board_height)
 			return
+
+		var/_x = x
+		var/_y = y
+
+		if(src.lock_pieces_to_tile)
+			_x = round(x)
+			_y = round(y)
+
 
 		var/pawn = src.getPawnById(src.active_users[ckey]["selected"])
 		if (!pawn)
@@ -170,19 +185,19 @@
 		var/old_y = pawn["y"]
 
 		// Check if the pawn is moving to a new tile
-		if (old_x == x && old_y == y)
+		if (old_x == _x && old_y == _y)
 			src.deselectPawn(ckey)
 			return
 
 		// Check if the pawn is moving to a tile that is already occupied
 
-		var/occupied = src.getPawnAt(x, y)
+		var/occupied = src.getPawnAt(_x, _y)
 
 		if (occupied)
 			// Check if the pawn is moving to a tile that is occupied by an enemy
 			if (pawn != occupied)
 				playsound(src.loc, src.sounds["capture"], 30, 1)
-				src.removePiece(occupied)
+				src.removePieceAt(_x, _y)
 			else
 				// If the piece is moving to a tile that is occupied by a friendly
 				return
@@ -190,8 +205,8 @@
 		playsound(src.loc, src.sounds["move"], 30, 1)
 
 		// Move the pawn to the new tile
-		pawn["x"] = x
-		pawn["y"] = y
+		pawn["x"] = _x
+		pawn["y"] = _y
 
 		// Deselect the pawn
 		src.deselectPawn(ckey)
