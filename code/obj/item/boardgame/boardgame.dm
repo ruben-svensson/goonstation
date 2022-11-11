@@ -50,7 +50,6 @@
 
 	proc/applyGNot(gnot)
 		// Like FEN but comma seperated
-		// Apply a GNot string and parse each value as a piece and set its x and y
 		// Example GNOT of a 3x3 board: P,P,P,3,p,p,p the true length is 9
 
 		// Clear the board
@@ -81,7 +80,7 @@
 		// create a unique random id for a piece when adding it to the board
 		var/id = ""
 		while ((id == "") || (id in src.pieces))
-			id = "[rand(1000, 9999)]"
+			id = "[rand(1000, 99999)]"
 		return id
 
 	proc/createPiece(var/code, var/x, var/y)
@@ -141,7 +140,7 @@
 	proc/getPawnAt(x, y)
 		for (var/id in src.pieces)
 			var/list/pawn = src.pieces[id]
-			if (pawn["x"] == round(x) && pawn["y"] == round(y))
+			if (pawn["x"] == x && pawn["y"] == y)
 				return pawn
 		return null
 
@@ -173,19 +172,19 @@
 		var/old_y = pawn["y"]
 
 		// Check if the pawn is moving to a new tile
-		if (old_x == round(x) && old_y == round(y))
+		if (old_x == x && old_y == y)
 			src.deselectPawn(ckey)
 			return
 
 		// Check if the pawn is moving to a tile that is already occupied
 
-		var/occupied = src.getPawnAt(round(x), round(y))
+		var/occupied = src.getPawnAt(x, y)
 
 		if (occupied)
 			// Check if the pawn is moving to a tile that is occupied by an enemy
 			if (pawn != occupied)
 				playsound(src.loc, src.sounds["capture"], 30, 1)
-				src.removePieceAt(round(x), round(y))
+				src.removePiece(occupied)
 			else
 				// If the piece is moving to a tile that is occupied by a friendly
 				return
@@ -193,8 +192,8 @@
 		playsound(src.loc, src.sounds["move"], 30, 1)
 
 		// Move the pawn to the new tile
-		pawn["x"] = round(x)
-		pawn["y"] = round(y)
+		pawn["x"] = x
+		pawn["y"] = y
 
 		// Deselect the pawn
 		src.deselectPawn(ckey)

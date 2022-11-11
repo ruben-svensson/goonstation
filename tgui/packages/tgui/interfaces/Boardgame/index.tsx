@@ -109,9 +109,14 @@ export const Boardgame = (_props, context) => {
     y: number;
   }>(context, 'mouseCoords', { x: 0, y: 0 });
 
-  const [boardSize, setBoardSize] = useLocalState(context, 'boardSize', {
-    width: 250,
-    height: 250,
+  const [translateCoords, setTranslateCoords] = useLocalState<{
+    x: number;
+    y: number;
+  }>(context, 'translateCoords', { x: 0, y: 0 });
+
+  const [tileSize, setTileSize] = useLocalState(context, 'tileSize', {
+    width: 50,
+    height: 50,
   });
 
   return (
@@ -119,54 +124,32 @@ export const Boardgame = (_props, context) => {
       <FenCodeSettings />
 
       <Window.Content
-        onFocusIn={() => {
-          // adjustWindowSize(width, height, tileSize);
-          const board = document.getElementsByClassName('boardgame__board-inner')[0];
-          if (board) {
-            const boardRect = board.getBoundingClientRect();
-            setBoardSize({
-              width: boardRect.width - 48,
-              height: boardRect.height - 48,
-            });
-          }
-        }}
-        onFocusOut={() => {
-          // adjustWindowSize(width, height, tileSize);
-          const board = document.getElementsByClassName('boardgame__board-inner')[0];
-          if (board) {
-            const boardRect = board.getBoundingClientRect();
-            setBoardSize({
-              width: boardRect.width - 48,
-              height: boardRect.height - 48,
-            });
-          }
-        }}
         onMouseMove={(e) => {
-          // adjustWindowSize(width,  height);
-          const board = document.getElementsByClassName('boardgame__board-inner')[0];
-          if (board) {
-            const boardRect = board.getBoundingClientRect();
-            setBoardSize({
-              width: boardRect.width - 48,
-              height: boardRect.height - 48,
-            });
-          }
           setMouseCoords({
             x: e.clientX,
             y: e.clientY,
           });
         }}
-        onMouseUp={() => {
-          /* act('pawnDeselect', {
-            ckey: currentUser.ckey,
-          });*/
-        }}
         fitted
         className="boardgame__window">
         <GhostPiecesContainer />
-        {(currentUser?.palette || currentUser.selected) && <HeldPieceRenderer />}
+        <Box
+          style={{
+            'position': 'fixed',
+            'top': translateCoords.y + 20 + 32 + 'px',
+            'left': translateCoords.x + 20 + 'px',
+            'width': `${tileSize.width || 0}px`,
+            'height': `${tileSize.height || 0}px`,
+            'z-index': 100,
+            'background-color': 'rgba(255, 255, 255, 0.5)',
+          }}
+        />
+        {(currentUser?.palette || currentUser?.selected) && <HeldPieceRenderer />}
         <Box className="boardgame__debug">
-          Notations: {useNotations ? 'Enabled' : 'Disabled'}
+          no: {useNotations ? 'Enabled' : 'Disabled'}
+          tc: {translateCoords.x}, {translateCoords.y}
+          mc: {mouseCoords.x}, {mouseCoords.y}
+          ts: {tileSize.width}, {tileSize.height}
           <span>Flip board</span>
           <Button.Checkbox checked={flip} onClick={() => setFlip(!flip)} />
           <Button title={'Setup'} icon={'cog'} onClick={() => setConfigModalOpen(true)} />
@@ -230,7 +213,7 @@ const HeldPieceRenderer = (_, context) => {
     y: number;
   }>(context, 'mouseCoords', { x: 0, y: 0 });
 
-  const code = currentUser.palette || currentUser.selected?.code;
+  const code = currentUser?.palette || currentUser.selected?.code;
 
   if (code) {
     const pieces = fetchPieces();
