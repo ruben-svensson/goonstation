@@ -68,7 +68,6 @@ const ConfigModal = (_, context) => {
           onClick={() => {
             setConfigModalOpen(false);
             setTime(whiteTimeBuffer, blackTimeBuffer);
-            act('set_turn');
           }}
         />
         <Button content="Cancel" onClick={() => setConfigModalOpen(false)} />
