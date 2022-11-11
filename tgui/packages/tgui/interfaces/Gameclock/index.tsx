@@ -5,7 +5,6 @@ import {
   Box,
   Button,
   Dimmer,
-  Flex,
   Icon,
   LabeledList,
   NumberInput,
@@ -22,10 +21,12 @@ type TeamProps = {
 export const Gameclock = (_props, context) => {
   const { data } = useBackend<GameClockData>(context);
 
+  const { name } = data.clockStatic;
+
   const [configModalOpen] = useLocalState(context, 'configModalOpen', false);
 
   return (
-    <Window title={'Game Clock'} width={220} height={350}>
+    <Window title={name} width={220} height={350}>
       <Window.Content className="gameclock__window" fitted>
         {configModalOpen && <ConfigModal />}
         <TeamIcon team={data.swap ? 'white' : 'black'} />

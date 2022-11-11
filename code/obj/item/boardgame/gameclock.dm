@@ -2,7 +2,7 @@
 #define WHITE TRUE
 
 /obj/item/gameclock
-	name = "board game clock"
+	name = "game clock"
 	desc = "A set of clocks used to track time for two player board games. Fancy!"
 	icon = 'icons/obj/items/gameboard.dmi'
 	icon_state = "chessclock"
@@ -91,6 +91,7 @@
 	ui_static_data(mob/user)
 		. = list()
 		.["clockStatic"] = list(
+			"name" = src.name,
 			"maxTime" = round(src.maxTime / 10),
 			"minTime" = round(src.minTime / 10),
 		)
