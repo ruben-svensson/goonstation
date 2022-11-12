@@ -2,7 +2,7 @@ import { useBackend, useLocalState } from '../../../backend';
 import { Box, Button, Flex, Stack, Tabs, TextArea, Tooltip } from '../../../components';
 import { fenCodeRecordFromPieces, fetchPieces, getPiece, getPiecesByGame, PieceType } from '../Pieces';
 import { BoardgameData, Piece } from '../types';
-import { presets } from '../Presets';
+import { presets, PresetType, presetsByGame } from '../Presets';
 
 export const FenCodeSettings = (_props, context) => {
   const [tabIndex, setTabIndex] = useLocalState(context, 'tabIndex', 1);
@@ -185,25 +185,37 @@ const PieceSVGImage = ({ width, height, pieceData }: PieceSVGImageProps) => {
 
 type GenerateSvgBoardProps = {
   preset: string;
+  size?: number;
 };
 
 // Create an svg element with the boardgame specified in the boardInfo
 // The board size is 128x128
-const GenerateSvgBoard = ({ preset }: GenerateSvgBoardProps, context) => {
+const GenerateSvgBoard = ({ preset, size }: GenerateSvgBoardProps, context) => {
+  const { act } = useBackend<BoardgameData>(context);
+  const [configModalOpen, setConfigModalOpen] = useLocalState(context, 'configModalOpen', false);
+
   const { data } = useBackend<BoardgameData>(context);
-  const { pieces } = data;
-  const { width, height, game } = data.boardInfo;
-  const boardSize = width * height;
+  const { width } = data.boardInfo;
   const { tileColour1, tileColour2 } = data.styling;
 
   const allPieces = fetchPieces();
   const codeRecords = fenCodeRecordFromPieces(allPieces);
 
-  const fenArray = convertFenCodeToBoardArray(preset);
   const presetArray = preset.split(',');
   let currentIndex = 0;
+
+  const s = (size || 1) * 80;
   return (
-    <svg width="80" height="80" viewBox="0 0 80 80">
+    <svg
+      onClick={() => {
+        act('applyGNot', {
+          gnot: preset,
+        });
+        setConfigModalOpen(false);
+      }}
+      width="80"
+      height="80"
+      viewBox="0 0 80 80">
       <pattern id="pattern-checkerboard-preset" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
         <rect width="10" height="10" fill={tileColour1} />
         <rect x="10" y="10" width="10" height="10" fill={tileColour1} />
@@ -239,14 +251,74 @@ const GenerateSvgBoard = ({ preset }: GenerateSvgBoardProps, context) => {
   );
 };
 
-const PresetsTab = (_props, context) => {
-  const { act, data } = useBackend<BoardgameData>(context);
+const PresetDetails = (_props, context) => {
+  const { act } = useBackend<BoardgameData>(context);
+  const [selectedPreset, setSelectedPreset] = useLocalState<PresetType>(context, 'selectedPreset', null);
   const [configModalOpen, setConfigModalOpen] = useLocalState(context, 'configModalOpen', false);
 
-  // Orgainize the presets by game, key is the game name, value is the presets for that game
+  if (!selectedPreset) return;
+
+  let setupString = '';
+
+  if (selectedPreset) {
+    setupString = typeof selectedPreset.setup === 'function' ? selectedPreset.setup() : selectedPreset.setup;
+  }
+  return (
+    <Box className={`boardgame__preset-details ${selectedPreset ? 'boardgame__preset-details--active' : ''}`}>
+      <Flex>
+        <Flex.Item>
+          <Button
+            onClick={() => {
+              act('applyGNot', {
+                gnot: setupString,
+              });
+              setSelectedPreset(null);
+              setConfigModalOpen(false);
+            }}>
+            Play
+          </Button>
+          <Button
+            onClick={() => {
+              setSelectedPreset(null);
+            }}>
+            Close
+          </Button>
+          <Box className="boardgame__preset-details-board">
+            <GenerateSvgBoard preset={setupString} />
+          </Box>
+        </Flex.Item>
+        <Flex.Item className="boardgame__preset-details-summary">
+          <h4>{selectedPreset?.name}</h4>
+          <p>{selectedPreset?.description}</p>
+        </Flex.Item>
+      </Flex>
+      <h3>Rules:</h3>
+      <p>
+        Lorem ipsum dolor sit, amet consectetur adipisicing elit. Quaerat, vero! Incidunt omnis deserunt corrupti odit
+        nulla, error quis sequi. Dolor sunt hic quo modi illo in exercitationem quis praesentium deserunt.
+      </p>
+      <p>
+        Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, quae. Quisquam, quae. Quisquam, quae.
+        Quisquam,
+      </p>
+    </Box>
+  );
+};
+
+const PresetsTab = (_props, context) => {
+  const records = presetsByGame();
 
   return (
     <Flex className="boardgame__presets">
+      {Object.keys(records).map((game, i) => {
+        const presets = records[game];
+        return <PresetsRow key={i} game={game} presets={presets} />;
+      })}
+      <PresetDetails />
+    </Flex>
+  );
+
+  /* <Flex className="boardgame__presets">
       {presets.map((preset, i) => {
         const setup = preset.setup;
         // if setup is a function, call it to get the setup
@@ -265,13 +337,91 @@ const PresetsTab = (_props, context) => {
             <Tooltip position="top" content={preset.name}>
               <Flex position="relative">
                 <Flex.Item>
-                  <GenerateSvgBoard preset={setupString} />
+                  <PresetItem presetSetup={setupString} />
                 </Flex.Item>
               </Flex>
             </Tooltip>
           </Flex.Item>
         );
       })}
-    </Flex>
+    </Flex>*/
+};
+
+type PresetsRowProps = {
+  game: string;
+  presets: PresetType[];
+};
+
+const PresetsRow = ({ game, presets }: PresetsRowProps, context) => {
+  const { act } = useBackend<BoardgameData>(context);
+  const [, setConfigModalOpen] = useLocalState(context, 'configModalOpen', false);
+
+  const prettyGameName = game.charAt(0).toUpperCase() + game.slice(1);
+
+  return (
+    <Flex.Item>
+      <Flex direction="column" className="boardgame__presets">
+        <Flex.Item>
+          <h4>{prettyGameName}</h4>
+        </Flex.Item>
+        <Flex.Item className="boardgame__presets-grid">
+          {presets.map((preset, i) => {
+            const setup = preset.setup;
+            // if setup is a function, call it to get the setup
+            const setupString = typeof setup === 'function' ? setup() : setup;
+
+            return (
+              <Flex.Item key={i} className="boardgame__preset">
+                <Tooltip position="top" content={preset.name}>
+                  <Flex position="relative">
+                    <Flex.Item>
+                      <PresetItem preset={preset} presetSetup={setupString} />
+                    </Flex.Item>
+                  </Flex>
+                </Tooltip>
+              </Flex.Item>
+            );
+          })}
+        </Flex.Item>
+      </Flex>
+    </Flex.Item>
+  );
+};
+
+type PresetItemProps = {
+  preset: PresetType;
+  presetSetup: string;
+};
+
+const PresetItem = ({ preset, presetSetup }: PresetItemProps, context) => {
+  const { act } = useBackend<BoardgameData>(context);
+  const [selectedPreset, setSelectedPreset] = useLocalState<PresetType>(context, 'selectedPreset', null);
+  const [, setConfigModalOpen] = useLocalState(context, 'configModalOpen', false);
+  // Draw the board and a ? button on top of it
+  return (
+    <Box className="boardgame__preset-item">
+      <Flex className="boardgame__preset-buttons" direction="row">
+        <span
+          className="boardgame__preset-button"
+          onClick={() => {
+            act('applyGNot', {
+              gnot: presetSetup,
+            });
+            setConfigModalOpen(false);
+          }}>
+          Play
+        </span>
+        <span
+          className="boardgame__preset-button"
+          onClick={() => {
+            setSelectedPreset(preset);
+          }}>
+          Info
+        </span>
+      </Flex>
+      <Box className={``}>
+        <GenerateSvgBoard preset={presetSetup} />
+      </Box>
+    </Box>
   );
 };

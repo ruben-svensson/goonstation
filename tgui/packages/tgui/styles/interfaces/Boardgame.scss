@@ -38,7 +38,7 @@
   height: 100%;
   padding: 10%;
   background: rgba(0, 0, 0, 0.4);
-  z-index: 100;
+  z-index: 1;
 }
 
 .boardgame__modal-inner {
@@ -65,12 +65,120 @@
 }
 
 .boardgame__presets {
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
 }
 
-.boardgame__settingspart {
+.boardgame__presets-grid {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding: 2px;
+  background-color: rgb(0, 0, 0, 0.2);
+}
+
+.boardgame__preset-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  padding: 5px;
+  cursor: pointer;
+  padding-bottom: 5px;
+  transition: 0.5s;
+  width: 90px;
+  height: 90px;
+  padding: 5px;
+  background-color: rgb(0, 0, 0, 0.4);
+  color: rgba(255, 255, 255, 0);
+  text-shadow: none;
+}
+
+.boardgame__preset-item:hover {
+  color: rgba(255, 255, 255, 0.8);
+  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+}
+
+.boardgame__preset-item:hover {
+  z-index: 4;
+}
+
+.boardgame__preset-buttons {
+  position: absolute;
+  margin-bottom: 5px;
+  font-size: 1.2em;
+  font-weight: bold;
+  bottom: 0;
+  left: 0;
+  width: 80px;
+  margin-left: 5px;
+  justify-content: space-around;
+  z-index: 5;
+  background-color: rgba(0, 0, 0, 0);
+}
+
+.boardgame__preset-buttons:hover {
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+.boardgame__preset-button {
+  text-align: center;
+  border-radius: 5px;
+  padding: 2px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.boardgame__preset-button:hover {
+  text-decoration: underline;
+  color: white;
+  // draw a thick black border around the text
+  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+}
+
+.boardgame__preset-board {
+  position: relative;
+  bottom: 0;
+  transition: 0.2s;
+  margin-top: 0px;
+  z-index: 3;
+  padding-top: 0;
+}
+
+.boardgame__preset-board:hover {
+  padding-top: 20px;
+  zoom: 1.5;
+  z-index: 4;
+  margin-right: 50px;
+}
+
+.boardgame__preset-details {
+  position: fixed;
+  padding: 10px;
+  top: 10%;
+  right: 10%;
+  left: 10%;
+  bottom: 10%;
+  transition: 0.2s all;
+  padding: 10px;
+  z-index: 10;
+  background-color: base.$color-bg;
+}
+
+.boardgame__preset-details-summary {
+  padding: 10px;
+}
+
+.boardgame__preset-details-board {
+  width: 160px;
+  background-color: red;
+  height: 160px;
+}
+
+.boardgame__preset-details-board > svg {
+  zoom: 2;
 }
 
 .boardgame__heldpiece {

@@ -30,29 +30,27 @@ export const Pattern = ({ pattern }: PatternProps, context) => {
   const width = 100 / data.boardInfo.width;
   const height = 100 / data.boardInfo.height;
 
-  const [flip, setFlip] = useLocalState(context, 'flip', false);
+  const [flip] = useLocalState(context, 'flip', false);
 
-  const [translateCoords, setTranslateCoords] = useLocalState<{
+  const [, setTranslateCoords] = useLocalState<{
     x: number;
     y: number;
   }>(context, 'translateCoords', { x: 0, y: 0 });
 
-  const [mouseCoords, setMouseCoords] = useLocalState<{
+  const [mouseCoords] = useLocalState<{
     x: number;
     y: number;
   }>(context, 'mouseCoords', { x: 0, y: 0 });
-  const [tileSize, setTileSize] = useLocalState(context, 'tileSize', {
+  const [, setTileSize] = useLocalState(context, 'tileSize', {
     width: 50,
     height: 50,
   });
   let { x, y } = mouseCoords;
 
   const pieceRecords = fenCodeRecordFromPieces(fetchPieces());
-  const [paletteSelected, setPaletteSelected] = useLocalState(context, 'paletteSelected', '');
-  // const [patternMulti, setPatternMulti] = useLocalState(context, 'patternMulti', 1);
 
   const board = document.getElementsByClassName('boardgame__board-inner')[0];
-  let tileWidth, tileHeight;
+  let tileWidth: number, tileHeight: number;
   if (board) {
     const boardRect = board.getBoundingClientRect();
 

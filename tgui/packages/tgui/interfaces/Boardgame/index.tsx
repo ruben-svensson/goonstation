@@ -2,37 +2,26 @@ import { Window } from '../../layouts';
 import { Box, Button, Flex } from '../../components';
 import { useBackend, useLocalState } from '../../backend';
 import { Pattern } from './Patterns';
-import { BoardgameData, User } from './types';
+import { BoardgameData } from './types';
 
 import { PieceDrawer } from './Components/PieceDrawer';
 
-import { FenCodeSettings, Notations } from './Components';
-import { fenCodeRecordFromPieces, fetchPieces, PieceType } from './Pieces';
+import { FenCodeSettings, Notations, HeldPieceRenderer } from './Components';
 
 export const Boardgame = (_props, context) => {
   const { act, data } = useBackend<BoardgameData>(context);
 
-  const { name, game, pattern, width, height } = data.boardInfo;
-  const { currentUser, pieces } = data;
+  const { currentUser } = data;
+  const { name, pattern } = data.boardInfo;
   const { useNotations } = data.styling;
 
-  const [configModalOpen, setConfigModalOpen] = useLocalState(context, 'configModalOpen', false);
+  const [, setConfigModalOpen] = useLocalState(context, 'configModalOpen', false);
   const [flip, setFlip] = useLocalState(context, 'flip', false);
 
-  const [mouseCoords, setMouseCoords] = useLocalState<{
+  const [, setMouseCoords] = useLocalState<{
     x: number;
     y: number;
   }>(context, 'mouseCoords', { x: 0, y: 0 });
-
-  const [translateCoords, setTranslateCoords] = useLocalState<{
-    x: number;
-    y: number;
-  }>(context, 'translateCoords', { x: 0, y: 0 });
-
-  const [tileSize, setTileSize] = useLocalState(context, 'tileSize', {
-    width: 50,
-    height: 50,
-  });
 
   return (
     <Window title={name} width={800} height={650}>
@@ -43,6 +32,18 @@ export const Boardgame = (_props, context) => {
             x: e.clientX,
             y: e.clientY,
           });
+        }}
+        onMouseUp={(e) => {
+          // If mouse is released outside boardgame__board-inner, delete the held piece
+          const board = document.getElementsByClassName('boardgame__board-inner')[0];
+          if (board) {
+            let x = e.clientX;
+            let y = e.clientY;
+            const boardRect = board.getBoundingClientRect();
+            if (x < boardRect.left || x > boardRect.right || y < boardRect.top || y > boardRect.bottom) {
+              act('heldPiece', { heldPiece: null });
+            }
+          }
         }}
         fitted
         className="boardgame__window">
@@ -99,37 +100,4 @@ Boardgame.defaultHooks = {
       size: `${width}x${height}`,
     });
   },
-};
-
-const HeldPieceRenderer = (_, context) => {
-  const { act, data } = useBackend<BoardgameData>(context);
-  const { currentUser } = data;
-
-  const [mouseCoords, setMouseCoords] = useLocalState<{
-    x: number;
-    y: number;
-  }>(context, 'mouseCoords', { x: 0, y: 0 });
-
-  const code = currentUser?.palette || currentUser.selected?.code;
-
-  if (code) {
-    const pieces = fetchPieces();
-    const piece: PieceType = fenCodeRecordFromPieces(pieces)[code];
-
-    // Draw the piece with svg fixed to the mouse
-
-    return (
-      <Box
-        className="boardgame__heldpiece"
-        style={{
-          top: mouseCoords.y + 'px',
-          left: mouseCoords.x + 'px',
-          width: '30px',
-          height: '30px',
-        }}>
-        <img src={piece?.image} />
-        <span>{piece?.name}</span>
-      </Box>
-    );
-  }
 };

@@ -1,7 +1,7 @@
 import { useBackend, useLocalState } from '../../../backend';
 import { BoardgameData } from '../types';
 import { Piece } from './';
-import { sets } from '../sets';
+import { sets } from '../Pieces/sets';
 import { Box, Button, Flex } from '../../../components';
 
 export const PieceDrawer = (orps, context) => {

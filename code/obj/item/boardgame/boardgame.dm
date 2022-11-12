@@ -334,33 +334,6 @@
 
 		New()
 			..()
-
-	go
-		name = "go board"
-		desc = "It's a board for playing go!"
-
-		pattern="go"
-		icon_state = "goboard"
-		board_width = 19
-		board_height = 19
-
-		New()
-			..()
-			styling["useNotations"] = FALSE
-
-	xiangqi
-		name = "xiangqi board"
-		desc = "It's a board for playing xiangqi!"
-
-		pattern="xiangqi"
-		icon_state = "xiangqiboard"
-		board_width = 9
-		board_height = 10
-
-		New()
-			..()
-			styling["useNotations"] = FALSE
-
 	New()
 		..()
 

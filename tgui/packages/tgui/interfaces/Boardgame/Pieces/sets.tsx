@@ -1,4 +1,4 @@
-import { fetchPieces, getPiecesByGame, PieceType } from './Pieces';
+import { getPiecesByGame, PieceType } from '.';
 
 export type PieceSet = {
   name: string;
