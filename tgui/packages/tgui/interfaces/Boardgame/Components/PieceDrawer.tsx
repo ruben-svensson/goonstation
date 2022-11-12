@@ -23,10 +23,7 @@ export const PieceDrawer = (orps, context) => {
         <Box key={set.name}>
           <Box
             className={'boardgame__piece-set-header'}
-            style={{
-              'text-align': 'center',
-            }}>
-            {set.name}
+          >
             <ExpandedSetsButton index={i} setId={set.name} />
           </Box>
 
@@ -70,6 +67,8 @@ const ExpandedSetsButton = ({ index, setId }: ExpandedSetsButtonProps, context) 
         newExpandedSets[index] = !newExpandedSets[index];
         setExpandedSets(newExpandedSets);
       }}
-    />
+    >
+      {setId}
+    </Button.Checkbox>
   );
 };

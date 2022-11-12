@@ -136,8 +136,7 @@ export const Boardgame = (_props, context) => {
 
         {(currentUser?.palette || currentUser?.selected) && <HeldPieceRenderer />}
         <Box className="boardgame__debug">
-          <span>Flip board</span>
-          <Button.Checkbox checked={flip} onClick={() => setFlip(!flip)} />
+          <Button.Checkbox checked={flip} onClick={() => setFlip(!flip)}>Flip board</Button.Checkbox>
           <Button title={'Setup'} icon={'cog'} onClick={() => setConfigModalOpen(true)} />
         </Box>
         <Flex className="boardgame__wrapper">
