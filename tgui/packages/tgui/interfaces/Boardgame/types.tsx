@@ -29,7 +29,11 @@ export type Piece = {
   code: string;
   x: number;
   y: number;
+  prevX: number;
+  prevY: number;
   selected: User;
+  lastSelected: User;
+  palette: string;
 };
 
 export type StartingPosition = {

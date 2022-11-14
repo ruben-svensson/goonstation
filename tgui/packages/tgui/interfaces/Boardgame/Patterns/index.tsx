@@ -1,5 +1,7 @@
+declare const React;
+
 import { useBackend, useLocalState } from '../../../backend';
-import { fenCodeRecordFromPieces, fetchPieces } from '../Pieces';
+import { fenCodeRecordFromPieces, fetchPieces, PieceType } from '../Pieces';
 import { BoardgameData } from '../types';
 import { CheckerBoard } from './checkerboard';
 
@@ -14,21 +16,14 @@ type PatternToUseProps = {
 };
 
 const PatternToUse = ({ pattern }: PatternToUseProps, context) => {
-  switch (pattern) {
-    case 'checkerboard': // 4 tiles per square, handles translation
-      return <CheckerBoard />;
-  }
+  return <CheckerBoard />;
 };
 
 export const Pattern = ({ pattern }: PatternProps, context) => {
   const { act, data } = useBackend<BoardgameData>(context);
 
   const { pieces, currentUser } = data;
-  const { lock } = data.boardInfo;
-
-  const { tileColour1, tileColour2 } = data.styling;
-  const width = 100 / data.boardInfo.width;
-  const height = 100 / data.boardInfo.height;
+  const pieceRecords = fenCodeRecordFromPieces(fetchPieces());
 
   const [flip] = useLocalState(context, 'flip', false);
 
@@ -47,10 +42,9 @@ export const Pattern = ({ pattern }: PatternProps, context) => {
   });
   let { x, y } = mouseCoords;
 
-  const pieceRecords = fenCodeRecordFromPieces(fetchPieces());
-
   const board = document.getElementsByClassName('boardgame__board-inner')[0];
-  let tileWidth: number, tileHeight: number;
+  let tileWidth: number = 0,
+    tileHeight: number = 0;
   if (board) {
     const boardRect = board.getBoundingClientRect();
 
@@ -62,17 +56,9 @@ export const Pattern = ({ pattern }: PatternProps, context) => {
   }
 
   let patternMulti = 1; // Divide by this to get the board coord
-  let patternOffset = 0; // Used to offset the board coord, for games like go
-  switch (pattern) {
-    case 'checkerboard': // 4 tiles per square, handles translation
-      patternMulti = 1;
-      break;
-    case 'go':
-      patternOffset = 0.5; // Half a tile
-  }
 
-  let boardX = Math.floor(((x - 20) / tileWidth) * patternMulti + patternOffset);
-  let boardY = Math.floor(((y - 52) / tileHeight) * patternMulti + patternOffset);
+  let boardX = Math.floor(((x - 20) / tileWidth) * patternMulti);
+  let boardY = Math.floor(((y - 52) / tileHeight) * patternMulti);
 
   // reverse the y axis if the board is flipped
   if (flip) {
@@ -84,6 +70,7 @@ export const Pattern = ({ pattern }: PatternProps, context) => {
 
   return (
     <svg
+      overflow="visible"
       className={`boardgame__pattern ${flip ? 'boardgame__patternflip' : ''}`}
       onmousemove={(e) => {
         setTileSize({ width: tileWidth, height: tileHeight });
@@ -107,12 +94,90 @@ export const Pattern = ({ pattern }: PatternProps, context) => {
       width="100%"
       height="100%">
       <PatternToUse pattern={pattern} />
+      <PiecesSvgRenderer pieceRecords={pieceRecords} />
+      <OverlaySvg pieceRecords={pieceRecords} />
+    </svg>
+  );
+};
+
+type OverlaySvgRendererProps = {
+  pieceRecords: Record<string, PieceType>;
+};
+
+// Draw names of player moving the pieces, lines between moved pieces and the piece being moved
+const OverlaySvg = ({ pieceRecords }: OverlaySvgRendererProps, context) => {
+  const { act, data } = useBackend<BoardgameData>(context);
+
+  const { pieces, currentUser } = data;
+  const { lock } = data.boardInfo;
+
+  const { tileColour1, tileColour2 } = data.styling;
+  const width = 100 / data.boardInfo.width;
+  const height = 100 / data.boardInfo.height;
+
+  return (
+    <svg width="100%" height="100%" overflow="visible">
       {Object.keys(pieces).map((val, index) => {
-        const { x, y, code } = pieces[val];
+        const { x, y, prevX, prevY, code } = pieces[val];
+        const selected = pieces[val].selected;
+        const pieceType = pieceRecords[code];
+
+        const name = selected?.name || '';
+        const firstName = name.split(' ')[0];
+        const lastName = name.split(' ')[1];
+        const lastNamefirstLetter = lastName?.charAt(0) || '';
+
+        return (
+          <svg
+            overflow="visible"
+            key={index}
+            x={width * x + '%'}
+            y={height * y + '%'}
+            width={width + '%'}
+            height={height + '%'}>
+            <text
+              stroke="black"
+              fill="white"
+              font-family="Verdana"
+              font-weight="bold"
+              x="50%"
+              y="100%"
+              text-anchor="middle"
+              alignment-baseline="middle"
+              font-size="1.4em"
+              shape-rendering="crispEdges">
+              {selected ? (name ? firstName + ' ' + lastNamefirstLetter : name) : ''}
+            </text>
+          </svg>
+        );
+      })}
+    </svg>
+  );
+};
+
+type PiecesSvgRendererProps = {
+  pieceRecords: Record<string, PieceType>;
+};
+
+const PiecesSvgRenderer = ({ pieceRecords }: PiecesSvgRendererProps, context) => {
+  const { act, data } = useBackend<BoardgameData>(context);
+
+  const { pieces, currentUser } = data;
+
+  const width = 100 / data.boardInfo.width;
+  const height = 100 / data.boardInfo.height;
+
+  return (
+    <svg width="100%" height="100%">
+      {Object.keys(pieces).map((val, index) => {
+        const { x, y, prevX, prevY, code } = pieces[val];
         const pieceType = pieceRecords[code];
 
         // Is the piece selected by currentUser?
         const selected = pieces[val].selected;
+
+        // generate a unique color based on selected players name as a seed
+        // make it so the same player always has the same color
 
         return (
           <svg
@@ -141,15 +206,14 @@ export const Pattern = ({ pattern }: PatternProps, context) => {
             width={width + '%'}
             height={height + '%'}
             overflow="visible"
-            viewBox="0 0 100 100"
             style={{
               'cursor': 'pointer',
+              'opacity': selected ? 0.5 : 1,
             }}>
-            <g overflow="visible">
+            <g width="100%" height="100%" overflow="visible">
               <image
                 style={{
                   'cursor': 'pointer',
-                  'opacity': selected ? 0.5 : 1,
                 }}
                 x="0%"
                 y="0%"
@@ -157,33 +221,6 @@ export const Pattern = ({ pattern }: PatternProps, context) => {
                 height="100%"
                 xlinkHref={pieceType?.image}
               />
-              {
-                // if selected make it more opaque
-                // center a text element with the holder's name
-                // like a tooltip
-                pieces[val].selected ? (
-                  <svg overflow="visible">
-                    <text
-                      x="50%"
-                      y="50%"
-                      fontSize="18px"
-                      text-anchor="middle"
-                      dominant-baseline="middle"
-                      style={{
-                        'text-align': 'center',
-                        'cursor': 'pointer',
-                        'fill': 'black',
-                        'font-weight': 'bold',
-                        'stroke': 'white',
-                        'stroke-width': '1px',
-                      }}>
-                      {pieces[val].selected.name}
-                    </text>
-                  </svg>
-                ) : (
-                  ''
-                )
-              }
             </g>
           </svg>
         );

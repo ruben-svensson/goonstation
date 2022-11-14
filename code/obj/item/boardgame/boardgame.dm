@@ -78,7 +78,10 @@
 			"code" = code,
 			"x" = x,
 			"y" = y,
+			"prevX" = x,
+			"prevY" = y,
 			"selected" = null, // Piece on the board selected
+			"lastSelected" = null, // Last piece selected by the user
 			"palette" = null, // Code of the palette
 		)
 		playsound(src.loc, src.sounds["move"], 30, 1)
@@ -137,6 +140,7 @@
 		if (x < 0 || x >= src.board_width || y < 0 || y >= src.board_height)
 			return
 
+		// Update old pos
 		var/_x = x
 		var/_y = y
 
@@ -172,13 +176,22 @@
 			src.deselectPawn(ckey)
 			return
 
-		var/old_x = pawn["x"]
-		var/old_y = pawn["y"]
+		var/new_x = pawn["x"]
+		var/new_y = pawn["y"]
 
 		// Check if the pawn is moving to a new tile
-		if (old_x == _x && old_y == _y)
+		if (new_x == _x && new_y == _y)
 			src.deselectPawn(ckey)
 			return
+
+		//Clear last selected from the players last selected piece
+
+
+
+		// Update old pos
+		pawn["prevX"] = new_x
+		pawn["prevY"] = new_y
+		pawn["lastSelected"] = pawn["selected"]
 
 		// Check if the pawn is moving to a tile that is already occupied
 
@@ -206,7 +219,6 @@
 		//src.drawBoardIcon()
 		playsound(src.loc, src.sounds["capture"], 30, 1)
 		src.removePiece(pawn["id"])
-
 
 	ui_interact(mob/user, datum/tgui/ui)
 		ui = tgui_process.try_update_ui(user, src, ui)

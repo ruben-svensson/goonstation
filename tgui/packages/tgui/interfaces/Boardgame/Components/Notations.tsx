@@ -24,7 +24,7 @@ export const Notations = ({ direction }: NotationsProps, context) => {
   if (direction === 'vertical') {
     notationDirectionClass = 'boardgame__verticalnotations';
   } else {
-    notationDirectionClass = `boardgame__horizontalnotations`;
+    notationDirectionClass = `boardgame__piece-set-horizontal`;
   }
 
   return (

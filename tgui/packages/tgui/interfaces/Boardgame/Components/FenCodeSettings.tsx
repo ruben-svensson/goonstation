@@ -267,22 +267,6 @@ const PresetDetails = (_props, context) => {
     <Box className={`boardgame__preset-details ${selectedPreset ? 'boardgame__preset-details--active' : ''}`}>
       <Flex>
         <Flex.Item>
-          <Button
-            onClick={() => {
-              act('applyGNot', {
-                gnot: setupString,
-              });
-              setSelectedPreset(null);
-              setConfigModalOpen(false);
-            }}>
-            Play
-          </Button>
-          <Button
-            onClick={() => {
-              setSelectedPreset(null);
-            }}>
-            Close
-          </Button>
           <Box className="boardgame__preset-details-board">
             <GenerateSvgBoard preset={setupString} />
           </Box>
@@ -290,17 +274,41 @@ const PresetDetails = (_props, context) => {
         <Flex.Item className="boardgame__preset-details-summary">
           <h4>{selectedPreset?.name}</h4>
           <p>{selectedPreset?.description}</p>
+          <Box>
+            <Button
+              onClick={() => {
+                act('applyGNot', {
+                  gnot: setupString,
+                });
+                setSelectedPreset(null);
+                setConfigModalOpen(false);
+              }}>
+              Play
+            </Button>
+            <Button
+              onClick={() => {
+                setSelectedPreset(null);
+              }}>
+              Close
+            </Button>
+          </Box>
         </Flex.Item>
       </Flex>
-      <h3>Rules:</h3>
-      <p>
-        Lorem ipsum dolor sit, amet consectetur adipisicing elit. Quaerat, vero! Incidunt omnis deserunt corrupti odit
-        nulla, error quis sequi. Dolor sunt hic quo modi illo in exercitationem quis praesentium deserunt.
-      </p>
-      <p>
-        Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, quae. Quisquam, quae. Quisquam, quae.
-        Quisquam,
-      </p>
+      <DetailRules element={selectedPreset?.rules} />
+    </Box>
+  );
+};
+
+type DetailRulesProps = {
+  element: JSX.Element;
+};
+const DetailRules = ({ element }: DetailRulesProps) => {
+  if (!element) return;
+
+  return (
+    <Box className="boardgame__rules">
+      <h4>Rules</h4>
+      <Box className="boardgame__rules-content">{element}</Box>
     </Box>
   );
 };
