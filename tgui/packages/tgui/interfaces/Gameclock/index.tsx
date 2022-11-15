@@ -1,3 +1,5 @@
+declare const React;
+
 import { useBackend, useLocalState } from '../../backend';
 import { GameClockData } from './types';
 import {
