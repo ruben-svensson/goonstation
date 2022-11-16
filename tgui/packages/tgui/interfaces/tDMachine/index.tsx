@@ -18,7 +18,7 @@ export const tDMachine = (props, context) => {
 
 class WebGLView extends Component {
   ref = createRef<HTMLCanvasElement>();
-  public animRef = createRef<FrameRequestCallback>();
+  animRef = createRef<FrameRequestCallback>();
   constructor(props) {
     super(props);
   }
