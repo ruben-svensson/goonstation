@@ -20,7 +20,7 @@
 		else
 			icon_state = "chessclock_L"
 
-	proc/formatTimeText(var/timeValue as num) // FIX THIS SHIT
+	proc/formatTimeText(var/timeValue as num)
 		var/seconds = round((timeValue / 10) % 60)
 		var/minutes = round(((timeValue / 10) - seconds) / 60)
 		if (minutes < 10)
