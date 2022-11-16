@@ -1,11 +1,4 @@
-/* eslint-disable max-len */
-
 import chessPieces from './chess';
-import unicodePieces from './unicode';
-import facesPieces from './faces';
-import gifPieces from './gifs';
-import goPieces from './go';
-
 export type PieceType = {
   fenCode: string;
   name: string;
@@ -16,10 +9,6 @@ export type PieceType = {
 const pieces: PieceType[] = [];
 
 pieces.push(...chessPieces);
-pieces.push(...unicodePieces);
-pieces.push(...facesPieces);
-pieces.push(...gifPieces);
-pieces.push(...goPieces);
 
 export const getPiece = (fenCode: string, game: string) => {
   return pieces.find((piece) => piece.fenCode === fenCode && piece.game === game);

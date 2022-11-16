@@ -14,12 +14,6 @@
 	var/board_width = 8
 	var/board_height = 8
 
-	var/list/pieceSets = list("chess", "draughts", "go")
-
-	var/icon/custom_board = null
-	/// If true, the board will be drawn with a checkerboard pattern automatically
-	/// If false, the board will be drawn with the icon provided
-	var/draw_custom_icon = FALSE
 	var/lock_pieces_to_tile = TRUE // If true, pieces will be locked to the center of the tile they're on, otherwise they'll be free to move around
 
 	/// Apply custom styling, matches both in dm and tgui releated code
@@ -29,9 +23,6 @@
 		"border" = rgb(131, 100, 74),
 		"aspectRatio" = 1, // 1 to 1 ratio, use null for auto
 		"useNotations" = TRUE, // Whether to use chess-like notation or not
-		// Set fixed width and height to null to disable
-		"tileWidth" = null,
-		"tileHeight" = null,
 	)
 
 	var/list/sounds = list(
@@ -44,6 +35,15 @@
 	// also track pawns they have selected and moving
 	var/list/active_users = list()
 	var/list/pieces = list()
+
+	proc/posToNotationString(x, y)
+		// Convert a position to a chess notation string
+		// eg. 1, 1 -> A1
+
+		// Create a split list of the alphabet
+		var/list/letters = splittext("ABCDEFGHIJKLMNOPQRSTUVWXYZ", "")
+		return "[letters[x+1]][board_height - y]"
+
 
 
 	proc/applyGNot(gnot)
@@ -87,7 +87,10 @@
 			"code" = code,
 			"x" = x,
 			"y" = y,
+			"prevX" = x,
+			"prevY" = y,
 			"selected" = null, // Piece on the board selected
+			"lastSelected" = null, // Last piece selected by the user
 			"palette" = null, // Code of the palette
 		)
 		playsound(src.loc, src.sounds["move"], 30, 1)
@@ -146,6 +149,7 @@
 		if (x < 0 || x >= src.board_width || y < 0 || y >= src.board_height)
 			return
 
+		// Update old pos
 		var/_x = x
 		var/_y = y
 
@@ -181,26 +185,45 @@
 			src.deselectPawn(ckey)
 			return
 
-		var/old_x = pawn["x"]
-		var/old_y = pawn["y"]
+		var/new_x = pawn["x"]
+		var/new_y = pawn["y"]
 
 		// Check if the pawn is moving to a new tile
-		if (old_x == _x && old_y == _y)
+		if (new_x == _x && new_y == _y)
 			src.deselectPawn(ckey)
 			return
+
+		var/map_text = ""
+		var/moverName = pawn["selected"]["name"]
+		var/prevPosString = src.posToNotationString(new_x, new_y)
+		var/newPosString = src.posToNotationString(_x, _y)
+
+		// Update old pos
+		pawn["prevX"] = new_x
+		pawn["prevY"] = new_y
+		pawn["lastSelected"] = pawn["selected"]
 
 		// Check if the pawn is moving to a tile that is already occupied
 
 		var/occupied = src.getPawnAt(_x, _y)
 
+
+
 		if (occupied)
 			// Check if the pawn is moving to a tile that is occupied by an enemy
 			if (pawn != occupied)
+				map_text = "[moverName] moves [prevPosString] to [newPosString] and captures [occupied["name"]]!"
 				playsound(src.loc, src.sounds["capture"], 30, 1)
 				src.removePieceAt(_x, _y)
 			else
-				// If the piece is moving to a tile that is occupied by a friendly
+				// If the piece is moving to a tile that is occupied by itself
 				return
+		else
+			map_text = "[moverName] moves [prevPosString] to [newPosString]!"
+
+		var/map_text_final = make_chat_maptext(src, map_text, "color: #A8E9F0;", alpha = 150, force=20, time=10)
+		for (var/mob/O in hearers(src))
+			O.show_message(assoc_maptext = map_text_final)
 
 		playsound(src.loc, src.sounds["move"], 30, 1)
 
@@ -215,7 +238,6 @@
 		//src.drawBoardIcon()
 		playsound(src.loc, src.sounds["capture"], 30, 1)
 		src.removePiece(pawn["id"])
-
 
 	ui_interact(mob/user, datum/tgui/ui)
 		ui = tgui_process.try_update_ui(user, src, ui)
@@ -333,9 +355,34 @@
 	attack_hand(var/mob/user) // open browser window when board is clicked
 		src.ui_interact(user)
 
-	examine(mob/user)
-		. = ..()
-		ui_interact(user)
+	attackby(obj/item/W, mob/user, params)
+		if(istype(W, /obj/item/paint_can))
+			var/obj/item/paint_can/can = W
+
+			//Check which hand the paint can is in, style tileColour1 or tileColour2
+			// based on that
+
+			var/tileColour = "tileColour1"
+			if(user.l_hand == can)
+				tileColour = "tileColour1"
+			else if(user.r_hand == can)
+				tileColour = "tileColour2"
+			else
+				boutput(user, "<span class='warning'>You need to hold the paint can in your hand to use it!</span>")
+				return
+
+			//Check if the paint can is empty
+			if(can.uses <= 0)
+				boutput(user, "<span class='warning'>The paint can is empty!</span>")
+				return
+
+			//Apply the paint to the src.styling[tileColour]
+			src.styling[tileColour] = can.paint_color
+			can.uses--
+
+		return
+
+
 
 	chess
 		name = "chess board"
@@ -343,33 +390,8 @@
 
 		New()
 			..()
-
-	go
-		name = "go board"
-		desc = "It's a board for playing go!"
-
-		pattern="go"
-		icon_state = "goboard"
-		board_width = 19
-		board_height = 19
-
-		New()
-			..()
-			styling["useNotations"] = FALSE
-
-	xiangqi
-		name = "xiangqi board"
-		desc = "It's a board for playing xiangqi!"
-
-		pattern="xiangqi"
-		icon_state = "xiangqiboard"
-		board_width = 9
-		board_height = 10
-
-		New()
-			..()
-			styling["useNotations"] = FALSE
-
 	New()
 		..()
+		styling["oldTileColour1"] = styling["tileColour1"]
+		styling["oldTileColour2"] = styling["tileColour2"]
 

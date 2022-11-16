@@ -1,4 +1,4 @@
-import { fetchPieces, getPiecesByGame, PieceType } from './Pieces';
+import { getPiecesByGame, PieceType } from '.';
 
 export type PieceSet = {
   name: string;
@@ -15,9 +15,4 @@ sets.push({
 sets.push({
   name: 'Draughts',
   pieces: getPiecesByGame('draughts'),
-});
-
-sets.push({
-  name: 'Go',
-  pieces: getPiecesByGame('go'),
 });

@@ -1,128 +1,31 @@
-declare const React;
-declare const twemoji;
-
 import { Window } from '../../layouts';
-import { Box, Button, Dimmer, Flex } from '../../components';
+import { Box, Button, Flex } from '../../components';
 import { useBackend, useLocalState } from '../../backend';
 import { Pattern } from './Patterns';
-import { BoardgameData, Piece, User } from './types';
+import { BoardgameData } from './types';
 
-import { adjustWindowSize, getFirstTileDimensions } from './helpers';
 import { PieceDrawer } from './Components/PieceDrawer';
 
-import { FenCodeSettings, FloatingPiece, Notations } from './Components';
-import { fenCodeRecordFromPieces, fetchPieces, getPiece, PieceType } from './Pieces';
-
-export type GhostPieceProps = {
-  user: User;
-  piece: PieceType;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-};
-
-export const GhostPiece = ({ user, piece, x, y, width, height }: GhostPieceProps) => {
-  return (
-    <Box
-      className="boardgame__ghostpiece"
-      style={{
-        top: `${y}px`,
-        left: `${x}px`,
-        width: `${width}px`,
-        height: `${height}px`,
-        'max-width': `${width}px`,
-        'max-height': `${height}px`,
-      }}>
-      <img src={piece.image} />
-      <span>{user.name}</span>
-    </Box>
-  );
-};
-
-export const GhostPiecesContainer = (_props, context) => {
-  const { act, data } = useBackend<BoardgameData>(context);
-  const { users } = data;
-  const { width, height } = data.boardInfo;
-  const [flip, setFlip] = useLocalState(context, 'flip', false);
-  // Loop through every object in users
-
-  const widthPercentage = 100 / width;
-  const heightPercentage = 100 / height;
-
-  const additionalWidth = 24;
-  const additionalHeight = 32 + 24;
-  return <Box />;
-  /*
-  if (users) {
-    return (
-      <Box>
-        {Object.keys(users).map((key) => {
-          const user: User = users[key];
-          const { selected } = user;
-          if (selected) {
-            const firstTile = getFirstTileDimensions();
-            const { code, game, x, y } = selected;
-            const xPos = additionalWidth + firstTile.width * x - firstTile.width;
-            let yPos = additionalHeight + firstTile.height * y - firstTile.height;
-
-            if (flip) {
-              yPos = additionalHeight + firstTile.height * (height - y);
-            }
-
-            const piece = getPiece(code, game);
-
-            if (x === 0 && y === 0) {
-              return;
-            }
-
-            return (
-              <GhostPiece
-                user={user}
-                key={key}
-                piece={piece}
-                x={xPos}
-                y={yPos}
-                width={firstTile.width}
-                height={firstTile.height}
-              />
-            );
-          }
-        })}
-      </Box>
-    );
-  }*/
-};
+import { FenCodeSettings, Notations, HeldPieceRenderer } from './Components';
 
 export const Boardgame = (_props, context) => {
   const { act, data } = useBackend<BoardgameData>(context);
 
-  const { name, game, pattern, width, height } = data.boardInfo;
-  const { currentUser, pieces } = data;
+  const { currentUser } = data;
+  const { name, pattern } = data.boardInfo;
   const { useNotations } = data.styling;
 
-  const [configModalOpen, setConfigModalOpen] = useLocalState(context, 'configModalOpen', false);
+  const [, setConfigModalOpen] = useLocalState(context, 'configModalOpen', false);
   const [flip, setFlip] = useLocalState(context, 'flip', false);
 
-  const [mouseCoords, setMouseCoords] = useLocalState<{
+  const [, setMouseCoords] = useLocalState<{
     x: number;
     y: number;
   }>(context, 'mouseCoords', { x: 0, y: 0 });
 
-  const [translateCoords, setTranslateCoords] = useLocalState<{
-    x: number;
-    y: number;
-  }>(context, 'translateCoords', { x: 0, y: 0 });
-
-  const [tileSize, setTileSize] = useLocalState(context, 'tileSize', {
-    width: 50,
-    height: 50,
-  });
-
   return (
     <Window title={name} width={800} height={650}>
       <FenCodeSettings />
-
       <Window.Content
         onMouseMove={(e) => {
           setMouseCoords({
@@ -130,19 +33,30 @@ export const Boardgame = (_props, context) => {
             y: e.clientY,
           });
         }}
+        onMouseUp={(e) => {
+          // If mouse is released outside boardgame__board-inner, delete the held piece
+          const board = document.getElementsByClassName('boardgame__board-inner')[0];
+          if (board) {
+            let x = e.clientX;
+            let y = e.clientY;
+            const boardRect = board.getBoundingClientRect();
+            if (x < boardRect.left || x > boardRect.right || y < boardRect.top || y > boardRect.bottom) {
+              act('heldPiece', { heldPiece: null });
+            }
+          }
+        }}
         fitted
         className="boardgame__window">
-        <GhostPiecesContainer />
-
         {(currentUser?.palette || currentUser?.selected) && <HeldPieceRenderer />}
         <Box className="boardgame__debug">
-          <Button.Checkbox checked={flip} onClick={() => setFlip(!flip)}>Flip board</Button.Checkbox>
+          <Button.Checkbox checked={flip} onClick={() => setFlip(!flip)}>
+            Flip board
+          </Button.Checkbox>
           <Button title={'Setup'} icon={'cog'} onClick={() => setConfigModalOpen(true)} />
         </Box>
         <Flex className="boardgame__wrapper">
           <Flex.Item grow={1} className={`boardgame__board-inner`}>
             {!!useNotations && <Notations direction={'horizontal'} />}
-
             <Flex className={`boardgame__board`}>
               {!!useNotations && <Notations direction={'vertical'} />}
               <Pattern pattern={pattern} />
@@ -187,37 +101,4 @@ Boardgame.defaultHooks = {
       size: `${width}x${height}`,
     });
   },
-};
-
-const HeldPieceRenderer = (_, context) => {
-  const { act, data } = useBackend<BoardgameData>(context);
-  const { currentUser } = data;
-
-  const [mouseCoords, setMouseCoords] = useLocalState<{
-    x: number;
-    y: number;
-  }>(context, 'mouseCoords', { x: 0, y: 0 });
-
-  const code = currentUser?.palette || currentUser.selected?.code;
-
-  if (code) {
-    const pieces = fetchPieces();
-    const piece: PieceType = fenCodeRecordFromPieces(pieces)[code];
-
-    // Draw the piece with svg fixed to the mouse
-
-    return (
-      <Box
-        className="boardgame__heldpiece"
-        style={{
-          top: mouseCoords.y + 'px',
-          left: mouseCoords.x + 'px',
-          width: '30px',
-          height: '30px',
-        }}>
-        <img src={piece?.image} />
-        <span>{piece?.name}</span>
-      </Box>
-    );
-  }
 };

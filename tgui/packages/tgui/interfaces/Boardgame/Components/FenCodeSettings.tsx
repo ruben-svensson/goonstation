@@ -1,23 +1,8 @@
 import { useBackend, useLocalState } from '../../../backend';
-import {
-  Box,
-  Button,
-  Dimmer,
-  Divider,
-  Dropdown,
-  Flex,
-  Modal,
-  Stack,
-  Tabs,
-  TextArea,
-  Tooltip,
-} from '../../../components';
+import { Box, Button, Flex, Stack, Tabs, TextArea, Tooltip } from '../../../components';
 import { fenCodeRecordFromPieces, fetchPieces, getPiece, getPiecesByGame, PieceType } from '../Pieces';
 import { BoardgameData, Piece } from '../types';
-import { presets, presetsByGame } from '../Presets';
-import { getTwemojiSrc } from './Piece';
-
-declare const React;
+import { presets, PresetType, presetsByGame } from '../Presets';
 
 export const FenCodeSettings = (_props, context) => {
   const [tabIndex, setTabIndex] = useLocalState(context, 'tabIndex', 1);
@@ -27,11 +12,11 @@ export const FenCodeSettings = (_props, context) => {
     configModalOpen && (
       <Box className="boardgame__modal">
         <Box className="boardgame__modal-inner">
-          <Tabs className="boardgame__modal-tabs">
-            <Tabs.Tab selected={tabIndex === 1} onClick={() => setTabIndex(1)}>
+          <Tabs fluid className="boardgame__modal-tabs">
+            <Tabs.Tab className="boardgame__modal-tab" selected={tabIndex === 1} onClick={() => setTabIndex(1)}>
               Config
             </Tabs.Tab>
-            <Tabs.Tab selected={tabIndex === 2} onClick={() => setTabIndex(2)}>
+            <Tabs.Tab className="boardgame__modal-tab" selected={tabIndex === 2} onClick={() => setTabIndex(2)}>
               Presets
             </Tabs.Tab>
             <Button onClick={() => setConfigModalOpen(false)}>Close</Button>
@@ -161,7 +146,7 @@ const ConfigTab = (_props, context) => {
         <ConfigTooltip text="PGN" tooltip="Portable Game Notation (coming later)" />
         <ConfigTooltip text="PDN" tooltip="Portable Draughts Notation (coming later)" />
       </Box>
-      <TextArea value={gnot} style={{ 'height': '250px', 'margin': '6px' }} />
+      <TextArea value={gnot} style={{ 'height': '200px' }} />
       <Button
         onClick={() => {
           act('applyGNot', {
@@ -181,204 +166,6 @@ const ConfigTab = (_props, context) => {
     </Stack>
   );
 };
-
-/*
-const ConfigTab = (_props, context) => {
-  const { act, data } = useBackend<BoardgameData>(context);
-  const { startingPositions } = data.boardInfo; // Key value pairs of board name and starting position
-  const { width, height, game } = data.boardInfo;
-  const { board } = data;
-
-  const [disabled, setDisabled] = useLocalState(context, 'disabled', true);
-  const startingPositionNames = Object.keys(startingPositions);
-
-  // Set fencode to the first starting position as default
-  const [fenCode, setFenCode] = useLocalState(context, 'fenCode', '');
-
-  const convertBoardToFenCode = () => {
-    let fenCode = '';
-    let emptyCount = 0;
-
-    for (let i = 0; i < board.length; i++) {
-      const piece = board[i];
-      if (piece) {
-        if (emptyCount > 0) {
-          fenCode += emptyCount;
-          emptyCount = 0;
-        }
-        fenCode += piece;
-      } else {
-        emptyCount++;
-      }
-
-      if (i % width === width - 1) {
-        if (emptyCount > 0) {
-          fenCode += emptyCount;
-          emptyCount = 0;
-        }
-        if (i !== board.length - 1) {
-          fenCode += '/';
-        }
-      }
-    }
-
-    setFenCode(fenCode);
-  };
-
-  const getFenCodeLength = () => {
-    // Check if the fen code is valid
-    // loop though fenCode, if the fenLength ends with width * height then it is valid
-    // ignore slashes, the number at index adds to the length its self
-
-    let fenLength = 0;
-
-    for (let i = 0; i < fenCode.length; i++) {
-      const char: string = fenCode[i];
-
-      if (char === '/') continue;
-
-      if (isNaN(parseInt(char, 10))) {
-        fenLength++;
-      }
-
-      if (!isNaN(parseInt(char, 10))) {
-        fenLength += parseInt(char, 10);
-      }
-    }
-
-    return fenLength;
-  };
-
-  const lengthValid = () => {
-    const length = getFenCodeLength();
-    if (length !== width * height) {
-      return false;
-    }
-    return true;
-  };
-
-  const slashesValid = () => {
-    // Count the number of slashes in the fen code
-    // if the number of slashes is not equal to the height - 1 then it is invalid
-
-    let slashCount = 0;
-
-    for (let i = 0; i < fenCode.length; i++) {
-      const char: string = fenCode[i];
-
-      if (char === '/') {
-        slashCount++;
-      }
-    }
-
-    if (slashCount !== height - 1) {
-      return false;
-    }
-
-    return true;
-  };
-
-  const charactersValid = () => {
-    // Check if all the letters are inlcuded in the piece array
-    // if not then it is invalid
-    const pieces = getPiecesByGame(game).map((piece) => piece.fenCode);
-
-    for (let i = 0; i < fenCode.length; i++) {
-      const char: string = fenCode[i];
-      // If char is a is not a number or a slash then it is a piece
-      // Check if the piece is in the pieces array
-
-      if (isNaN(parseInt(char, 10)) && char !== '/') {
-        if (!pieces.includes(char)) {
-          return false;
-        }
-      }
-    }
-    return true;
-  };
-
-  const allValid = lengthValid() && slashesValid() && charactersValid();
-
-  return (
-    <Flex direction={'column'}>
-      <h2>Apply FEN</h2>
-      <Divider />
-      <span>Presets</span>
-      <Dropdown
-        style={{ 'width': '100%' }}
-        selected={'Empty'}
-        options={startingPositionNames}
-        onSelected={(value) => {
-          setFenCode(startingPositions[value]);
-        }}
-      />
-      <Divider />
-      <TextArea
-        className="boardgame__settings-input"
-        value={fenCode}
-        onChange={(e, value) => {
-          setFenCode(value);
-        }}
-        onInput={(e, value) => {
-          setFenCode(value);
-        }}
-      />
-      <Flex direction={'column'}>
-        <Button
-          grow={1}
-          content={'Get from board'}
-          onClick={() => {
-            convertBoardToFenCode();
-          }}
-        />
-        <Button
-          disabled={!allValid}
-          grow={1}
-          content={'Apply'}
-          onClick={() => {
-            act('applyFen', {
-              fen: fenCode,
-            });
-          }}
-        />
-        <Button
-          disabled={!allValid}
-          grow={1}
-          content={'Swap colors'}
-          onClick={() => {
-            // Swap between big and small letters in the fen code
-            // Example: Test becomes tEST
-            const swappedFenCode = fenCode
-              .split('')
-              .map((char) => {
-                if (char === char.toUpperCase()) {
-                  return char.toLowerCase();
-                } else {
-                  return char.toUpperCase();
-                }
-              })
-              .join('');
-
-            setFenCode(swappedFenCode);
-          }}
-        />
-
-        <Button
-          disabled={!allValid}
-          grow={1}
-          content={'Swap places'}
-          onClick={() => {
-            // Reverse the y axis fen code
-            const swappedFenCode = fenCode.split('/').reverse().join('/');
-
-            setFenCode(swappedFenCode);
-          }}
-        />
-      </Flex>
-    </Flex>
-  );
-};*/
-
 type PieceSVGImageProps = {
   width: number;
   height: number;
@@ -386,10 +173,6 @@ type PieceSVGImageProps = {
 };
 
 const PieceSVGImage = ({ width, height, pieceData }: PieceSVGImageProps) => {
-  // if pieceData.image exists
-  // return the image
-  // else return the svg
-
   if (pieceData?.image) {
     return <image width={width} height={height} xlinkHref={pieceData.image} />;
   }
@@ -397,47 +180,31 @@ const PieceSVGImage = ({ width, height, pieceData }: PieceSVGImageProps) => {
   if (pieceData?.fenCode) {
     return <text>{pieceData.fenCode} </text>;
   }
-
   return;
-  /** else {
-    if (pieceData?.fenCode) {
-      let src = getTwemojiSrc(pieceData.fenCode);
-      if (src) {
-        return <image width={width} height={height} xlinkHref={src} />;
-      } else {
-        return <text>{pieceData.fenCode}</text>;
-      } */
-  /*
-    return (
-          <text x={width / 2} y={height / 2} textAnchor="middle">
-            {pieceData.fenCode}
-          </text>
-        );
-
-    if (src) {
-      return <image width={width} height={height} xlinkHref={src} />;
-    */
 };
 
 type GenerateSvgBoardProps = {
   preset: string;
+  size?: number;
 };
 
 // Create an svg element with the boardgame specified in the boardInfo
 // The board size is 128x128
-const GenerateSvgBoard = ({ preset }: GenerateSvgBoardProps, context) => {
+const GenerateSvgBoard = ({ preset, size }: GenerateSvgBoardProps, context) => {
+  const { act } = useBackend<BoardgameData>(context);
+  const [configModalOpen, setConfigModalOpen] = useLocalState(context, 'configModalOpen', false);
+
   const { data } = useBackend<BoardgameData>(context);
-  const { pieces } = data;
-  const { width, height, game } = data.boardInfo;
-  const boardSize = width * height;
+  const { width } = data.boardInfo;
   const { tileColour1, tileColour2 } = data.styling;
 
   const allPieces = fetchPieces();
   const codeRecords = fenCodeRecordFromPieces(allPieces);
 
-  const fenArray = convertFenCodeToBoardArray(preset);
   const presetArray = preset.split(',');
   let currentIndex = 0;
+
+  const s = (size || 1) * 80;
   return (
     <svg width="80" height="80" viewBox="0 0 80 80">
       <pattern id="pattern-checkerboard-preset" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
@@ -475,87 +242,83 @@ const GenerateSvgBoard = ({ preset }: GenerateSvgBoardProps, context) => {
   );
 };
 
-/*
-<svg width={128} height={128}>
-      {board.map((code, index) => {
-        const x = index % 8;
-        const y = Math.floor(index / 8);
-
-        const presetCode = presetArray[index];
-
-        const piece = fenCodeRecords[presetCode];
-        // Draw a tile, white if x + y is even, black if x + y is odd
-        return (
-          <g key={index}>
-            <rect x={x * 16} y={y * 16} width={16} height={16} fill={(x + y) % 2 === 0 ? tileColour1 : tileColour2} />
-            {piece && <image x={x * 16} y={y * 16} width={16} height={16} href={`${piece.image}`} />}
-          </g>
-        );
-      })}
-    </svg> */
-
-/*
-const PresetsTab = (_props, context) => {
-  const { act, data } = useBackend<BoardgameData>(context);
+const PresetDetails = (_props, context) => {
+  const { act } = useBackend<BoardgameData>(context);
+  const [selectedPreset, setSelectedPreset] = useLocalState<PresetType>(context, 'selectedPreset', null);
   const [configModalOpen, setConfigModalOpen] = useLocalState(context, 'configModalOpen', false);
+
+  if (!selectedPreset) return;
+
+  let setupString = '';
+
+  if (selectedPreset) {
+    setupString = typeof selectedPreset.setup === 'function' ? selectedPreset.setup() : selectedPreset.setup;
+  }
   return (
-    <Stack vertical>
-      {presets.map((preset, i) => {
-        return (
-          <Stack.Item key={i} className="boardgame__preset">
-            <Flex>
-              <Flex.Item>
-                <GenerateSvgBoard preset={preset.setup} />
-              </Flex.Item>
-              <Flex.Item className="boardgame__presetdetails">
-                <h4>{preset.name}</h4>
-                <p>{preset.description}</p>
-                <Button
-                  onClick={() => {
-                    act('applyGNot', {
-                      gnot: preset.setup,
-                    });
-                    setConfigModalOpen(false);
-                  }}>
-                  Apply
-                </Button>
-              </Flex.Item>
-            </Flex>
-          </Stack.Item>
-        );
-      })}
-    </Stack>
+    <Box className={`boardgame__preset-details ${selectedPreset ? 'boardgame__preset-details--active' : ''}`}>
+      <Flex>
+        <Flex.Item>
+          <Box className="boardgame__preset-details-board">
+            <GenerateSvgBoard preset={setupString} />
+          </Box>
+        </Flex.Item>
+        <Flex.Item className="boardgame__preset-details-summary">
+          <h4>{selectedPreset?.name}</h4>
+          <p>{selectedPreset?.description}</p>
+          <Box>
+            <Button
+              onClick={() => {
+                act('applyGNot', {
+                  gnot: setupString,
+                });
+                setSelectedPreset(null);
+                setConfigModalOpen(false);
+              }}>
+              Play
+            </Button>
+            <Button
+              onClick={() => {
+                setSelectedPreset(null);
+              }}>
+              Close
+            </Button>
+          </Box>
+        </Flex.Item>
+      </Flex>
+      <DetailRules element={selectedPreset?.rules} />
+    </Box>
   );
 };
-*/
 
-/** <Flex>
-              <Flex.Item>
-                <GenerateSvgBoard preset={preset.setup} />
-              </Flex.Item>
-              <Flex.Item className="boardgame__presetdetails">
-                <h4>{preset.name}</h4>
-                <p>{preset.description}</p>
-                <Button
-                  onClick={() => {
-                    act('applyGNot', {
-                      gnot: preset.setup,
-                    });
-                    setConfigModalOpen(false);
-                  }}>
-                  Apply
-                </Button>
-              </Flex.Item>
-            </Flex> */
+type DetailRulesProps = {
+  element: JSX.Element;
+};
+const DetailRules = ({ element }: DetailRulesProps) => {
+  if (!element) return;
+
+  return (
+    <Box className="boardgame__rules">
+      <h4>Rules</h4>
+      <Box className="boardgame__rules-content">{element}</Box>
+    </Box>
+  );
+};
 
 const PresetsTab = (_props, context) => {
-  const { act, data } = useBackend<BoardgameData>(context);
-  const [configModalOpen, setConfigModalOpen] = useLocalState(context, 'configModalOpen', false);
-
-  // Orgainize the presets by game, key is the game name, value is the presets for that game
+  const records = presetsByGame();
 
   return (
     <Flex className="boardgame__presets">
+      <h5>Click once for rules, double click to quick launch</h5>
+      {Object.keys(records).map((game, i) => {
+        const presets = records[game];
+        return <PresetsRow key={i} game={game} presets={presets} />;
+      })}
+      <PresetDetails />
+    </Flex>
+  );
+
+  /* <Flex className="boardgame__presets">
       {presets.map((preset, i) => {
         const setup = preset.setup;
         // if setup is a function, call it to get the setup
@@ -574,13 +337,86 @@ const PresetsTab = (_props, context) => {
             <Tooltip position="top" content={preset.name}>
               <Flex position="relative">
                 <Flex.Item>
-                  <GenerateSvgBoard preset={setupString} />
+                  <PresetItem presetSetup={setupString} />
                 </Flex.Item>
               </Flex>
             </Tooltip>
           </Flex.Item>
         );
       })}
-    </Flex>
+    </Flex>*/
+};
+
+type PresetsRowProps = {
+  game: string;
+  presets: PresetType[];
+};
+
+const PresetsRow = ({ game, presets }: PresetsRowProps, context) => {
+  const { act } = useBackend<BoardgameData>(context);
+  const [, setConfigModalOpen] = useLocalState(context, 'configModalOpen', false);
+
+  const prettyGameName = game.charAt(0).toUpperCase() + game.slice(1);
+
+  return (
+    <Flex.Item>
+      <Flex direction="column" className="boardgame__presets">
+        <Flex.Item>
+          <h4>{prettyGameName}</h4>
+        </Flex.Item>
+        <Flex.Item className="boardgame__presets-grid">
+          {presets.map((preset, i) => {
+            const setup = preset.setup;
+            // if setup is a function, call it to get the setup
+            const setupString = typeof setup === 'function' ? setup() : setup;
+
+            return (
+              <Flex.Item key={i} className="boardgame__preset">
+                <Tooltip position="top" content={preset.name}>
+                  <Flex position="relative">
+                    <Flex.Item>
+                      <PresetItem preset={preset} presetSetup={setupString} />
+                    </Flex.Item>
+                  </Flex>
+                </Tooltip>
+              </Flex.Item>
+            );
+          })}
+        </Flex.Item>
+      </Flex>
+    </Flex.Item>
+  );
+};
+
+type PresetItemProps = {
+  preset: PresetType;
+  presetSetup: string;
+};
+
+const PresetItem = ({ preset, presetSetup }: PresetItemProps, context) => {
+  const { act } = useBackend<BoardgameData>(context);
+  const [selectedPreset, setSelectedPreset] = useLocalState<PresetType>(context, 'selectedPreset', null);
+  const [, setConfigModalOpen] = useLocalState(context, 'configModalOpen', false);
+  // Draw the board and a ? button on top of it
+  return (
+    <Box className="boardgame__preset-item">
+      <Box
+        onClick={() => {
+          setTimeout(() => {
+            setSelectedPreset(preset);
+          }, 200);
+        }}
+        onDblClick={() => {
+          act('applyGNot', {
+            gnot: presetSetup,
+          });
+          setConfigModalOpen(false);
+          setTimeout(() => {
+            setSelectedPreset(null);
+          }, 200);
+        }}>
+        <GenerateSvgBoard preset={presetSetup} />
+      </Box>
+    </Box>
   );
 };

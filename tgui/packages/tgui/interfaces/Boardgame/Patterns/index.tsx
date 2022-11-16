@@ -1,9 +1,10 @@
+declare const React;
+
+import { flip } from '@popperjs/core';
 import { useBackend, useLocalState } from '../../../backend';
-import { fenCodeRecordFromPieces, fetchPieces } from '../Pieces';
+import { fenCodeRecordFromPieces, fetchPieces, PieceType } from '../Pieces';
 import { BoardgameData } from '../types';
 import { CheckerBoard } from './checkerboard';
-import { Go } from './go';
-import { Flex, Box } from '../../../components';
 
 export type BoardPattern = 'checkerboard' | 'hexagon' | 'go';
 
@@ -16,47 +17,35 @@ type PatternToUseProps = {
 };
 
 const PatternToUse = ({ pattern }: PatternToUseProps, context) => {
-  switch (pattern) {
-    case 'checkerboard': // 4 tiles per square, handles translation
-      return <CheckerBoard />;
-    case 'go':
-      return <Go />;
-  }
+  return <CheckerBoard />;
 };
 
 export const Pattern = ({ pattern }: PatternProps, context) => {
   const { act, data } = useBackend<BoardgameData>(context);
 
   const { pieces, currentUser } = data;
-  const { lock } = data.boardInfo;
+  const pieceRecords = fenCodeRecordFromPieces(fetchPieces());
 
-  const { tileColour1, tileColour2 } = data.styling;
-  const width = 100 / data.boardInfo.width;
-  const height = 100 / data.boardInfo.height;
+  const [flip] = useLocalState(context, 'flip', false);
 
-  const [flip, setFlip] = useLocalState(context, 'flip', false);
-
-  const [translateCoords, setTranslateCoords] = useLocalState<{
+  const [, setTranslateCoords] = useLocalState<{
     x: number;
     y: number;
   }>(context, 'translateCoords', { x: 0, y: 0 });
 
-  const [mouseCoords, setMouseCoords] = useLocalState<{
+  const [mouseCoords] = useLocalState<{
     x: number;
     y: number;
   }>(context, 'mouseCoords', { x: 0, y: 0 });
-  const [tileSize, setTileSize] = useLocalState(context, 'tileSize', {
+  const [, setTileSize] = useLocalState(context, 'tileSize', {
     width: 50,
     height: 50,
   });
   let { x, y } = mouseCoords;
 
-  const pieceRecords = fenCodeRecordFromPieces(fetchPieces());
-  const [paletteSelected, setPaletteSelected] = useLocalState(context, 'paletteSelected', '');
-  // const [patternMulti, setPatternMulti] = useLocalState(context, 'patternMulti', 1);
-
   const board = document.getElementsByClassName('boardgame__board-inner')[0];
-  let tileWidth, tileHeight;
+  let tileWidth: number = 0,
+    tileHeight: number = 0;
   if (board) {
     const boardRect = board.getBoundingClientRect();
 
@@ -68,17 +57,9 @@ export const Pattern = ({ pattern }: PatternProps, context) => {
   }
 
   let patternMulti = 1; // Divide by this to get the board coord
-  let patternOffset = 0; // Used to offset the board coord, for games like go
-  switch (pattern) {
-    case 'checkerboard': // 4 tiles per square, handles translation
-      patternMulti = 1;
-      break;
-    case 'go':
-      patternOffset = 0.5; // Half a tile
-  }
 
-  let boardX = Math.floor(((x - 20) / tileWidth) * patternMulti + patternOffset);
-  let boardY = Math.floor(((y - 52) / tileHeight) * patternMulti + patternOffset);
+  let boardX = Math.floor(((x - 20) / tileWidth) * patternMulti);
+  let boardY = Math.floor(((y - 52) / tileHeight) * patternMulti);
 
   // reverse the y axis if the board is flipped
   if (flip) {
@@ -90,6 +71,7 @@ export const Pattern = ({ pattern }: PatternProps, context) => {
 
   return (
     <svg
+      overflow="visible"
       className={`boardgame__pattern ${flip ? 'boardgame__patternflip' : ''}`}
       onmousemove={(e) => {
         setTileSize({ width: tileWidth, height: tileHeight });
@@ -113,13 +95,119 @@ export const Pattern = ({ pattern }: PatternProps, context) => {
       width="100%"
       height="100%">
       <PatternToUse pattern={pattern} />
+      <PiecesSvgRenderer pieceRecords={pieceRecords} />
+      <OverlaySvg pieceRecords={pieceRecords} />
+    </svg>
+  );
+};
+
+type OverlaySvgRendererProps = {
+  pieceRecords: Record<string, PieceType>;
+};
+
+// Draw names of player moving the pieces, lines between moved pieces and the piece being moved
+const OverlaySvg = ({ pieceRecords }: OverlaySvgRendererProps, context) => {
+  const { act, data } = useBackend<BoardgameData>(context);
+  const [flip] = useLocalState(context, 'flip', false);
+  const { pieces, currentUser } = data;
+  const { lock } = data.boardInfo;
+
+  const { tileColour1, tileColour2 } = data.styling;
+  const width = 100 / data.boardInfo.width;
+  const height = 100 / data.boardInfo.height;
+  const board = document.getElementsByClassName('boardgame__board-inner')[0];
+  let tileWidth: number = 0,
+    tileHeight: number = 0;
+  if (board) {
+    const boardRect = board.getBoundingClientRect();
+
+    const boardWidth = boardRect.width - 40; // Full width of the board
+    const boardHeight = boardRect.height - 40; // Full height of the board
+
+    tileWidth = boardWidth / data.boardInfo.width; // Width of a single tile
+    tileHeight = boardHeight / data.boardInfo.height; // Height of a single tile
+  }
+  return (
+    <svg width="100%" height="100%" overflow="visible">
       {Object.keys(pieces).map((val, index) => {
-        const { x, y, code } = pieces[val];
+        const { x, y, prevX, prevY, code } = pieces[val];
+        const selected = pieces[val].selected;
+        const pieceType = pieceRecords[code];
+
+        const name = selected?.name || '';
+        const firstName = name.split(' ')[0];
+        const lastName = name.split(' ')[1];
+        const lastNamefirstLetter = lastName?.charAt(0) || '';
+
+        return (
+          <svg
+            overflow="visible"
+            key={index}
+            x={width * x + '%'}
+            y={height * y + '%'}
+            width={width + '%'}
+            height={height + '%'}
+            transform={
+              flip ? `rotate(-180 ${tileWidth / 2} ${tileHeight / 2})` : `rotate(0 ${tileWidth / 2} ${tileHeight / 2})`
+            }>
+            <g overflow="visible" transform={flip ? `scale(1,-1)` : ``}>
+              <text
+                stroke="black"
+                fill="white"
+                font-family="Verdana"
+                font-weight="bold"
+                x="50%"
+                y={flip ? '0%' : '100%'}
+                text-anchor="middle"
+                alignment-baseline="middle"
+                font-size="1.4em"
+                shape-rendering="crispEdges">
+                {selected ? (name ? firstName + ' ' + lastNamefirstLetter : name) : ''}
+              </text>
+            </g>
+          </svg>
+        );
+      })}
+    </svg>
+  );
+};
+
+type PiecesSvgRendererProps = {
+  pieceRecords: Record<string, PieceType>;
+};
+
+const PiecesSvgRenderer = ({ pieceRecords }: PiecesSvgRendererProps, context) => {
+  const { act, data } = useBackend<BoardgameData>(context);
+
+  const { pieces, currentUser } = data;
+  const [flip] = useLocalState(context, 'flip', false);
+  const width = 100 / data.boardInfo.width;
+  const height = 100 / data.boardInfo.height;
+  const board = document.getElementsByClassName('boardgame__board-inner')[0];
+  let tileWidth: number = 0,
+    tileHeight: number = 0;
+  if (board) {
+    const boardRect = board.getBoundingClientRect();
+
+    const boardWidth = boardRect.width - 40; // Full width of the board
+    const boardHeight = boardRect.height - 40; // Full height of the board
+
+    tileWidth = boardWidth / data.boardInfo.width; // Width of a single tile
+    tileHeight = boardHeight / data.boardInfo.height; // Height of a single tile
+  }
+  return (
+    <svg width="100%" height="100%">
+      {Object.keys(pieces).map((val, index) => {
+        const { x, y, prevX, prevY, code } = pieces[val];
         const pieceType = pieceRecords[code];
 
         // Is the piece selected by currentUser?
         const selected = pieces[val].selected;
 
+        // generate a unique color based on selected players name as a seed
+        // make it so the same player always has the same color
+
+        const flipY = data.boardInfo.height - y - 1;
         return (
           <svg
             className="boardgame__piecesvg"
@@ -136,22 +224,31 @@ export const Pattern = ({ pattern }: PatternProps, context) => {
             onmouseup={(e) => {
               // Deselect the pawn if it is itself
             }}
-            ondblclick={(e) => {}}
+            ondblclick={(e) => {
+              act('pawnRemove', {
+                id: val,
+              });
+            }}
             key={index}
             x={width * x + '%'}
             y={height * y + '%'}
-            width={width + '%'}
-            height={height + '%'}
+            width={tileWidth + 'px'}
+            height={tileHeight + 'px'}
             overflow="visible"
-            viewBox="0 0 100 100"
             style={{
-              'cursor': 'pointer',
+              'opacity': selected ? 0.5 : 1,
             }}>
-            <g overflow="visible">
+            <g
+              transform={
+                flip ? `rotate(180 ${tileWidth / 2} ${tileHeight / 2})` : `rotate(0 ${tileWidth / 2} ${tileHeight / 2})`
+              }
+              width="100%"
+              height="100%"
+              overflow="visible">
               <image
+                transform={flip ? `rotate(180 50% 50%)` : ''}
                 style={{
                   'cursor': 'pointer',
-                  'opacity': selected ? 0.5 : 1,
                 }}
                 x="0%"
                 y="0%"
@@ -159,33 +256,6 @@ export const Pattern = ({ pattern }: PatternProps, context) => {
                 height="100%"
                 xlinkHref={pieceType?.image}
               />
-              {
-                // if selected make it more opaque
-                // center a text element with the holder's name
-                // like a tooltip
-                pieces[val].selected ? (
-                  <svg overflow="visible">
-                    <text
-                      x="50%"
-                      y="50%"
-                      fontSize="18px"
-                      text-anchor="middle"
-                      dominant-baseline="middle"
-                      style={{
-                        'text-align': 'center',
-                        'cursor': 'pointer',
-                        'fill': 'black',
-                        'font-weight': 'bold',
-                        'stroke': 'white',
-                        'stroke-width': '1px',
-                      }}>
-                      {pieces[val].selected.name}
-                    </text>
-                  </svg>
-                ) : (
-                  ''
-                )
-              }
             </g>
           </svg>
         );

@@ -38,17 +38,25 @@
   height: 100%;
   padding: 10%;
   background: rgba(0, 0, 0, 0.4);
-  z-index: 100;
+  z-index: 1;
 }
 
 .boardgame__modal-inner {
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
+  height: auto;
   max-height: 100%;
+  transition: 0.5s all;
   background-color: base.$color-bg;
   padding: 10px;
   border-radius: 5px;
+}
+
+.boardgame__modal-tab {
+  text-align: center;
+}
+
+.boardgame__modal-tab:active {
+  // Blue background on click
+  background-color: rgba(0, 0, 255, 0.2);
 }
 
 .boardgame__modal-tabs {
@@ -65,12 +73,136 @@
 }
 
 .boardgame__presets {
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
 }
 
-.boardgame__settingspart {
+.boardgame__presets-grid {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding: 2px;
+  background-color: rgb(0, 0, 0, 0.2);
+}
+
+.boardgame__preset-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  padding: 5px;
+  cursor: pointer;
+  padding-bottom: 5px;
+  transition: 0.5s;
+  width: 90px;
+  height: 90px;
+  padding: 5px;
+  background-color: rgb(0, 0, 0, 0.4);
+  color: rgba(255, 255, 255, 0);
+  text-shadow: none;
+}
+
+.boardgame__preset-item:hover {
+  color: rgba(255, 255, 255, 0.8);
+  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+}
+
+.boardgame__preset-item:hover {
+  z-index: 4;
+}
+
+.boardgame__preset-buttons {
+  position: absolute;
+  margin-bottom: 5px;
+  font-size: 1.2em;
+  font-weight: bold;
+  bottom: 0;
+  left: 0;
+  width: 80px;
+  margin-left: 5px;
+  justify-content: space-around;
+  z-index: 5;
+  background-color: rgba(0, 0, 0, 0);
+}
+
+.boardgame__preset-buttons:hover {
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+.boardgame__preset-button {
+  text-align: center;
+  border-radius: 5px;
+  padding: 2px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.boardgame__preset-button:hover {
+  text-decoration: underline;
+  color: white;
+  // draw a thick black border around the text
+  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+}
+
+.boardgame__preset-board {
+  position: relative;
+  bottom: 0;
+  transition: 0.2s;
+  margin-top: 0px;
+  z-index: 3;
+  padding-top: 0;
+}
+
+.boardgame__preset-board:hover {
+  padding-top: 20px;
+  zoom: 1.5;
+  z-index: 4;
+  margin-right: 50px;
+}
+
+.boardgame__preset-details {
+  position: fixed;
+  padding: 15px;
+  top: 10%;
+  right: 15%;
+  left: 15%;
+  max-height: 75%;
+  transition: 0.2s all;
+  padding: 10px;
+  z-index: 10;
+  background-color: base.$color-bg;
+  overflow-y: auto;
+  box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.5);
+  border-radius: 5px;
+}
+
+.boardgame__preset-details-summary {
+  padding: 10px;
+  width: 100%;
+  background-color: rgb(0, 0, 0, 0.4);
+}
+
+.boardgame__preset-details-board {
+  width: 160px;
+  height: 160px;
+}
+
+.boardgame__rules {
+  padding: 6px;
+  background-color: rgb(0, 0, 0, 0.2);
+}
+
+.boardgame__preset-details-board > svg {
+  zoom: 2;
+
+  // Make the svg look like a button
+  border-top: 2px solid rgba(255, 255, 255, 0.2);
+  border-left: 2px solid rgba(255, 255, 255, 0.2);
+  border-bottom: 2px solid rgba(0, 0, 0, 0.2);
+  border-right: 2px solid rgba(0, 0, 0, 0.2);
+  border-top-left-radius: 5px;
 }
 
 .boardgame__heldpiece {
@@ -91,90 +223,6 @@
   height: 60px;
 }
 
-.boardgame__ghostpiece {
-  position: fixed;
-  top: 0px;
-  left: 0px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-  z-index: 20;
-  //transform: translatey(0px);
-  //animation: boardgame__float 2s ease-in-out infinite;
-  -webkit-touch-callout: none; /* iOS Safari */
-  -webkit-user-select: none; /* Safari */
-  -khtml-user-select: none; /* Konqueror HTML */
-  -moz-user-select: none; /* Old versions of Firefox */
-  -ms-user-select: none; /* Internet Explorer/Edge */
-  user-select: none; /* Non-prefixed version, currently
-                                supported by Chrome, Edge, Opera and Firefox */
-  pointer-events: none;
-}
-
-.boardgame__ghostpiece span {
-  color: white;
-
-  // Black text shadow
-  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
-}
-
-.boardgame__ghostpiece img {
-  width: 70%;
-  height: auto;
-  opacity: 0.5;
-  max-height: 70%;
-}
-
-.boardgame__ghostpieceshadow {
-  // Turn the img black
-
-  filter: blur(4px) brightness(0%);
-}
-/*
-@keyframes boardgame__float {
-  0% {
-    //box-shadow: 0 5px 15px 0px rgba(0, 0, 0, 0.6);
-    transform: translatey(0px);
-  }
-  50% {
-    //box-shadow: 0 25px 15px 0px rgba(0, 0, 0, 0.2);
-    transform: translatey(-20px);
-  }
-  100% {
-    //box-shadow: 0 5px 15px 0px rgba(0, 0, 0, 0.6);
-    transform: translatey(0px);
-  }
-}
-*/
-.boardgame_floatingpiece {
-  pointer-events: none;
-  position: fixed;
-  top: 0px;
-  left: 0px;
-  color: black;
-  text-shadow: 0px 0px 1px white;
-  font-weight: bold;
-  display: flex;
-  flex-direction: column;
-  text-align: center;
-  width: 200px;
-  margin-left: -100px;
-  height: 50px;
-  z-index: 10;
-  margin-top: -25px;
-  -webkit-touch-callout: none; /* iOS Safari */
-  -webkit-user-select: none; /* Safari */
-  -khtml-user-select: none; /* Konqueror HTML */
-  -moz-user-select: none; /* Old versions of Firefox */
-  -ms-user-select: none; /* Internet Explorer/Edge */
-  user-select: none; /* Non-prefixed version, currently
-                                supported by Chrome, Edge, Opera and Firefox */
-}
-
-.boardgame_floatingpiece img {
-}
-
 .boardgame__panel {
   height: 30px;
 }
@@ -186,22 +234,27 @@
 .boardgame__board-inner {
   transition: 1s all;
   flex-grow: 1;
-  background-color: purple;
   display: flex;
   flex-direction: column;
 }
 
 .boardgame__pattern {
-  transition: 2s all;
+  transition: all 0;
 }
 
 .boardgame__patternflip {
-  transform: rotateX(180deg);
+  transform: rotate(180deg);
+}
+
+.boardgame__piece-set-toggle {
+  width: 100%;
 }
 
 .boardgame__piece-set-wrapper {
   width: 100px;
   overflow-y: scroll;
+  display: flex;
+  flex-direction: column;
 }
 
 .boardgame__menubutton {
@@ -250,10 +303,10 @@
   display: flex;
   justify-content: space-around;
   flex-direction: row;
-  margin-left: 30px;
-  margin-right: 30px;
-  padding-left: 24px;
-  padding-right: 24px;
+  padding-left: 20px;
+  padding-right: 20px;
+
+  overflow: hidden;
 }
 .boardgame__piece-set-label {
   display: flex;
@@ -275,6 +328,10 @@
   width: 20%;
 
   font-size: 10px;
+}
+
+.boardgame__notations {
+  font-weight: bold;
 }
 
 .boardgame__verticalnotations > div {
@@ -451,5 +508,20 @@
 }
 
 .boardgame__piecesvg {
-  background-color: red;
+  fill: red;
+}
+
+.svgtest {
+  transition: 1s all;
+  fill: red;
+  animation: bg_example 1s linear infinite;
+}
+
+@keyframes bg_exmaple {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
