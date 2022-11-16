@@ -36,6 +36,15 @@
 	var/list/active_users = list()
 	var/list/pieces = list()
 
+	proc/posToNotationString(x, y)
+		// Convert a position to a chess notation string
+		// eg. 1, 1 -> A1
+
+		// Create a split list of the alphabet
+		var/list/letters = splittext("ABCDEFGHIJKLMNOPQRSTUVWXYZ", "")
+		return "[letters[x+1]][board_height - y]"
+
+
 
 	proc/applyGNot(gnot)
 		// Like FEN but comma seperated
@@ -184,9 +193,10 @@
 			src.deselectPawn(ckey)
 			return
 
-		//Clear last selected from the players last selected piece
-
-
+		var/map_text = ""
+		var/moverName = pawn["selected"]["name"]
+		var/prevPosString = src.posToNotationString(new_x, new_y)
+		var/newPosString = src.posToNotationString(_x, _y)
 
 		// Update old pos
 		pawn["prevX"] = new_x
@@ -197,14 +207,23 @@
 
 		var/occupied = src.getPawnAt(_x, _y)
 
+
+
 		if (occupied)
 			// Check if the pawn is moving to a tile that is occupied by an enemy
 			if (pawn != occupied)
+				map_text = "[moverName] moves [prevPosString] to [newPosString] and captures [occupied["name"]]!"
 				playsound(src.loc, src.sounds["capture"], 30, 1)
 				src.removePieceAt(_x, _y)
 			else
-				// If the piece is moving to a tile that is occupied by a friendly
+				// If the piece is moving to a tile that is occupied by itself
 				return
+		else
+			map_text = "[moverName] moves [prevPosString] to [newPosString]!"
+
+		var/map_text_final = make_chat_maptext(src, map_text, "color: #A8E9F0;", alpha = 150, force=20, time=10)
+		for (var/mob/O in hearers(src))
+			O.show_message(assoc_maptext = map_text_final)
 
 		playsound(src.loc, src.sounds["move"], 30, 1)
 
@@ -336,9 +355,34 @@
 	attack_hand(var/mob/user) // open browser window when board is clicked
 		src.ui_interact(user)
 
-	examine(mob/user)
-		. = ..()
-		ui_interact(user)
+	attackby(obj/item/W, mob/user, params)
+		if(istype(W, /obj/item/paint_can))
+			var/obj/item/paint_can/can = W
+
+			//Check which hand the paint can is in, style tileColour1 or tileColour2
+			// based on that
+
+			var/tileColour = "tileColour1"
+			if(user.l_hand == can)
+				tileColour = "tileColour1"
+			else if(user.r_hand == can)
+				tileColour = "tileColour2"
+			else
+				boutput(user, "<span class='warning'>You need to hold the paint can in your hand to use it!</span>")
+				return
+
+			//Check if the paint can is empty
+			if(can.uses <= 0)
+				boutput(user, "<span class='warning'>The paint can is empty!</span>")
+				return
+
+			//Apply the paint to the src.styling[tileColour]
+			src.styling[tileColour] = can.paint_color
+			can.uses--
+
+		return
+
+
 
 	chess
 		name = "chess board"
@@ -348,4 +392,6 @@
 			..()
 	New()
 		..()
+		styling["oldTileColour1"] = styling["tileColour1"]
+		styling["oldTileColour2"] = styling["tileColour2"]
 

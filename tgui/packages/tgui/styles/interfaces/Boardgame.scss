@@ -42,13 +42,21 @@
 }
 
 .boardgame__modal-inner {
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
+  height: auto;
   max-height: 100%;
+  transition: 0.5s all;
   background-color: base.$color-bg;
   padding: 10px;
   border-radius: 5px;
+}
+
+.boardgame__modal-tab {
+  text-align: center;
+}
+
+.boardgame__modal-tab:active {
+  // Blue background on click
+  background-color: rgba(0, 0, 255, 0.2);
 }
 
 .boardgame__modal-tabs {
@@ -226,17 +234,20 @@
 .boardgame__board-inner {
   transition: 1s all;
   flex-grow: 1;
-  background-color: purple;
   display: flex;
   flex-direction: column;
 }
 
 .boardgame__pattern {
-  transition: 2s all;
+  transition: all 0;
 }
 
 .boardgame__patternflip {
-  transform: rotateX(180deg);
+  transform: rotate(180deg);
+}
+
+.boardgame__piece-set-toggle {
+  width: 100%;
 }
 
 .boardgame__piece-set-wrapper {
@@ -294,6 +305,8 @@
   flex-direction: row;
   padding-left: 20px;
   padding-right: 20px;
+
+  overflow: hidden;
 }
 .boardgame__piece-set-label {
   display: flex;

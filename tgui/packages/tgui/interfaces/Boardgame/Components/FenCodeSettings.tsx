@@ -12,11 +12,11 @@ export const FenCodeSettings = (_props, context) => {
     configModalOpen && (
       <Box className="boardgame__modal">
         <Box className="boardgame__modal-inner">
-          <Tabs className="boardgame__modal-tabs">
-            <Tabs.Tab selected={tabIndex === 1} onClick={() => setTabIndex(1)}>
+          <Tabs fluid className="boardgame__modal-tabs">
+            <Tabs.Tab className="boardgame__modal-tab" selected={tabIndex === 1} onClick={() => setTabIndex(1)}>
               Config
             </Tabs.Tab>
-            <Tabs.Tab selected={tabIndex === 2} onClick={() => setTabIndex(2)}>
+            <Tabs.Tab className="boardgame__modal-tab" selected={tabIndex === 2} onClick={() => setTabIndex(2)}>
               Presets
             </Tabs.Tab>
             <Button onClick={() => setConfigModalOpen(false)}>Close</Button>
@@ -146,7 +146,7 @@ const ConfigTab = (_props, context) => {
         <ConfigTooltip text="PGN" tooltip="Portable Game Notation (coming later)" />
         <ConfigTooltip text="PDN" tooltip="Portable Draughts Notation (coming later)" />
       </Box>
-      <TextArea value={gnot} style={{ 'height': '250px', 'margin': '6px' }} />
+      <TextArea value={gnot} style={{ 'height': '200px' }} />
       <Button
         onClick={() => {
           act('applyGNot', {
@@ -206,16 +206,7 @@ const GenerateSvgBoard = ({ preset, size }: GenerateSvgBoardProps, context) => {
 
   const s = (size || 1) * 80;
   return (
-    <svg
-      onClick={() => {
-        act('applyGNot', {
-          gnot: preset,
-        });
-        setConfigModalOpen(false);
-      }}
-      width="80"
-      height="80"
-      viewBox="0 0 80 80">
+    <svg width="80" height="80" viewBox="0 0 80 80">
       <pattern id="pattern-checkerboard-preset" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
         <rect width="10" height="10" fill={tileColour1} />
         <rect x="10" y="10" width="10" height="10" fill={tileColour1} />
@@ -318,6 +309,7 @@ const PresetsTab = (_props, context) => {
 
   return (
     <Flex className="boardgame__presets">
+      <h5>Click once for rules, double click to quick launch</h5>
       {Object.keys(records).map((game, i) => {
         const presets = records[game];
         return <PresetsRow key={i} game={game} presets={presets} />;
@@ -408,26 +400,21 @@ const PresetItem = ({ preset, presetSetup }: PresetItemProps, context) => {
   // Draw the board and a ? button on top of it
   return (
     <Box className="boardgame__preset-item">
-      <Flex className="boardgame__preset-buttons" direction="row">
-        <span
-          className="boardgame__preset-button"
-          onClick={() => {
-            act('applyGNot', {
-              gnot: presetSetup,
-            });
-            setConfigModalOpen(false);
-          }}>
-          Play
-        </span>
-        <span
-          className="boardgame__preset-button"
-          onClick={() => {
+      <Box
+        onClick={() => {
+          setTimeout(() => {
             setSelectedPreset(preset);
-          }}>
-          Info
-        </span>
-      </Flex>
-      <Box className={``}>
+          }, 200);
+        }}
+        onDblClick={() => {
+          act('applyGNot', {
+            gnot: presetSetup,
+          });
+          setConfigModalOpen(false);
+          setTimeout(() => {
+            setSelectedPreset(null);
+          }, 200);
+        }}>
         <GenerateSvgBoard preset={presetSetup} />
       </Box>
     </Box>

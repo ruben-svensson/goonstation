@@ -1,5 +1,6 @@
 declare const React;
 
+import { flip } from '@popperjs/core';
 import { useBackend, useLocalState } from '../../../backend';
 import { fenCodeRecordFromPieces, fetchPieces, PieceType } from '../Pieces';
 import { BoardgameData } from '../types';
@@ -107,14 +108,25 @@ type OverlaySvgRendererProps = {
 // Draw names of player moving the pieces, lines between moved pieces and the piece being moved
 const OverlaySvg = ({ pieceRecords }: OverlaySvgRendererProps, context) => {
   const { act, data } = useBackend<BoardgameData>(context);
-
+  const [flip] = useLocalState(context, 'flip', false);
   const { pieces, currentUser } = data;
   const { lock } = data.boardInfo;
 
   const { tileColour1, tileColour2 } = data.styling;
   const width = 100 / data.boardInfo.width;
   const height = 100 / data.boardInfo.height;
+  const board = document.getElementsByClassName('boardgame__board-inner')[0];
+  let tileWidth: number = 0,
+    tileHeight: number = 0;
+  if (board) {
+    const boardRect = board.getBoundingClientRect();
 
+    const boardWidth = boardRect.width - 40; // Full width of the board
+    const boardHeight = boardRect.height - 40; // Full height of the board
+
+    tileWidth = boardWidth / data.boardInfo.width; // Width of a single tile
+    tileHeight = boardHeight / data.boardInfo.height; // Height of a single tile
+  }
   return (
     <svg width="100%" height="100%" overflow="visible">
       {Object.keys(pieces).map((val, index) => {
@@ -134,20 +146,25 @@ const OverlaySvg = ({ pieceRecords }: OverlaySvgRendererProps, context) => {
             x={width * x + '%'}
             y={height * y + '%'}
             width={width + '%'}
-            height={height + '%'}>
-            <text
-              stroke="black"
-              fill="white"
-              font-family="Verdana"
-              font-weight="bold"
-              x="50%"
-              y="100%"
-              text-anchor="middle"
-              alignment-baseline="middle"
-              font-size="1.4em"
-              shape-rendering="crispEdges">
-              {selected ? (name ? firstName + ' ' + lastNamefirstLetter : name) : ''}
-            </text>
+            height={height + '%'}
+            transform={
+              flip ? `rotate(-180 ${tileWidth / 2} ${tileHeight / 2})` : `rotate(0 ${tileWidth / 2} ${tileHeight / 2})`
+            }>
+            <g overflow="visible" transform={flip ? `scale(1,-1)` : ``}>
+              <text
+                stroke="black"
+                fill="white"
+                font-family="Verdana"
+                font-weight="bold"
+                x="50%"
+                y={flip ? '0%' : '100%'}
+                text-anchor="middle"
+                alignment-baseline="middle"
+                font-size="1.4em"
+                shape-rendering="crispEdges">
+                {selected ? (name ? firstName + ' ' + lastNamefirstLetter : name) : ''}
+              </text>
+            </g>
           </svg>
         );
       })}
@@ -163,10 +180,21 @@ const PiecesSvgRenderer = ({ pieceRecords }: PiecesSvgRendererProps, context) =>
   const { act, data } = useBackend<BoardgameData>(context);
 
   const { pieces, currentUser } = data;
-
+  const [flip] = useLocalState(context, 'flip', false);
   const width = 100 / data.boardInfo.width;
   const height = 100 / data.boardInfo.height;
+  const board = document.getElementsByClassName('boardgame__board-inner')[0];
+  let tileWidth: number = 0,
+    tileHeight: number = 0;
+  if (board) {
+    const boardRect = board.getBoundingClientRect();
 
+    const boardWidth = boardRect.width - 40; // Full width of the board
+    const boardHeight = boardRect.height - 40; // Full height of the board
+
+    tileWidth = boardWidth / data.boardInfo.width; // Width of a single tile
+    tileHeight = boardHeight / data.boardInfo.height; // Height of a single tile
+  }
   return (
     <svg width="100%" height="100%">
       {Object.keys(pieces).map((val, index) => {
@@ -179,6 +207,7 @@ const PiecesSvgRenderer = ({ pieceRecords }: PiecesSvgRendererProps, context) =>
         // generate a unique color based on selected players name as a seed
         // make it so the same player always has the same color
 
+        const flipY = data.boardInfo.height - y - 1;
         return (
           <svg
             className="boardgame__piecesvg"
@@ -203,15 +232,21 @@ const PiecesSvgRenderer = ({ pieceRecords }: PiecesSvgRendererProps, context) =>
             key={index}
             x={width * x + '%'}
             y={height * y + '%'}
-            width={width + '%'}
-            height={height + '%'}
+            width={tileWidth + 'px'}
+            height={tileHeight + 'px'}
             overflow="visible"
             style={{
-              'cursor': 'pointer',
               'opacity': selected ? 0.5 : 1,
             }}>
-            <g width="100%" height="100%" overflow="visible">
+            <g
+              transform={
+                flip ? `rotate(180 ${tileWidth / 2} ${tileHeight / 2})` : `rotate(0 ${tileWidth / 2} ${tileHeight / 2})`
+              }
+              width="100%"
+              height="100%"
+              overflow="visible">
               <image
+                transform={flip ? `rotate(180 50% 50%)` : ''}
                 style={{
                   'cursor': 'pointer',
                 }}
