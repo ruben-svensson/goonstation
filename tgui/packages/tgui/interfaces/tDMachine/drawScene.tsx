@@ -27,14 +27,10 @@ const generateProgramInfo = (gl: WebGLRenderingContext, shaderProgram: WebGLProg
   return programInfo;
 };
 
-export const drawScene = (gl: WebGLRenderingContext, shaderProgram: WebGLProgram) => {
+export const drawScene = (gl: WebGLRenderingContext, shaderProgram: WebGLProgram, deltaTime: number) => {
   const programInfo = generateProgramInfo(gl, shaderProgram);
 
-  const r = Math.sin(Date.now() / 1000) / 2 + 0.5;
-  const g = Math.sin(Date.now() / 1000 + 2) / 2 + 0.5;
-  const b = Math.sin(Date.now() / 1000 + 4) / 2 + 0.5;
-
-  gl.clearColor(r, g, b, 1.0); // Clear to black, fully opaque
+  gl.clearColor(0, 0, 0, 1.0); // Clear to black, fully opaque
   gl.clearDepth(1.0); // Clear everything
   gl.enable(gl.DEPTH_TEST); // Enable depth testing
   gl.depthFunc(gl.LEQUAL); // Near things obscure far things
@@ -44,7 +40,7 @@ export const drawScene = (gl: WebGLRenderingContext, shaderProgram: WebGLProgram
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
   const fieldOfView = (45 * Math.PI) / 180; // in radians
-  const aspect = 640 / 480;
+  const aspect = gl.canvas.width / gl.canvas.height;
   const zNear = 0.1;
   const zFar = 100.0;
   const projectionMatrix = mat4.create();
@@ -55,18 +51,28 @@ export const drawScene = (gl: WebGLRenderingContext, shaderProgram: WebGLProgram
 
   // Set the drawing position to the "identity" point, which is
   // the center of the scene.
-  const modelViewMatrix = mat4.create();
+  let modelViewMatrix = mat4.create();
+
+  // Make modelViewMatrix smaller
+  modelViewMatrix = mat4.scale(modelViewMatrix, modelViewMatrix, [0.5, 0.5, 0.5]);
 
   // Now move the drawing position a bit to where we want to
   // start drawing the square.
 
-  const z = Math.sin(new Date().getMilliseconds() * 0.01) / 2 + 0.5;
+  const z = Math.sin(deltaTime * 10) / 3 + 0.5;
 
   mat4.translate(
     modelViewMatrix, // destination matrix
     modelViewMatrix, // matrix to translate
     [-0.0, z, -6.0 + z]
   ); // amount to translate
+
+  mat4.rotate(
+    modelViewMatrix, // destination matrix
+    modelViewMatrix, // matrix to rotate
+    deltaTime * 2, // amount to rotate in radians
+    [0, 1, 0]
+  ); // axis to rotate around (Z)
 
   // Tell WebGL how to pull out the positions from the position
   // buffer into the vertexPosition attribute.
