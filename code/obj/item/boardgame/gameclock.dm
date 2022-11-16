@@ -51,7 +51,6 @@
 		return timeValue
 
 	proc/timeFlag()
-
 		var/winner = src.turn ? "Black" : "White"
 		var/loser = !src.turn ? "Black" : "White"
 		var/map_text = make_chat_maptext(src, "[winner] wins on time.", "color: #A8E9F0;", alpha = 150)
