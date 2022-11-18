@@ -75,8 +75,9 @@ export const Pattern = ({ pattern }: PatternProps, context) => {
       className={`boardgame__pattern ${flip ? 'boardgame__patternflip' : ''}`}
       onmousemove={(e) => {
         setTileSize({ width: tileWidth, height: tileHeight });
+        let x = flip ? data.boardInfo.width - boardX - 1 : boardX;
         setTranslateCoords({
-          x: boardX,
+          x: x,
           y: boardY,
         });
       }}
@@ -86,9 +87,11 @@ export const Pattern = ({ pattern }: PatternProps, context) => {
         // If the board is 8 tiles wide, and the mouse is at 50% of the board width, the board coord is 4
         // Use x,y, boardWidth, boardHeight, tileWidth, tileHeight only, boardRect.x and boardRect.y are not needed
 
+        let x = flip ? data.boardInfo.width - boardX - 1 : boardX;
+
         act('pawnPlace', {
           ckey: currentUser.ckey,
-          x: boardX,
+          x: x,
           y: boardY,
         });
       }}

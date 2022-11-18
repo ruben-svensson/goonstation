@@ -20,6 +20,12 @@ export const PieceDrawer = (orps, context) => {
         act('paletteClear', {
           ckey: currentUser.ckey,
         });
+
+        if (currentUser.selected) {
+          act('pawnRemove', {
+            id: currentUser.selected,
+          });
+        }
       }}
       className={'boardgame__piece-set-wrapper'}>
       {sets.map((set, i) => (

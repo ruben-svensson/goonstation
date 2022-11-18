@@ -1,3 +1,7 @@
+declare const React;
+declare const Byond;
+declare const window;
+
 import { Window } from '../../layouts';
 import { Box, Button, Flex } from '../../components';
 import { useBackend, useLocalState } from '../../backend';
@@ -15,7 +19,7 @@ export const Boardgame = (_props, context) => {
   const { name, pattern } = data.boardInfo;
   const { useNotations } = data.styling;
 
-  const [, setConfigModalOpen] = useLocalState(context, 'configModalOpen', false);
+  const [configModalOpen, setConfigModalOpen] = useLocalState(context, 'configModalOpen', false);
   const [flip, setFlip] = useLocalState(context, 'flip', false);
 
   const [, setMouseCoords] = useLocalState<{

@@ -48,6 +48,9 @@
   background-color: base.$color-bg;
   padding: 10px;
   border-radius: 5px;
+  overflow-y: hidden;
+  height: 100%;
+  padding-bottom: 15%;
 }
 
 .boardgame__modal-tab {
@@ -69,6 +72,7 @@
 
 .boardgame__modal-config {
   flex: 1;
+  max-height: 100%;
   overflow-y: auto;
 }
 
@@ -252,9 +256,8 @@
 
 .boardgame__piece-set-wrapper {
   width: 100px;
+  max-height: 100%;
   overflow-y: scroll;
-  display: flex;
-  flex-direction: column;
 }
 
 .boardgame__menubutton {
@@ -303,8 +306,10 @@
   display: flex;
   justify-content: space-around;
   flex-direction: row;
+  padding-top: 2px;
   padding-left: 20px;
   padding-right: 20px;
+  height: 20px;
 
   overflow: hidden;
 }

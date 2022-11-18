@@ -1,3 +1,5 @@
+declare const React;
+
 import { useBackend, useLocalState } from '../../../backend';
 import { Box, Button, Flex, Stack, Tabs, TextArea, Tooltip } from '../../../components';
 import { fenCodeRecordFromPieces, fetchPieces, getPiece, getPiecesByGame, PieceType } from '../Pieces';
@@ -7,28 +9,25 @@ import { presets, PresetType, presetsByGame } from '../Presets';
 export const FenCodeSettings = (_props, context) => {
   const [tabIndex, setTabIndex] = useLocalState(context, 'tabIndex', 1);
   const [configModalOpen, setConfigModalOpen] = useLocalState(context, 'configModalOpen', false);
-
-  return (
-    configModalOpen && (
-      <Box className="boardgame__modal">
-        <Box className="boardgame__modal-inner">
-          <Tabs fluid className="boardgame__modal-tabs">
-            <Tabs.Tab className="boardgame__modal-tab" selected={tabIndex === 1} onClick={() => setTabIndex(1)}>
-              Config
-            </Tabs.Tab>
-            <Tabs.Tab className="boardgame__modal-tab" selected={tabIndex === 2} onClick={() => setTabIndex(2)}>
-              Presets
-            </Tabs.Tab>
-            <Button onClick={() => setConfigModalOpen(false)}>Close</Button>
-          </Tabs>
-          <Box className="boardgame__modal-config">
-            {tabIndex === 1 && <ConfigTab />}
-            {tabIndex === 2 && <PresetsTab />}
-          </Box>
+  return configModalOpen ? (
+    <Box className="boardgame__modal">
+      <Box className="boardgame__modal-inner">
+        <Tabs fluid className="boardgame__modal-tabs">
+          <Tabs.Tab className="boardgame__modal-tab" selected={tabIndex === 1} onClick={() => setTabIndex(1)}>
+            Config
+          </Tabs.Tab>
+          <Tabs.Tab className="boardgame__modal-tab" selected={tabIndex === 2} onClick={() => setTabIndex(2)}>
+            Presets
+          </Tabs.Tab>
+          <Button onClick={() => setConfigModalOpen(false)}>Close</Button>
+        </Tabs>
+        <Box className="boardgame__modal-config">
+          {tabIndex === 1 && <ConfigTab />}
+          {tabIndex === 2 && <PresetsTab />}
         </Box>
       </Box>
-    )
-  );
+    </Box>
+  ) : null;
 };
 
 const convertFenCodeToBoardArray = (fenCode: string) => {
@@ -38,7 +37,7 @@ const convertFenCodeToBoardArray = (fenCode: string) => {
   // The "/" should be ignored
 
   const fenCodeArray = fenCode.split('/');
-  const boardArray = [];
+  const boardArray: string[] = [];
 
   for (const fenCodeRow of fenCodeArray) {
     const fenCodeRowArray = fenCodeRow.split('');
@@ -143,8 +142,7 @@ const ConfigTab = (_props, context) => {
         <span>You can import: </span>
         <ConfigTooltip text="GNot" tooltip="Goon Notation" link={'https://wiki.ss13.co/Main_Page'} />
         <ConfigTooltip text="FEN" tooltip="Forsyth–Edwards Notation" />
-        <ConfigTooltip text="PGN" tooltip="Portable Game Notation (coming later)" />
-        <ConfigTooltip text="PDN" tooltip="Portable Draughts Notation (coming later)" />
+        <ConfigTooltip text="PDN" tooltip="Portable Draughts Notation" />
       </Box>
       <TextArea value={gnot} style={{ 'height': '200px' }} />
       <Button
@@ -180,7 +178,7 @@ const PieceSVGImage = ({ width, height, pieceData }: PieceSVGImageProps) => {
   if (pieceData?.fenCode) {
     return <text>{pieceData.fenCode} </text>;
   }
-  return;
+  return null;
 };
 
 type GenerateSvgBoardProps = {
@@ -244,10 +242,10 @@ const GenerateSvgBoard = ({ preset, size }: GenerateSvgBoardProps, context) => {
 
 const PresetDetails = (_props, context) => {
   const { act } = useBackend<BoardgameData>(context);
-  const [selectedPreset, setSelectedPreset] = useLocalState<PresetType>(context, 'selectedPreset', null);
+  const [selectedPreset, setSelectedPreset] = useLocalState<PresetType | null>(context, 'selectedPreset', null);
   const [configModalOpen, setConfigModalOpen] = useLocalState(context, 'configModalOpen', false);
 
-  if (!selectedPreset) return;
+  if (!selectedPreset) return null;
 
   let setupString = '';
 
@@ -285,7 +283,7 @@ const PresetDetails = (_props, context) => {
           </Box>
         </Flex.Item>
       </Flex>
-      <DetailRules element={selectedPreset?.rules} />
+      {selectedPreset.rules ? <DetailRules element={selectedPreset.rules} /> : null}
     </Box>
   );
 };
@@ -294,7 +292,7 @@ type DetailRulesProps = {
   element: JSX.Element;
 };
 const DetailRules = ({ element }: DetailRulesProps) => {
-  if (!element) return;
+  if (!element) return null;
 
   return (
     <Box className="boardgame__rules">
@@ -317,34 +315,6 @@ const PresetsTab = (_props, context) => {
       <PresetDetails />
     </Flex>
   );
-
-  /* <Flex className="boardgame__presets">
-      {presets.map((preset, i) => {
-        const setup = preset.setup;
-        // if setup is a function, call it to get the setup
-        const setupString = typeof setup === 'function' ? setup() : setup;
-
-        return (
-          <Flex.Item
-            key={i}
-            className="boardgame__preset"
-            onClick={() => {
-              act('applyGNot', {
-                gnot: setupString,
-              });
-              setConfigModalOpen(false);
-            }}>
-            <Tooltip position="top" content={preset.name}>
-              <Flex position="relative">
-                <Flex.Item>
-                  <PresetItem presetSetup={setupString} />
-                </Flex.Item>
-              </Flex>
-            </Tooltip>
-          </Flex.Item>
-        );
-      })}
-    </Flex>*/
 };
 
 type PresetsRowProps = {
@@ -395,7 +365,7 @@ type PresetItemProps = {
 
 const PresetItem = ({ preset, presetSetup }: PresetItemProps, context) => {
   const { act } = useBackend<BoardgameData>(context);
-  const [selectedPreset, setSelectedPreset] = useLocalState<PresetType>(context, 'selectedPreset', null);
+  const [selectedPreset, setSelectedPreset] = useLocalState<PresetType | null>(context, 'selectedPreset', null);
   const [, setConfigModalOpen] = useLocalState(context, 'configModalOpen', false);
   // Draw the board and a ? button on top of it
   return (
