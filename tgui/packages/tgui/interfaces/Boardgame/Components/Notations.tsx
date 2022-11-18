@@ -13,6 +13,7 @@ export const Notations = ({ direction }: NotationsProps, context) => {
   const { act, data } = useBackend<BoardgameData>(context);
   const { boardInfo } = data;
   const { height, width } = boardInfo;
+  const { currentUser } = data;
   const { tileColour1, tileColour2, border } = data.styling;
   const [flip, setFlip] = useLocalState(context, 'flip', false);
   let chars = 'abcdefghijklmnopqrstuvwxyz'.split('').slice(0, width);
@@ -34,6 +35,17 @@ export const Notations = ({ direction }: NotationsProps, context) => {
 
   return (
     <Flex.Item
+      onMouseUp={() => {
+        act('paletteClear', {
+          ckey: currentUser.ckey,
+        });
+
+        if (currentUser.selected) {
+          act('pawnRemove', {
+            id: currentUser.selected,
+          });
+        }
+      }}
       style={{
         'background-color': border || tileColour2,
         'color': tileColour1,

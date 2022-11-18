@@ -15,6 +15,9 @@
 	var/board_width = 8
 	var/board_height = 8
 
+	var/use_custom_board = TRUE
+	var/icon/custom_board = null
+
 	var/lock_pieces_to_tile = TRUE // If true, pieces will be locked to the center of the tile they're on, otherwise they'll be free to move around
 
 	/// Apply custom styling, matches both in dm and tgui releated code
@@ -213,7 +216,7 @@
 		if (occupied)
 			// Check if the pawn is moving to a tile that is occupied by an enemy
 			if (pawn != occupied)
-				map_text = "[moverName] moves [prevPosString] to [newPosString] and captures [occupied["name"]]!"
+				map_text = "[moverName] moves [prevPosString] to [newPosString] and captures [occupied["code"]]!"
 				playsound(src.loc, src.sounds["capture"], 30, 1)
 				src.removePieceAt(_x, _y)
 			else
@@ -222,7 +225,7 @@
 		else
 			map_text = "[moverName] moves [prevPosString] to [newPosString]!"
 
-		var/map_text_final = make_chat_maptext(src, map_text, "color: #A8E9F0;", alpha = 150, force=20, time=10)
+		var/map_text_final = make_chat_maptext(src, map_text, "color: #A8E9F0;", alpha = 150, force=10, time=8)
 		for (var/mob/O in hearers(src))
 			O.show_message(assoc_maptext = map_text_final)
 
@@ -239,6 +242,64 @@
 		//src.drawBoardIcon()
 		playsound(src.loc, src.sounds["capture"], 30, 1)
 		src.removePiece(pawn["id"])
+
+	proc/drawBoardIcon()
+		if(!src.use_custom_board) return
+
+		var/board_padding = 4
+		var/width = (board_width * 3) + board_padding
+		var/height = (board_height * 3) + board_padding
+		src.bound_width = width
+		src.bound_height = height
+		if(!src.custom_board)
+			src.custom_board = icon(src.icon, icon_state = "base")
+			src.custom_board.Crop(1, 1, width, height)
+
+		var/color1rgb = styling["tileColour1"]
+		var/color2rgb = styling["tileColour2"]
+		// Draw the background for the board
+		var/list/RGB = rgb2num(color2rgb)
+		var/darker = 0.9
+		var/darkercolor1 = rgb(RGB[1] * darker, RGB[2] * darker, RGB[3] * darker)
+		src.custom_board.DrawBox(darkercolor1, 0, 0, width, height)
+
+		for(var/x in 1 to board_width)
+			for(var/y in 1 to board_height)
+				var/tile_color = color1rgb
+				var/tile_size = 3
+				var/tile_x1 = (x) * tile_size
+				var/tile_y1 = (board_height - y + 1) * tile_size
+				var/tile_x2 = tile_x1 + tile_size
+				var/tile_y2 = tile_y1 + tile_size
+				if ((x + y) % 2 == 0)
+					tile_color = color2rgb
+				src.custom_board.DrawBox(tile_color, tile_x1, tile_y1, tile_x2-1, tile_y2-1)
+
+		for(var/id in src.pieces)
+			var/piece = src.pieces[id]
+			var/letter = piece["code"]
+			var/x = piece["x"] + 1
+			var/y = piece["y"] + 1
+
+			// DrawBox uses x1, y1, x2, y2, each tile should be 2x2
+			var/tile_size = 3
+			var/tile_x1 = (x) * tile_size
+			var/tile_y1 = (board_height - y + 1) * tile_size
+			var/tile_x2 = tile_x1 + tile_size
+			var/tile_y2 = tile_y1 + tile_size
+
+			var/pawn_height = 1
+			if(letter == "p" || letter == "P")
+				pawn_height = 0
+			if(letter == "k" || letter == "K")
+				pawn_height = 2
+			if (letter != "")
+				if (letter == uppertext(letter))
+					src.custom_board.DrawBox(rgb(255, 255, 255), tile_x1 + 1, tile_y1 + 1, tile_x1 + 1, tile_y1 + 1 + pawn_height)
+				else
+					src.custom_board.DrawBox(rgb(0, 0, 0), tile_x1 + 1, tile_y1 + 1, tile_x1 + 1, tile_y1 + 1 + pawn_height)
+			src.icon = custom_board
+
 
 	can_access_remotely(mob/user)
 		. = can_access_remotely_default(user)
@@ -269,6 +330,7 @@
 
 
 	ui_data(mob/user)
+		src.process()
 		. = list()
 		.["pieces"] = src.pieces
 		.["styling"] = src.styling
@@ -346,6 +408,9 @@
 		if(. <= UI_CLOSE || !IN_RANGE(src, user, 10))
 			return UI_CLOSE
 
+	process()
+		src.drawBoardIcon()
+
 	examine(mob/user)
 		. = ..()
 		if(IN_RANGE(src, user, 10))
@@ -401,4 +466,6 @@
 		..()
 		styling["oldTileColour1"] = styling["tileColour1"]
 		styling["oldTileColour2"] = styling["tileColour2"]
+
+		src.drawBoardIcon()
 

@@ -35,5 +35,7 @@ export const HeldPieceRenderer = (_, context) => {
         <span>{piece?.name}</span>
       </Box>
     );
+  } else {
+    return null;
   }
 };

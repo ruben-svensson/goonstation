@@ -1,3 +1,8 @@
+/* eslint-disable react/no-unescaped-entities */
+/* @ts-ignore */
+
+declare const React;
+
 import { PresetType } from '.';
 import { Box, Button, Flex, Stack, Tabs, TextArea, Tooltip } from '../../../components';
 
@@ -24,7 +29,7 @@ presets.push({
     <Stack vertical>
       <Stack.Item>
         <Box bold>Objective</Box>
-        <Box>Checkmate the opponent's king.</Box>
+        <Box>Checkmate the opponents king.</Box>
       </Stack.Item>
       <Stack.Item>
         <Box bold>Setup</Box>
@@ -36,10 +41,10 @@ presets.push({
       <Stack.Item>
         <Box bold>Gameplay</Box>
         <Box>
-          Players take turns moving one of their pieces. A move is legal if it does not put the player's king in check.
-          A player can only move a piece if it is their turn. A player can only move a piece if it is their turn. If a
-          player's king is in check, they must move it out of check. If a player's king is in checkmate, they lose. If a
-          player's king is in stalemate, the game is a draw.
+          Players take turns moving one of their pieces. A move is legal if it does not put the players king in check. A
+          player can only move a piece if it is their turn. A player can only move a piece if it is their turn. If a
+          players king is in check, they must move it out of check. If a players king is in checkmate, they lose. If a
+          players king is in stalemate, the game is a draw.
         </Box>
       </Stack.Item>
     </Stack>
@@ -57,7 +62,7 @@ presets.push({
     <Stack vertical>
       <Stack.Item>
         <Box bold>Objective</Box>
-        <Box>Checkmate the opponent's king.</Box>
+        <Box>Checkmate the opponents king.</Box>
       </Stack.Item>
       <Stack.Item>
         <Box bold>Setup</Box>
@@ -109,7 +114,7 @@ presets.push({
   description:
     "Displacement chess is a family of chess variants in which a few pieces are transposed in the initial standard chess position. The main goal of these variants is to negate players' knowledge of standard chess openings.",
   setup: function () {
-    let board = [];
+    let board: (number | string[])[] = [];
 
     const pawns = ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'];
     let special = ['n', 'b', 'r', 'q', 'k', 'r', 'b', 'n'];
