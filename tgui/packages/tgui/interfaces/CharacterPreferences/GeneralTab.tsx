@@ -94,6 +94,25 @@ export const GeneralTab = (_props, context) => {
             }>
             <BlockQuote>{data.medicalNote ? decodeHtmlEntities(data.medicalNote) : <Box italic>None</Box>}</BlockQuote>
           </LabeledList.Item>
+          <LabeledList.Item
+            label="Medical Note"
+            buttons={
+              <Button onClick={() => act('update-medicalNote')} icon="wrench">
+                Edit
+              </Button>
+            }>
+            <BlockQuote>
+              {data.medicalNote ? (
+                decodeHtmlEntities(data.medicalNote)
+              ) : (
+                <Box italic>
+                  Lorem ipsum dolor sit amet consectetur adipisicing elit. Expedita, totam! Dolore atque amet porro est,
+                  aliquam deserunt maiores reiciendis, praesentium eum doloremque tempora, eveniet quidem quia quas
+                  fugit architecto totam.
+                </Box>
+              )}
+            </BlockQuote>
+          </LabeledList.Item>
         </LabeledList>
       </Section>
       <Section title="Other names">

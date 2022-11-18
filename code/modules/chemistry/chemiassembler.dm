@@ -6,10 +6,6 @@ sx is source register, valid sources are 1-10 for the reservoirs
 tx is target register, valid targets are for reservoirs 1-10, and 11 for pill, 12 for vial, 13 for syringe
 ax is amount register (16-bit)
 
-
-
-
-
 Instructions:
 var val/reg/var name
 Moves val/reg/var name
@@ -63,6 +59,10 @@ It takes as long as the chemistry lab heater would take.
 	 */
 	var/raw_program = ""
 
+	var/list/reservoirs = list(
+		null,null,null,null,null,null,null,null,null,null,
+	)
+
 	var/list/registers = list(
 		"sx" = 0, // Source register
 		"tx" = 0, // Target register
@@ -72,6 +72,8 @@ It takes as long as the chemistry lab heater would take.
 
 	var/list/program = list() // Each entry is an instruction
 	var/pointer = 1 // The current instruction
+
+	var/holder = null // The current reagent holder
 
 	var/running = FALSE
 
@@ -92,7 +94,9 @@ It takes as long as the chemistry lab heater would take.
 				continue
 
 			var/list/line_split = splittext(clean_line, " ")
+			// if the line is a variable, prebuild it
 			program.Add(list(line_split))
+
 
 	process()
 		if(!program.len || !running)
@@ -207,13 +211,13 @@ It takes as long as the chemistry lab heater would take.
 						pointer = i
 						break
 
+		playsound(src, "sound/machines/law_insert.ogg", 50, 1)
 
 	proc/isRegister(regi)
 		return regi in src.registers
 
 	proc/isVariable(vari)
 		return vari in src.variables
-
 
 	proc/parseValue(value)
 		var/list/state = list(
@@ -223,10 +227,10 @@ It takes as long as the chemistry lab heater would take.
 		if(isnum(text2num_safe(value)))
 			state[1] = text2num_safe(value)
 			state[2] = IS_VALUE
-		if(value in variables)
+		if(value in src.variables)
 			state[1] = value
 			state[2] = IS_VARIABLE
-		if(value in registers)
+		if(value in src.registers)
 			state[1] = value
 			state[2] = IS_REGISTER
 		return state
@@ -246,6 +250,25 @@ It takes as long as the chemistry lab heater would take.
 		src.raw_program = program
 		src.build()
 
+	proc/ejectReservoir(mob/user, index)
+		//var/res = src.reservoirs[index]
+		if(!src.reservoirs[index])
+			return
+
+		if(istype(src.reservoirs[index], /obj/item/reagent_containers/glass))
+			// Check if user is holding something
+			user.put_in_hand_or_drop(src.reservoirs[index])
+			src.reservoirs[index] = null
+
+
+	proc/insertReservoir(mob/user, index)
+		// Check if there is a reservoir in the user's hand
+		var/obj/item/I = usr.equipped()
+		if(istype(I, /obj/item/reagent_containers/glass))
+			usr.drop_item()
+			I.loc = src
+			src.reservoirs[index] = I
+
 	ui_interact(mob/user, datum/tgui/ui)
 		ui = tgui_process.try_update_ui(user, src, ui)
 		if(!ui)
@@ -261,6 +284,8 @@ It takes as long as the chemistry lab heater would take.
 		.["program"] = src.program
 		.["pointer"] = src.pointer
 		.["running"] = src.running
+		.["reservoirs"] = src.reservoirs
+		.["active_user"] = user
 
 	ui_act(action, list/params, datum/tgui/ui, datum/ui_state/state)
 		. = ..()
@@ -284,6 +309,14 @@ It takes as long as the chemistry lab heater would take.
 				src.execStep()
 			if("reset")
 				src.resetProgram()
+			if("eject_reservoir")
+				var/user = params["user"]
+				var/index = params["index"]
+				src.ejectReservoir(user, index)
+			if("insert_reservoir")
+				var/user = params["user"]
+				var/index = params["index"]
+				src.insertReservoir(user, index)
 
 	ui_status(mob/user, datum/ui_state/state)
 		. = ..()

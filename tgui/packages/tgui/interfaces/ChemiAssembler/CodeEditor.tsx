@@ -1,45 +1,227 @@
+/* eslint-disable react/jsx-key */
 declare const React;
 
 import { Window } from '../../layouts';
 import { useBackend, useLocalState } from '../../backend';
 import { Box, Button, Flex, Input, Stack, TextArea } from '../../components';
 import { Component, createRef } from 'inferno';
+import { ChemiAssemblerData } from '.';
 
-export class CodeEditor extends Component {
-  codeRef = createRef<HTMLElement>();
-  elements = (
+const LineNumbers = (props, context) => {
+  const [lines, setLines] = useLocalState(context, 'lines', ['test', 'test2', 'test3', '1', '2', '3']);
 
+  return (
+    <Box className="chemiassembler__linenumbers">
+      {lines.map((line, index) => {
+        return (
+          <div className="chemiassembler__linenumbers-line" key={index}>
+            {index + 1}
+          </div>
+        );
+      })}
+    </Box>
   );
+};
 
-  constructor(props) {
-    super(props);
-  }
+class Code extends Component<any, any> {
+  elements = [];
 
-  codeRender() {
-    return <code
-    ref={this.codeRef}
-    className="chemiassembler__codeeditor-textarea"
-    oninput={(e) => {
-      e.preventDefault();
-    }}
-    contentEditable
-  />
-  }
+  editor = (<div className="chemiassembler__codeeditor-code">{this.elements}</div>);
 
-  componentDidUpdate() {
-    // Convert the contents of this.elements to elements
-    // if the word is var | set | add | sub | lbl | jmp wrap it in a span
+  convertStringToElements = (string: string) => {
+    const { data } = useBackend<ChemiAssemblerData>(this.context);
+    const { variables, registers } = data;
+
+    type MnemonicObject = {
+      name: string;
+      altText: string;
+    };
+
+    const mnemonics: MnemonicObject[] = [
+      {
+        name: 'mov',
+        altText: 'Move',
+      },
+      {
+        name: 'add',
+        altText: 'Addition',
+      },
+      {
+        name: 'sub',
+        altText: 'Subtraction',
+      },
+      {
+        name: 'lbl',
+        altText: 'Label',
+      },
+      {
+        name: 'jmp',
+        altText: 'Jump',
+      },
+    ];
+
+    const varArr = Object.keys(variables);
+    const regArr = Object.keys(registers);
+
+    // Convert mnemonics to <Mnemonic /> components
+    // Convert variables to <Variable /> components
+    // Convert numbers to <Number /> components
+    // Convert comments to <Comment /> components
+
+    // Split string into array of words
+    const words = string.split(' ');
+
+    // Create array of elements
+    const elements = [];
+
+    // Loop through words
+    for (let i = 0; i < words.length; i++) {
+      // Get word
+      const word = words[i];
+      const mnemonic = mnemonics.find((mnemonic) => mnemonic.name === word);
+
+      // Check if word is a mnemonic
+      if (mnemonic) {
+        // Push <Mnemonic /> component to elements array
+        elements.push(
+          <span
+            title={mnemonic.altText}
+            style={{
+              color: '#75bcff',
+              'font-weight': 'bold',
+            }}>
+            {word}
+          </span>
+        );
+      } else if (word.startsWith('//')) {
+        // Push <Comment /> component to elements array
+        elements.push(
+          <span
+            style={{
+              color: '#d2f1c3',
+            }}>
+            {word}
+          </span>
+        );
+        // Check if comment is at the end of the line, example:  ;this is a comment
+      } else if (word.startsWith(';')) {
+        // Add the rest of the line to the comment
+        const comment = word + ' ' + words.slice(i + 1).join(' ');
+
+        // Delete the line from the words array
+        words.splice(i, words.length - i);
+
+        elements.push(
+          <span
+            style={{
+              color: '#c4c4c4',
+            }}>
+            {comment}
+          </span>
+        );
+      } else if (regArr.includes(word)) {
+        // Push <Variable /> component to elements array
+        elements.push(
+          <span
+            style={{
+              color: 'pink',
+              'text-decoration': 'underline',
+            }}>
+            {word}
+          </span>
+        );
+      } else if (varArr.includes(word)) {
+        // Push <Variable /> component to elements array
+        elements.push(
+          <span
+            style={{
+              color: 'cyan',
+            }}>
+            {word}
+          </span>
+        );
+      } else if (Number(word)) {
+        // Push <Number /> component to elements array
+        elements.push(
+          <span
+            style={{
+              color: '#a8f2ff',
+            }}>
+            {word}
+          </span>
+        );
+      } else {
+        // Push word to elements array
+        elements.push(
+          <span
+            style={{
+              color: 'white',
+            }}>
+            {word}
+          </span>
+        );
+      }
+
+      // Add space to elements array
+      elements.push(<span>&nbsp;</span>);
+    }
+
+    // Return elements array
+    return elements;
+  };
+
+  constructor(props, context) {
+    super(props, context);
   }
 
   render() {
     return (
-      <Box className="chemiassembler__codeeditor">
-        {this.elements}
-        <Box>{this.codeRef.current.textContent || ''}</Box>
-      </Box>
+      <Flex className="chemiassembler__codeeditor-code" direction={'column'}>
+        <Flex.Item className="chemiassembler__codeeditor-code-line">
+          {this.convertStringToElements('var 10 foo')}
+        </Flex.Item>
+        <Flex.Item className="chemiassembler__codeeditor-code-line">
+          {this.convertStringToElements('add 40 foo ;comments work too')}
+        </Flex.Item>
+        <Flex.Item className="chemiassembler__codeeditor-code-line">{this.convertStringToElements('')}</Flex.Item>
+        <Flex.Item className="chemiassembler__codeeditor-code-line">
+          {this.convertStringToElements('lbl here')}
+        </Flex.Item>
+        <Flex.Item className="chemiassembler__codeeditor-code-line">
+          {this.convertStringToElements('add 1 tx')}
+        </Flex.Item>
+        <Flex.Item className="chemiassembler__codeeditor-code-line">
+          {this.convertStringToElements('jmp here')}
+        </Flex.Item>
+      </Flex>
     );
   }
 }
+
+export const CodeEditor = (props, context) => {
+  const { act, data } = useBackend<ChemiAssemblerData>(context);
+  const [lines, setLines] = useLocalState(context, 'lines', []);
+
+  return (
+    <Flex className="chemiassembler__codeeditor">
+      <LineNumbers />
+      <Code />
+    </Flex>
+  );
+};
+
+/*
+export const CodeEditor = (props, context) => {
+  const { act, data } = useBackend<ChemiAssemblerData>(context);
+  const [program, setProgram] = useLocalState(context, 'program', data.raw_program || '');
+
+  const onChange = (e) => {
+    const element = e.target;
+    setProgram(element.value);
+  };
+
+  return <TextArea className="chemiassembler__codeeditor" value={program} onChange={onChange} />;
+};*/
 
 /*
 export const CodeEditor = (props, context) => {
@@ -51,42 +233,24 @@ export const CodeEditor = (props, context) => {
         <Flex direction="column" className="chemiassembler__codeeditor-linenumbers">
           {Array.from(Array(lineCount).keys()).map((lineNumber) => (
             <Flex.Item className="chemiassembler__codeeditor-linenumbers-line" key={lineNumber}>
-              {' '}
-              {lineNumber + 1}{' '}
+              {lineNumber + 1}
             </Flex.Item>
           ))}
         </Flex>
       </Flex.Item>
-      <Flex.Item grow>
-        <textarea
+      <Flex.Item
+        grow
+        onClick={(e) => {
+          // Focus on the textarea
+        }}>
+        <TextArea
           className="chemiassembler__codeeditor-textarea"
-          tabIndex={-1}
           style={{
             'height': `${lineCount * 19}px`,
           }}
-          oninput={(e) => {
-            e.preventDefault();
-            const target = e.target as HTMLTextAreaElement;
-            const value = target.value;
-            setLineCount(value.split('\n').length);
-          }}
-          onkeydown={(e) => {
-            const target = e.target as HTMLTextAreaElement;
-
-            const value = target.value;
-
-            // on tab key press, insert 2 spaces
-            if (e.keyCode === 9) {
-              const start = target.selectionStart;
-              const end = target.selectionEnd;
-
-              target.value = value.substring(0, start) + '  ' + value.substring(end);
-              target.selectionStart = target.selectionEnd = start + 2;
-              e.preventDefault();
-            }
-
-            // on enter key press, copy the indentation of the previous line
-
+          onInput={(e) => {
+            const lines = e.target.value.split('\n');
+            setLineCount(lines.length);
           }}
         />
       </Flex.Item>

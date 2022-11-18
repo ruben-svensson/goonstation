@@ -1,46 +1,211 @@
+/*$terminal-dark: #111111;
+$terminal-text: #d4d4d4; */
+
+$terminal-dark: #314727;
+$terminal-dark-brighter: #47723d;
+$terminal-dark-darker: #1e2b1a;
+$terminal-text: #c3ee4c;
+
+$terminal-case: #535353;
+$terminal-screenborder: #333333;
+
 // Two rows, one for code, one for rest
+.chemiassembler__wrapper {
+  display: flex;
+  flex-direction: column;
+  background-color: $terminal-case;
+  border: 1px solid $terminal-screenborder;
+  padding: 10px;
+}
+
+.chemiassembler__window {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  background-color: rgba(165, 165, 165, 0.459);
+  z-index: 10;
+  border-radius: 20px;
+  opacity: 0.3;
+
+  // disable user and pointer events
+  pointer-events: none;
+  user-select: none;
+
+  // Apply a computer screen effect
+  &::before {
+    pointer-events: none;
+    user-select: none;
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: $terminal-dark;
+    border-radius: 20px;
+    opacity: 0.5;
+  }
+}
+
 .chemiassembler__content {
+  flex: 1;
   display: flex;
   flex-direction: row;
-  height: 100%;
-  padding: 10px;
+  background-color: $terminal-dark;
+  color: $terminal-text;
+  font-family: monospace;
+  border: 5px solid $terminal-screenborder;
+  border-radius: 20px;
+  padding: 5px;
+  box-shadow: 0 0 10px 0 $terminal-screenborder;
+
+  &-left {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  &-right {
+    width: 200px;
+    display: flex;
+    flex-direction: column;
+    padding: 5px;
+    margin: 5px;
+    background-color: $terminal-dark-brighter;
+
+    // Create a box shadow 10px to the right and 10px below
+    // With no fade
+    box-shadow: 5px 5px 0 0 $terminal-dark-darker;
+
+    &-register {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      margin-bottom: 5px;
+    }
+
+    &-variable {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      padding: 2px;
+    }
+
+    &-register,
+    &-variable,
+    &-pointer,
+    &-program,
+    &-running {
+      display: flex;
+      flex-direction: row;
+    }
+
+    &-reservoirs {
+      flex-grow: 1;
+      display: flex;
+
+      flex-wrap: wrap;
+      flex-direction: row;
+      justify-content: space-around;
+    }
+
+    &-reservoir {
+      display: flex;
+      flex-direction: column-reverse;
+      height: 50px;
+      width: 30px;
+      margin: 2px;
+      padding: 2px;
+      border: 1px solid $terminal-screenborder;
+      background-color: $terminal-dark-darker;
+      cursor: pointer;
+
+      &-fill {
+      }
+
+      &-percent {
+        font-size: 0.8em;
+        background-color: $terminal-dark-brighter;
+        color: $terminal-text;
+        text-align: center;
+        padding: 1px;
+      }
+    }
+  }
+}
+
+.chemiassembler__seperator {
+  // Hide if overflow
+  display: flex;
+  flex-direction: column;
+  white-space: nowrap;
+  overflow: hidden;
+
+  font-weight: bold;
+
+  text-align: center;
+}
+
+.chemiassembler__controls {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+
+  padding: 6px;
+
+  & div {
+    background-color: $terminal-dark;
+    border: 1px solid $terminal-text;
+    color: $terminal-text;
+  }
 }
 
 .chemiassembler__codeeditor {
   // Use a good color for the code editor
-  background-color: #1e1e1e;
+
+  border: none;
+  background-color: $terminal-dark;
   flex: 1;
-  height: 100%;
 
-  &-textarea {
+  &-code {
+    padding-top: 2px;
+    padding-left: 12px;
     width: 100%;
-    border: none;
-    padding: 0;
-    margin: 0;
-    overflow-y: hidden;
-    line-height: 19px;
-    padding-left: 5px;
-
-    // Use a good color for lines
-    color: #d4d4d4;
-    background-color: rgb(51, 51, 51);
-  }
-
-  &-linenumbers {
-    padding-left: 6px;
-    padding-right: 6px;
-
     &-line {
       height: 19px;
-      color: #fff;
+      width: 100%;
+      padding: 0;
+      margin: 0;
     }
 
-    -webkit-touch-callout: none; /* iOS Safari */
-    -webkit-user-select: none; /* Safari */
-    -khtml-user-select: none; /* Konqueror HTML */
-    -moz-user-select: none; /* Old versions of Firefox */
-    -ms-user-select: none; /* Internet Explorer/Edge */
-    user-select: none; /* Non-prefixed version, currently
-                                  supported by Chrome, Edge, Opera and Firefox */
+    &-line:hover {
+      background-color: $terminal-dark-brighter;
+    }
   }
+}
+
+.chemiassembler__linenumbers {
+  background-color: $terminal-dark-brighter;
+  height: 100%;
+  width: 28px;
+  text-align: right;
+  padding-right: 2px;
+
+  box-shadow: 5px 5px 0 0 $terminal-dark-darker;
+
+  &-line {
+    height: 19px;
+    line-height: 19px;
+    padding: 0;
+    margin: 0;
+  }
+}
+
+.chemiassembler__console {
+  // Clear textarea
+  border: none;
+  background-color: $terminal-dark;
+  height: 140px;
 }
