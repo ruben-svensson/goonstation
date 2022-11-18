@@ -3,6 +3,7 @@
 	desc = "A generic game board?"
 	icon = 'icons/obj/items/gameboard.dmi'
 	icon_state = "chessboard"
+	flags = TGUI_INTERACTIVE
 	w_class = W_CLASS_NORMAL
 	two_handed = TRUE
 	stamina_damage = 30
@@ -239,6 +240,9 @@
 		playsound(src.loc, src.sounds["capture"], 30, 1)
 		src.removePiece(pawn["id"])
 
+	can_access_remotely(mob/user)
+		. = can_access_remotely_default(user)
+
 	ui_interact(mob/user, datum/tgui/ui)
 		ui = tgui_process.try_update_ui(user, src, ui)
 		if(!ui)
@@ -345,15 +349,18 @@
 	examine(mob/user)
 		. = ..()
 		if(IN_RANGE(src, user, 10))
-			src.ui_interact(user)
+			return src.attack_hand(user)
 
 	mouse_drop(var/mob/user)
-		if((istype(user,/mob/living/carbon/human))&&(!user.stat)&&!(src in user.contents))
+		if((istype(user,/mob/living/carbon/human))&&(!user.stat)&&!(src in user.contents)&&!src.anchored)
 			user.put_in_hand_or_drop(src)
 		return ..()
 
 	attack_hand(var/mob/user) // open browser window when board is clicked
 		src.ui_interact(user)
+
+	attack_ai(var/mob/user)
+		return src.attack_hand(user)
 
 	attackby(obj/item/W, mob/user, params)
 		if(istype(W, /obj/item/paint_can))

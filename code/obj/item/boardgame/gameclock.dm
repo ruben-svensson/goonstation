@@ -6,6 +6,7 @@
 	desc = "A set of clocks used to track time for two player board games. Fancy!"
 	icon = 'icons/obj/items/gameboard.dmi'
 	icon_state = "chessclock"
+	flags = TGUI_INTERACTIVE
 	var/timing = FALSE
 	var/turn = WHITE
 	var/whiteTime = 5 MINUTES
@@ -81,6 +82,9 @@
 			src.lastTick = 0
 		src.returnMaxOfTimeOrZero()
 
+	can_access_remotely(mob/user)
+		. = can_access_remotely_default(user)
+
 	ui_interact(mob/user, datum/tgui/ui)
 		ui = tgui_process.try_update_ui(user, src, ui)
 		if(!ui)
@@ -135,12 +139,15 @@
 				. = TRUE
 
 	mouse_drop(var/mob/user)
-		if((istype(user,/mob/living/carbon/human))&&(!user.stat)&&!(src in user.contents))
+		if((istype(user,/mob/living/carbon/human))&&(!user.stat)&&!(src in user.contents)&&!src.anchored)
 			user.put_in_hand_or_drop(src)
 		return ..()
 
 	attack_hand(var/mob/user)
 		src.ui_interact(user)
 
+	attack_ai(var/mob/user)
+		return src.attack_hand(user)
+
 	attack_self(var/mob/user)
-		src.ui_interact(user)
+		return src.attack_hand(user)
