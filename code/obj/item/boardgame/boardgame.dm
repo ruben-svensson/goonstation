@@ -232,7 +232,7 @@
 			map_text = "[moverName] moves [prevPosString] to [newPosString]!"
 
 
-		var/map_text_final = make_chat_maptext(src, map_text, "color: #A8E9F0;", alpha = 150, force=10, time=8)
+		var/map_text_final = make_chat_maptext(src, map_text, "color: #A8E9F0;", alpha = 150, time = 8)
 		for (var/mob/O in hearers(src))
 			O.show_message(assoc_maptext = map_text_final)
 
