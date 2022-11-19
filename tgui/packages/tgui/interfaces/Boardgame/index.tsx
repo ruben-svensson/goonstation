@@ -28,7 +28,7 @@ export const Boardgame = (_props, context) => {
   }>(context, 'mouseCoords', { x: 0, y: 0 });
 
   return (
-    <Window title={name} width={800} height={650}>
+    <Window title={name} width={500} height={400}>
       <FenCodeSettings />
       <Window.Content
         onMouseMove={(e) => {
@@ -80,8 +80,8 @@ Boardgame.defaultHooks = {
     // Adjust window size
     const pieceSetPadding = 100; // Add 100 pixels to the width
     const titlebarHeightPadding = 32;
-    let width = 600;
-    let height = 500;
+    let width = 500;
+    let height = 400;
     // Fetch boardgame__wrapper element and get its width and height
     const wrapper = document.getElementsByClassName('boardgame__wrapper')[0];
     if (wrapper) {
