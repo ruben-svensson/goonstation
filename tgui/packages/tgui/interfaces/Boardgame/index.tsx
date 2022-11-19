@@ -28,7 +28,7 @@ export const Boardgame = (_props, context) => {
   }>(context, 'mouseCoords', { x: 0, y: 0 });
 
   return (
-    <Window title={name} width={500} height={400}>
+    <Window title={name} width={580} height={512}>
       <FenCodeSettings />
       <Window.Content
         onMouseMove={(e) => {
