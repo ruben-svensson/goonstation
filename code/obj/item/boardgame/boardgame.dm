@@ -9,14 +9,28 @@
 	stamina_damage = 30
 	stamina_cost = 20
 
+	var/list/sounds = list(
+		"move" = 'sound/impact_sounds/Wood_Tap.ogg',
+		"capture" = 'sound/effects/capture.ogg',
+		"newgame" = 'sound/effects/sine_boop.ogg',
+	)
+
 	var/game = "chess"
 	var/pattern = "checkerboard"
 
 	var/board_width = 8
 	var/board_height = 8
 
-	var/use_custom_board = TRUE
-	var/icon/custom_board = null
+	// Customizable board
+	var/icon/cb = null
+	var/use_cb = FALSE // Whether to use the custom board icon or not
+	var/cb_xoffset = 2 // Offset everything by this much
+	var/cb_yoffset = 2 // Offset everything by this much
+	var/cb_tsize = 3 // 3x3 pixels per tile
+	var/cb_pad = 4 // 4 pixels of padding around the board
+	var/cb_clr_out = rgb(86, 63,43) // Outline color
+	var/cb_clr_bot = rgb(69,42,31) // Bottom color
+	var/cb_mrg_bot = 1 // Bottom margin in pixels
 
 	var/lock_pieces_to_tile = TRUE // If true, pieces will be locked to the center of the tile they're on, otherwise they'll be free to move around
 
@@ -25,18 +39,11 @@
 		"tileColour1" = rgb(240, 217, 181),
 		"tileColour2" = rgb(181, 136, 99),
 		"border" = rgb(131, 100, 74),
-		"aspectRatio" = 1, // 1 to 1 ratio, use null for auto
+		"aspectRatio" = 1, // 1 to 1 ratio, used for auto resizing, FALSE to disable
 		"useNotations" = TRUE, // Whether to use chess-like notation or not
 	)
 
-	var/list/sounds = list(
-		"move" = 'sound/impact_sounds/Wood_Tap.ogg',
-		"capture" = 'sound/effects/capture.ogg',
-		"newgame" = 'sound/effects/sine_boop.ogg',
-	)
-
-	// Store the users who are currently using the board
-	// also track pawns they have selected and moving
+	// Game state data
 	var/list/active_users = list()
 	var/list/pieces = list()
 
@@ -113,7 +120,9 @@
 		return src.pieces[id]
 
 	proc/removePiece(var/piece)
-		src.pieces -= piece
+		if(piece)
+			src.pieces -= piece
+
 
 	proc/removePieceById(var/id)
 		src.removePiece(src.getPawnById(id))
@@ -183,7 +192,6 @@
 			_x = round(x)
 			_y = round(y)
 
-
 		var/pawn = src.getPawnById(src.active_users[ckey]["selected"])
 		if (!pawn)
 			src.deselectPawn(ckey)
@@ -211,8 +219,6 @@
 
 		var/occupied = src.getPawnAt(_x, _y)
 
-
-
 		if (occupied)
 			// Check if the pawn is moving to a tile that is occupied by an enemy
 			if (pawn != occupied)
@@ -225,6 +231,7 @@
 		else
 			map_text = "[moverName] moves [prevPosString] to [newPosString]!"
 
+
 		var/map_text_final = make_chat_maptext(src, map_text, "color: #A8E9F0;", alpha = 150, force=10, time=8)
 		for (var/mob/O in hearers(src))
 			O.show_message(assoc_maptext = map_text_final)
@@ -235,6 +242,10 @@
 		pawn["x"] = _x
 		pawn["y"] = _y
 
+		// Draw the piece and tile
+
+
+
 		// Deselect the pawn
 		src.deselectPawn(ckey)
 
@@ -243,30 +254,101 @@
 		playsound(src.loc, src.sounds["capture"], 30, 1)
 		src.removePiece(pawn["id"])
 
-	proc/drawBoardIcon()
-		if(!src.use_custom_board) return
+	proc/drawTile(x, y, updateIcon = FALSE)
+		if(!src.use_cb) return
 
-		var/board_padding = 4
-		var/width = (board_width * 3) + board_padding
-		var/height = (board_height * 3) + board_padding
+		var/usecolor = src.styling["tileColour1"]
+		if ((x + y) % 2 == 0)
+			usecolor = src.styling["tileColour2"]
+
+		var/x1 = x * src.cb_tsize -1
+		var/y1 = y * src.cb_tsize
+		var/x2 = x1 + src.cb_tsize - 1
+		var/y2 = y1 + src.cb_tsize - 1
+
+		src.cb.DrawBox(usecolor, x1,y1,x2,y2)
+
+		if(updateIcon)
+			src.icon = src.cb
+
+	proc/drawPiece(code, _x, _y, px = 0, py = 0, updateIcon = FALSE)
+		if(!src.use_cb) return
+		var/x = _x + 1
+		// Reverse y
+		var/y = _y + 1
+
+		if (px > 0 && py > 0)
+			// Clear the previous tile
+			src.drawTile(px, py, FALSE)
+
+		// Alter height depending on piece type
+		var/pawn_height = 1
+		switch(code)
+			// Pawn (Chess), Man and King (Draughts),
+			if("p", "P", "d", "D", "m", "M")
+				pawn_height = 0
+			// King (Chess)
+			if("k", "K")
+				pawn_height = 2
+
+		var/piece_color = rgb(0, 0, 0)
+		if (code == uppertext(code))
+			piece_color = rgb(226, 226, 226)
+
+		// Box size, use pawn_height to make the piece taller or shorter
+		var/x1 = (x) * src.cb_tsize
+		var/y1 = (board_height - y + 1) * src.cb_tsize
+
+		src.cb.DrawBox(piece_color, x1,y1 + 1,x1,y1 + 1 + pawn_height)
+
+		if(updateIcon)
+			src.icon = src.cb
+
+	proc/swapCustomAndDefault()
+		if(src.icon == src.cb)
+			src.swapToDefaultBoardStyle()
+		else
+			src.swapToCustomBoardStyle()
+
+	proc/swapToCustomBoardStyle()
+		src.icon = src.cb
+		src.initCustomBoardIcon()
+
+	proc/swapToDefaultBoardStyle()
+		src.icon = 'icons/obj/items/gameboard.dmi'
+		src.icon_state = "chessboard"
+
+	proc/initCustomBoardIcon()
+
+		var/width = (src.board_width * src.cb_tsize) + src.cb_pad - 2
+		var/height = (src.board_height * src.cb_tsize) + src.cb_pad - 1
+
 		src.bound_width = width
 		src.bound_height = height
-		if(!src.custom_board)
-			src.custom_board = icon(src.icon, icon_state = "base")
-			src.custom_board.Crop(1, 1, width, height)
+		src.cb = icon(src.icon, icon_state = "base")
+		src.cb.Crop(1, 1, width, height)
 
-		var/color1rgb = styling["tileColour1"]
-		var/color2rgb = styling["tileColour2"]
 		// Draw the background for the board
-		var/list/RGB = rgb2num(color2rgb)
-		var/darker = 0.9
-		var/darkercolor1 = rgb(RGB[1] * darker, RGB[2] * darker, RGB[3] * darker)
-		src.custom_board.DrawBox(darkercolor1, 0, 0, width, height)
+		src.cb.DrawBox(src.cb_clr_out, 1, 1 + src.cb_mrg_bot, width, height)
+		src.cb.DrawBox(src.cb_clr_bot, 1, 1, width, src.cb_mrg_bot)
 
+		// Draw the board
+		var/quarter_pad = src.cb_pad / 4 // Like a quarter pounder, but with padding
+		for(var/x in 1 to board_width)
+			for(var/y in 1 to board_height)
+				src.drawTile(x, y)
+
+		for(var/id in src.pieces)
+			var/piece = src.pieces[id]
+			var/code = piece["code"]
+			var/x = piece["x"]
+			var/y = piece["y"]
+			src.drawPiece(code, x, y)
+
+		/*
 		for(var/x in 1 to board_width)
 			for(var/y in 1 to board_height)
 				var/tile_color = color1rgb
-				var/tile_size = 3
 				var/tile_x1 = (x) * tile_size
 				var/tile_y1 = (board_height - y + 1) * tile_size
 				var/tile_x2 = tile_x1 + tile_size
@@ -275,6 +357,7 @@
 					tile_color = color2rgb
 				src.custom_board.DrawBox(tile_color, tile_x1, tile_y1, tile_x2-1, tile_y2-1)
 
+
 		for(var/id in src.pieces)
 			var/piece = src.pieces[id]
 			var/letter = piece["code"]
@@ -282,11 +365,9 @@
 			var/y = piece["y"] + 1
 
 			// DrawBox uses x1, y1, x2, y2, each tile should be 2x2
-			var/tile_size = 3
+
 			var/tile_x1 = (x) * tile_size
 			var/tile_y1 = (board_height - y + 1) * tile_size
-			var/tile_x2 = tile_x1 + tile_size
-			var/tile_y2 = tile_y1 + tile_size
 
 			var/pawn_height = 1
 			if(letter == "p" || letter == "P")
@@ -297,8 +378,8 @@
 				if (letter == uppertext(letter))
 					src.custom_board.DrawBox(rgb(255, 255, 255), tile_x1 + 1, tile_y1 + 1, tile_x1 + 1, tile_y1 + 1 + pawn_height)
 				else
-					src.custom_board.DrawBox(rgb(0, 0, 0), tile_x1 + 1, tile_y1 + 1, tile_x1 + 1, tile_y1 + 1 + pawn_height)
-			src.icon = custom_board
+					src.custom_board.DrawBox(rgb(0, 0, 0), tile_x1 + 1, tile_y1 + 1, tile_x1 + 1, tile_y1 + 1 + pawn_height)*/
+		src.icon = src.cb
 
 
 	can_access_remotely(mob/user)
@@ -330,7 +411,6 @@
 
 
 	ui_data(mob/user)
-		src.process()
 		. = list()
 		.["pieces"] = src.pieces
 		.["styling"] = src.styling
@@ -385,6 +465,8 @@
 			if("applyGNot")
 				var/gnot = params["gnot"]
 				src.applyGNot(gnot)
+				if(src.use_cb)
+					src.initCustomBoardIcon()
 				. = TRUE
 
 			// Palette actions
@@ -407,9 +489,6 @@
 		. = ..()
 		if(. <= UI_CLOSE || !IN_RANGE(src, user, 10))
 			return UI_CLOSE
-
-	process()
-		src.drawBoardIcon()
 
 	examine(mob/user)
 		. = ..()
@@ -459,13 +538,15 @@
 	chess
 		name = "chess board"
 		desc = "It's a board for playing chess and checkers!"
-
 		New()
 			..()
+
 	New()
 		..()
+		// Store old styling if there is any reason to reset the board
 		styling["oldTileColour1"] = styling["tileColour1"]
 		styling["oldTileColour2"] = styling["tileColour2"]
 
-		src.drawBoardIcon()
+		if(src.use_cb)
+			src.initCustomBoardIcon()
 
