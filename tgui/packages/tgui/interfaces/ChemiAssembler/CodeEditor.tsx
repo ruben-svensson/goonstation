@@ -8,25 +8,40 @@ import { Component, createRef } from 'inferno';
 import { ChemiAssemblerData } from '.';
 
 const LineNumbers = (props, context) => {
-  const [lines, setLines] = useLocalState(context, 'lines', ['test', 'test2', 'test3', '1', '2', '3']);
+  const { data } = useBackend<ChemiAssemblerData>(context);
+  const [lines, setLines] = useLocalState(context, 'lines', ['test', 'test2', 'test3', '1', '2', '3', '3']);
 
   return (
     <Box className="chemiassembler__linenumbers">
-      {lines.map((line, index) => {
-        return (
-          <div className="chemiassembler__linenumbers-line" key={index}>
-            {index + 1}
-          </div>
-        );
-      })}
+      <span
+        className="chemiassembler__linenumbers-cursor"
+        style={{
+          position: 'relative',
+          'margin-top': `${data.pointer * 19 - 19}px`,
+        }}>
+        {'>'}
+      </span>
+      <div className="chemiassembler__linenumbers-lines">
+        {lines.map((line, index) => {
+          return (
+            <div className={`chemiassembler__linenumbers-line`} key={index}>
+              {index + 1}
+            </div>
+          );
+        })}
+      </div>
     </Box>
   );
 };
 
+const codeTemplate = 'var 1 cool\nlbl here\nadd cool sx\nprint "The value of sx is [sx]"\njmp here';
+
 class Code extends Component<any, any> {
   elements = [];
+  activeLine = 0;
 
   editor = (<div className="chemiassembler__codeeditor-code">{this.elements}</div>);
+  plainText = codeTemplate;
 
   convertStringToElements = (string: string) => {
     const { data } = useBackend<ChemiAssemblerData>(this.context);
@@ -51,6 +66,18 @@ class Code extends Component<any, any> {
         altText: 'Subtraction',
       },
       {
+        name: 'mul',
+        altText: 'Multiplication',
+      },
+      {
+        name: 'div',
+        altText: 'Division',
+      },
+      {
+        name: 'mod',
+        altText: 'Modulo',
+      },
+      {
         name: 'lbl',
         altText: 'Label',
       },
@@ -72,7 +99,7 @@ class Code extends Component<any, any> {
     const words = string.split(' ');
 
     // Create array of elements
-    const elements = [];
+    const elements: JSX.Element[] = [];
 
     // Loop through words
     for (let i = 0; i < words.length; i++) {
@@ -135,7 +162,7 @@ class Code extends Component<any, any> {
         elements.push(
           <span
             style={{
-              color: 'cyan',
+              color: 'yellow',
             }}>
             {word}
           </span>
@@ -170,30 +197,36 @@ class Code extends Component<any, any> {
     return elements;
   };
 
+  setActiveLine = (line: number) => {
+    this.activeLine = line;
+  };
+
   constructor(props, context) {
     super(props, context);
+    const { act } = useBackend(this.context);
+
+    act('compile', {
+      program: this.plainText,
+    });
   }
 
   render() {
     return (
-      <Flex className="chemiassembler__codeeditor-code" direction={'column'}>
-        <Flex.Item className="chemiassembler__codeeditor-code-line">
-          {this.convertStringToElements('var 10 foo')}
-        </Flex.Item>
-        <Flex.Item className="chemiassembler__codeeditor-code-line">
-          {this.convertStringToElements('add 40 foo ;comments work too')}
-        </Flex.Item>
-        <Flex.Item className="chemiassembler__codeeditor-code-line">{this.convertStringToElements('')}</Flex.Item>
-        <Flex.Item className="chemiassembler__codeeditor-code-line">
-          {this.convertStringToElements('lbl here')}
-        </Flex.Item>
-        <Flex.Item className="chemiassembler__codeeditor-code-line">
-          {this.convertStringToElements('add 1 tx')}
-        </Flex.Item>
-        <Flex.Item className="chemiassembler__codeeditor-code-line">
-          {this.convertStringToElements('jmp here')}
-        </Flex.Item>
-      </Flex>
+      <div className="chemiassembler__codeeditor-code">
+        {this.plainText.split('\n').map((line, index) => {
+          return (
+            <div
+              onClick={(e) => {
+                // Get letter index on div
+                const target = e.target as HTMLDivElement;
+                const index = target.innerText.length - target.innerText.trimStart().length;
+              }}
+              className="chemiassembler__codeeditor-code-line">
+              {this.convertStringToElements(line)}
+            </div>
+          );
+        })}
+      </div>
     );
   }
 }

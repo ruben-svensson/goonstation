@@ -18,6 +18,14 @@ $terminal-screenborder: #333333;
   padding: 10px;
 }
 
+.chemiassembler__header {
+  margin: 0;
+  margin-bottom: 2px;
+  padding: 2px;
+  padding-left: 4px;
+  background-color: lighten($color: $terminal-dark-brighter, $amount: 5%);
+}
+
 .chemiassembler__window {
   position: absolute;
   top: 10px;
@@ -81,9 +89,19 @@ $terminal-screenborder: #333333;
 
     &-register {
       display: flex;
-      flex-direction: row;
+      flex-direction: column;
       justify-content: space-between;
-      margin-bottom: 5px;
+      margin-bottom: 10px;
+      width: 33%;
+
+      &-name {
+        padding-right: 5px;
+        font-weight: bold;
+      }
+
+      &-value {
+        flex-grow: 1;
+      }
     }
 
     &-variable {
@@ -110,28 +128,66 @@ $terminal-screenborder: #333333;
       flex-direction: row;
       justify-content: space-around;
     }
+  }
+}
 
-    &-reservoir {
-      display: flex;
-      flex-direction: column-reverse;
-      height: 50px;
-      width: 30px;
-      margin: 2px;
-      padding: 2px;
-      border: 1px solid $terminal-screenborder;
-      background-color: $terminal-dark-darker;
-      cursor: pointer;
+.chemiassembler__content-reservoirs {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: space-around;
 
-      &-fill {
+  &-header {
+    position: absolute;
+    // Move it a bit up and to the right
+    margin: -30px 0 0 0px;
+    padding: 5px;
+    background-color: lighten($color: $terminal-dark-brighter, $amount: 5%);
+    box-shadow: 5px 5px 0 0 $terminal-dark-darker;
+  }
+
+  &-reservoir {
+    display: flex;
+    flex-direction: column;
+    height: 40px;
+    margin: 1%;
+    width: 18%;
+    background-color: darken($color: $terminal-dark-darker, $amount: 20%);
+    cursor: pointer;
+
+    &-wrapper {
+      height: 100%;
+      padding: 1px;
+    }
+
+    &-header {
+    }
+
+    &-tank {
+      flex-grow: 1;
+
+      &-reagants {
+        height: 100%;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: row;
+
+        &-reagant {
+          height: 100%;
+        }
       }
+    }
 
-      &-percent {
-        font-size: 0.8em;
-        background-color: $terminal-dark-brighter;
-        color: $terminal-text;
-        text-align: center;
-        padding: 1px;
-      }
+    &-fill {
+    }
+
+    &-percent {
+      font-size: 0.8em;
+      background-color: $terminal-dark-brighter;
+      color: $terminal-text;
+      text-align: center;
+      padding: 1px;
     }
   }
 }
@@ -168,6 +224,8 @@ $terminal-screenborder: #333333;
   border: none;
   background-color: $terminal-dark;
   flex: 1;
+  margin-bottom: 30px;
+  overflow-y: scroll;
 
   &-code {
     padding-top: 2px;
@@ -187,25 +245,49 @@ $terminal-screenborder: #333333;
 }
 
 .chemiassembler__linenumbers {
+  display: flex;
   background-color: $terminal-dark-brighter;
   height: 100%;
   width: 28px;
-  text-align: right;
   padding-right: 2px;
-
+  line-height: 19px;
   box-shadow: 5px 5px 0 0 $terminal-dark-darker;
 
-  &-line {
+  &-cursor {
+    background-color: $terminal-dark-brighter;
     height: 19px;
     line-height: 19px;
-    padding: 0;
-    margin: 0;
+    transition: all 0.2s ease-in-out;
+  }
+
+  &-lines {
+    flex-grow: 1;
+    text-align: right;
+    &-line {
+      height: 19px;
+      line-height: 19px;
+      padding: 0;
+      margin: 0;
+
+      &-active {
+        background-color: $terminal-dark;
+      }
+    }
   }
 }
 
 .chemiassembler__console {
   // Clear textarea
-  border: none;
-  background-color: $terminal-dark;
-  height: 140px;
+  // Apply 5px padding extra padding to bottom
+  padding: 5px 5px 20px 5px;
+  height: 130px;
+
+  &-textarea {
+    height: 100%;
+    border: none;
+    overflow-y: scroll;
+    & > textarea {
+      background-color: $terminal-dark-darker;
+    }
+  }
 }

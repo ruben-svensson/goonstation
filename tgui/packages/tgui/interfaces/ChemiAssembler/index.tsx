@@ -2,12 +2,14 @@ declare const React;
 
 import { Window } from '../../layouts';
 import { useBackend, useLocalState } from '../../backend';
-import { Box, Button, Flex, Stack, TextArea } from '../../components';
+import { Box, Button, Flex, Stack, TextArea, Tooltip } from '../../components';
 
 import { CodeEditor } from './CodeEditor';
 
 type Reservoir = {
-  initial_volume: number;
+  name: string;
+  initVolume: number;
+  totalVolume: number;
 };
 
 export type User = {
@@ -28,7 +30,8 @@ export type ChemiAssemblerData = {
   program: string[];
   pointer: number;
   running: boolean;
-  active_user: User;
+  console_output: string[];
+  active_user: User; // ckey
 };
 
 const SIZE = {
@@ -51,6 +54,8 @@ export const ChemiAssembler = (props, context) => {
             <CodeEditor />
             <LineSeperator direction={'horizontal'} />
             <Console />
+            <LineSeperator direction={'horizontal'} />
+            <Reservoirs />
           </Box>
           <LineSeperator direction={'vertical'} />
           <Information />
@@ -66,15 +71,17 @@ const Information = (props, context) => {
   return (
     <Box className="chemiassembler__content-right">
       <Flex direction={'column'}>
-        <h3>Registers</h3>
-        {Object.keys(data.registers).map((register) => {
-          return (
-            <Flex.Item className="chemiassembler__content-right-register" key={register}>
-              <Box className="chemiassembler__content-right-register-name">{register}</Box>
-              <Box className="chemiassembler__content-right-register-value">{data.registers[register]}</Box>
-            </Flex.Item>
-          );
-        })}
+        <h3 className="chemiassembler__header">Registers</h3>
+        <Flex justify="space-between">
+          {Object.keys(data.registers).map((register) => {
+            return (
+              <Flex.Item className="chemiassembler__content-right-register" key={register}>
+                <Box className="chemiassembler__content-right-register-name">{register}: </Box>
+                <Box className="chemiassembler__content-right-register-value">{data.registers[register]}</Box>
+              </Flex.Item>
+            );
+          })}
+        </Flex>
       </Flex>
       <LineSeperator direction={'horizontal'} />
       <Flex
@@ -83,7 +90,7 @@ const Information = (props, context) => {
           'flex-grow': 1,
         }}>
         <Flex.Item>
-          <h3>Variables</h3>
+          <h3 className="chemiassembler__header">Variables: {Object.keys(data.variables)}</h3>
         </Flex.Item>
         {Object.keys(data.variables).map((variable, i) => {
           return (
@@ -97,20 +104,7 @@ const Information = (props, context) => {
       <LineSeperator direction={'horizontal'} />
       <Flex direction={'column'}>
         <Flex.Item>
-          <h3>Reservoirs</h3>
-        </Flex.Item>
-        <Flex.Item grow>
-          <Flex className="chemiassembler__content-right-reservoirs">
-            {data.reservoirs.map((reservoir, i) => {
-              return <ReservoirTank key={i} index={i} />;
-            })}
-          </Flex>
-        </Flex.Item>
-      </Flex>
-      <LineSeperator direction={'horizontal'} />
-      <Flex direction={'column'}>
-        <Flex.Item>
-          <h3>Runtime Info</h3>
+          <h3 className="chemiassembler__header">Runtime Info</h3>
         </Flex.Item>
         <Flex.Item className="chemiassembler__content-right-pointer">
           <Box className="chemiassembler__content-right-pointer-name">Pointer: </Box>
@@ -129,6 +123,23 @@ const Information = (props, context) => {
   );
 };
 
+const Reservoirs = (props, context) => {
+  const { act, data } = useBackend<ChemiAssemblerData>(context);
+  /** { data.reservoirs.map((reservoir, i) => {
+            return <ReservoirTank key={i} index={i} />;
+          })} */
+  return (
+    <Flex direction={'row'}>
+      <h3 className="chemiassembler__content-reservoirs-header" style={{}}>
+        Reservoirs
+      </h3>
+      <Flex.Item grow>
+        <Flex className="chemiassembler__content-reservoirs">{'[Fill this space with good looking reservoirs]'}</Flex>
+      </Flex.Item>
+    </Flex>
+  );
+};
+
 type ReservoirTankProps = {
   index: number;
 };
@@ -138,8 +149,11 @@ const ReservoirTank = ({ index }: ReservoirTankProps, context) => {
 
   const reservoir = data.reservoirs[index];
 
-  const fill = 50;
-  const color = reservoir === null ? 'red' : 'green';
+  let fill = 0;
+  if (reservoir) {
+    fill = (reservoir.totalVolume / reservoir.initVolume) * 100;
+  }
+  const color = reservoir === null ? '' : 'green';
 
   return (
     <Flex.Item
@@ -148,29 +162,49 @@ const ReservoirTank = ({ index }: ReservoirTankProps, context) => {
         if (reservoir === null) {
           // Insert
           act('insert_reservoir', {
-            user: data.active_user,
+            ckey: data.active_user.ckey,
             index: index + 1,
           });
         } else {
           // Eject
           act('eject_reservoir', {
-            user: data.active_user,
+            ckey: data.active_user.ckey,
             index: index + 1,
           });
         }
       }}
-      className="chemiassembler__content-right-reservoir">
-      <div
-        style={{
-          'background-color': color || 'black',
-          'height': `${fill}%`,
-          'width': `100%`,
-        }}
-        className="chemiassembler__content-right-reservoir-fill"
-      />
-      {'#' + index}
-      <span className="chemiassembler__content-right-reservoir-percent">{`${fill > 0 ? `${fill}` : 'EMP'}`}</span>
+      className="chemiassembler__content-reservoirs-reservoir">
+      <Flex direction="column" className="chemiassembler__content-reservoirs-reservoir-wrapper">
+        <Flex.Item className="chemiassembler__content-reservoirs-reservoir-header">{`Res: ${index + 1}`}</Flex.Item>
+        <Flex.Item className="chemiassembler__content-reservoirs-reservoir-tank">
+          <Flex className="chemiassembler__content-reservoirs-reservoir-tank-reagants">
+            <ResReagant name={'Blood'} color={'red'} fill={10} />
+            <ResReagant name={'Milk'} color={'white'} fill={20} />
+            <ResReagant name={'Tubby custard'} color={'pink'} fill={40} />
+          </Flex>
+        </Flex.Item>
+      </Flex>
     </Flex.Item>
+  );
+};
+
+type ResReagantProps = {
+  name: string;
+  fill: number;
+  color: string;
+};
+
+const ResReagant = ({ fill, color, name }: ResReagantProps, context) => {
+  return (
+    <Tooltip position="top" content={`${fill}u ${name}`}>
+      <Box
+        className="chemiassembler__content-reservoirs-reservoir-tank-reagants-reagant"
+        style={{
+          'width': `${fill}%`,
+          'background-color': color,
+        }}
+      />
+    </Tooltip>
   );
 };
 
@@ -233,7 +267,7 @@ type LineSepearatorProps = {
 export const LineSeperator = ({ direction }: LineSepearatorProps, context) => {
   const symbol = direction === 'vertical' ? '#' : '-';
 
-  // Repeat the symbol 100 times
+  // Repeat the symbol 100 timeregisters
   const line = symbol.repeat(400);
   const lineArray = Array.from(line);
   return (
@@ -245,7 +279,23 @@ export const LineSeperator = ({ direction }: LineSepearatorProps, context) => {
 
 export const Console = (props, context) => {
   const { act, data } = useBackend<ChemiAssemblerData>(context);
+  const [program, setProgram] = useLocalState(context, 'program', data.raw_program || '');
   const [consoleOutput, setConsoleOutput] = useLocalState(context, 'consoleOutput', '');
 
-  return <TextArea className="chemiassembler__console" value={data.reservoirs[2].initial_volume} />;
+  return (
+    <Flex direction={'column'}>
+      <Flex.Item>
+        <h3 className="chemiassembler__content-reservoirs-header">Console</h3>
+      </Flex.Item>
+      <Flex.Item grow className="chemiassembler__console">
+        <Flex direction={'column'} className="chemiassembler__console-textarea">
+          {data.console_output.reverse().map((line, i) => (
+            <Flex.Item key={i}>
+              <span>{line}</span>
+            </Flex.Item>
+          ))}
+        </Flex>
+      </Flex.Item>
+    </Flex>
+  );
 };
