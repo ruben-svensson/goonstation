@@ -115,7 +115,7 @@ const OverlaySvg = ({ pieceRecords }: OverlaySvgRendererProps, context) => {
   const { pieces, currentUser } = data;
   const { lock } = data.boardInfo;
 
-  const { tileColour1, tileColour2 } = data.styling;
+  const { tileColor1, tileColor2 } = data.styling;
   const width = 100 / data.boardInfo.width;
   const height = 100 / data.boardInfo.height;
   const board = document.getElementsByClassName('boardgame__board-inner')[0];
