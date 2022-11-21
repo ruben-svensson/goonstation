@@ -1,3 +1,14 @@
+// Defines, don't change these unless you have a good reason to do so.
+
+#define MAP_TEXT_MOVE 0
+#define MAP_TEXT_CAPTURE 1
+
+#define PATTERN_CHECKERBOARD "checkerboard"
+
+/**
+ * # Boardgame
+ */
+
 /obj/item/boardgame
 	name = "game board"
 	desc = "A generic game board?"
@@ -16,8 +27,13 @@
 	)
 
 	var/game = "chess"
-	var/pattern = "checkerboard"
+	var/pattern = PATTERN_CHECKERBOARD
 
+	/**
+	 * Designate the size of the board
+	 * Don't forget to update styling["aspectRatio"]
+	 * if you want to keep the board autoscaling
+	 */
 	var/board_width = 8
 	var/board_height = 8
 
@@ -36,16 +52,36 @@
 
 	var/lock_pieces_to_tile = TRUE // If true, pieces will be locked to the center of the tile they're on, otherwise they'll be free to move around
 
-	/// Apply custom styling, matches both in dm and tgui releated code
+	/**
+	 * # Gameboard styling
+	 *
+	 * Give the boardgame a custom look by changing these variables.
+	 */
 	var/list/styling = list(
 		"tileColour1" = rgb(240, 217, 181),
 		"tileColour2" = rgb(181, 136, 99),
 		"border" = rgb(131, 100, 74),
-		"aspectRatio" = 1, // 1 to 1 ratio, used for auto resizing, FALSE to disable
-		"useNotations" = TRUE, // Whether to use chess-like notation or not
+		/**
+		 * Aspect ratio of the board. This is the ratio of the width to the height.
+		 * 1 = 1:1
+		 * 2 = 2:1
+		 * 0.5 = 1:2
+		 */
+		"aspectRatio" = 1,
+		 /**
+		  * Whether to use chess-like notation around the board.
+		  *    a b c d...
+			*  1 ♜♞♝♛
+			*  2 ♙♙♙♙
+			*  3
+			*  ...
+		  */
+		"useNotations" = TRUE,
 	)
 
-	// Game state data
+	/**
+	 * # Gameboard Data and State
+	 */
 	var/list/active_users = list()
 	// Pieces layer
 	var/list/pieces = list()
@@ -58,10 +94,16 @@
 
 	// Start adding new boards here vvv
 
+	longchess
+		name = "long chess board"
+		desc = "It's a board for playing chess and checkers!"
+		board_width = 16
 
+		New()
+			..()
+			src.styling["aspectRatio"] = 2
 
 	// End adding new boards here ^^^
-
 	New()
 		..()
 		// Store old styling if there is any reason to reset the board
@@ -117,7 +159,7 @@
 			id = "[rand(1000, 99999)]"
 		return id
 
-	proc/createPiece(var/code, var/x, var/y)
+	proc/createPiece(code, x, y)
 		var/id = src.uniquePieceId()
 		src.pieces[id] = list(
 			"code" = code,
@@ -132,32 +174,35 @@
 		playsound(src.loc, src.sounds["move"], 30, 1)
 
 
-	proc/setPalette(var/ckey, var/code)
+	proc/setPalette(ckey, code)
+		// Clear selected piece
+		if(src.active_users[ckey]["selected"])
+			src.active_users[ckey]["selected"] = null
 		src.active_users[ckey]["palette"] = code
 
-	proc/clearPalette(var/ckey)
+	proc/clearPalette(ckey)
 		src.active_users[ckey]["palette"] = null
 
-	proc/getActivePalette(var/ckey)
+	proc/getActivePalette(ckey)
 		return src.active_users[ckey]["palette"]
 
-	proc/getPieceById(var/id)
+	proc/getPieceById(id)
 		return src.pieces[id]
 
-	proc/removePiece(var/piece)
+	proc/removePiece(piece)
 		if(piece)
 			src.pieces -= piece
 
 
-	proc/removePieceById(var/id)
+	proc/removePieceById(id)
 		src.removePiece(src.getPieceById(id))
 
-	proc/removePieceAt(var/x, var/y)
+	proc/removePieceAt(x, y)
 		for (var/piece in src.pieces)
 			if (src.pieces[piece]["x"] == x && src.pieces[piece]["y"] == y)
 				src.removePiece(piece)
 
-	proc/selectPawn(ckey, pId)
+	proc/selectPiece(ckey, pId)
 		src.active_users[ckey]["selected"] = pId
 		if (!pId)
 			return
@@ -167,7 +212,7 @@
 
 
 
-	proc/deselectPawn(ckey)
+	proc/deselectPiece(ckey)
 		// Check if ckey exists
 		if (ckey in src.active_users)
 			// Check if the user has a selected piece
@@ -177,10 +222,11 @@
 				src.active_users[ckey]["selected"] = null
 
 	proc/getPieceAt(x, y)
+
 		for (var/id in src.pieces)
-			var/list/pawn = src.pieces[id]
-			if (pawn["x"] == x && pawn["y"] == y)
-				return pawn
+			var/list/piece = src.pieces[id]
+			if (piece["x"] == x && piece["y"] == y)
+				return piece
 		return null
 
 	proc/placePalette(ckey, x, y)
@@ -204,19 +250,9 @@
 
 		return
 
-	proc/movePiece(pawn, x, y)
-		// Move pawn
-
-	proc/placeSelectedPawn(ckey, x, y)
-		// Check if out of bounds
+	proc/movePiece(piece, x, y)
+		// Move piece
 		if (x < 0 || x >= src.board_width || y < 0 || y >= src.board_height)
-			return
-
-		// Check if the user has a selected piece
-		var/pawn = src.getPieceById(src.active_users[ckey]["selected"])
-		if (!pawn)
-			// How can you move a piece if you don't have one selected?
-			// src.deselectPawn(ckey)
 			return
 
 		var/newX = x
@@ -226,54 +262,76 @@
 			newX = round(x)
 			newY = round(y)
 
-		var/oldX = pawn["x"]
-		var/oldY = pawn["y"]
+		var/oldX = piece["x"]
+		var/oldY = piece["y"]
+
 		// Update old pos
-		pawn["prevX"] = newX
-		pawn["prevY"] = newY
-		pawn["lastSelected"] = pawn["selected"]
+		piece["prevX"] = newX
+		piece["prevY"] = newY
+		piece["lastSelected"] = piece["selected"]
 
+		// Move the piece to the new tile
+		piece["x"] = newX
+		piece["y"] = newY
 
+		var/moverName = piece["selected"]["name"]
+
+		src.speakMapText(piece, oldX, oldY, newX, newY, MAP_TEXT_MOVE, moverName)
+		playsound(src.loc, src.sounds["move"], 30, 1)
+
+	proc/speakMapText(piece, newX, newY, oldX, oldY, mapTextType, captured=null)
 		var/map_text = ""
-		var/moverName = pawn["selected"]["name"]
-		var/prevPosString = src.posToNotationString(newX, newX)
+		if(!piece) return // If the piece doesn't exist, return
+		if(!piece["selected"]) return // If the piece isn't selected, return
+		var/moverName = piece["selected"]["name"]
+		var/prevPosString = src.posToNotationString(newX, newY)
 		var/newPosString = src.posToNotationString(oldX, oldY)
 
-		// Check if the pawn is moving to a tile that is already occupied
-		var/occupied = src.getPieceAt(newX, newX)
-
-		if (occupied)
-			// Check if the pawn is moving to a tile that is occupied by an enemy
-			if (pawn != occupied)
-				map_text = "[moverName] moves [prevPosString] to [newPosString] and captures [occupied["code"]]!"
-				playsound(src.loc, src.sounds["capture"], 30, 1)
-				src.removePieceAt(newX, newY)
-			else
-				// The space is occupied by itself
-				src.deselectPawn()
-				return
-		else
-			// The space is not occupied
-			src.move
-			map_text = "[moverName] moves [prevPosString] to [newPosString]!"
-			playsound(src.loc, src.sounds["move"], 30, 1)
+		switch(mapTextType)
+			if(MAP_TEXT_MOVE)
+				map_text = "[moverName] moves [prevPosString] to [newPosString]!"
+			if(MAP_TEXT_CAPTURE)
+				if(captured)
+					map_text = "[moverName] moves [prevPosString] to [newPosString] and captures [captured["code"]]!"
 
 		var/map_text_final = make_chat_maptext(src, map_text, "color: #A8E9F0;", alpha = 150, time = 8)
 		for (var/mob/O in hearers(src))
 			O.show_message(assoc_maptext = map_text_final)
 
+	proc/placeSelectedPiece(ckey, x, y)
+		// Check if out of bounds
+		if (x < 0 || x >= src.board_width || y < 0 || y >= src.board_height)
+			return
 
-		// Move the pawn to the new tile
-		pawn["x"] = posX
-		pawn["y"] = posY
+		// Check if the user has a selected piece
+		var/piece = src.getPieceById(src.active_users[ckey]["selected"])
+		if (!piece)
+			// How can you move a piece if you don't have one selected?
+			// src.deselectPiece(ckey)
+			return
 
-		// Deselect the pawn
-		src.deselectPawn(ckey)
+		// Check if the pawn is moving to a tile that is already occupied
+		var/occupied = src.getPieceAt(x, y)
 
-	proc/capturePiece(var/pawn)
+		if (occupied)
+			// Check if the piece is moving to a tile that is occupied by an enemy
+			if (piece != occupied)
+				// Capture the piece
+				src.capturePiece(occupied, piece)
+		else
+			// The space is not occupied, move the piece
+			src.movePiece(piece, x, y)
+
+		// Deselect the piece
+		src.deselectPiece(ckey)
+
+	proc/capturePiece(piece, capturedby)
 		//src.drawBoardIcon()
+		if(!piece) return
 		playsound(src.loc, src.sounds["capture"], 30, 1)
-		src.removePiece(pawn["id"])
+		src.removePiece(piece)
+		if(capturedby)
+			src.speakMapText(capturedby, capturedby["x"], capturedby["y"], capturedby["prevX"], capturedby["prevY"], MAP_TEXT_CAPTURE, piece)
 
 
 	proc/swapCustomAndDefault()
@@ -282,12 +340,12 @@
 		else
 			src.swapToCustomBoardStyle()
 
+
 	proc/swapToCustomBoardStyle()
 		src.icon = src.cb
 		src.initCustomBoardIcon()
 
 	proc/swapToDefaultBoardStyle()
-
 		src.icon = 'icons/obj/items/gameboard.dmi'
 		src.icon_state = "chessboard"
 
@@ -497,18 +555,18 @@
 			if("pawnRemoveHeld")
 				var/ckey = params["ckey"]
 				var/id = src.active_users[ckey]["selected"]
-				src.deselectPawn(ckey)
+				src.deselectPiece(ckey)
 				src.removePiece(id)
 				. = TRUE
 			if("pawnSelect")
 				var/ckey = params["ckey"]
 				var/pId = params["pId"]
-				src.selectPawn(ckey, pId)
+				src.selectPiece(ckey, pId)
 				//src.removePiece
 				. = TRUE
 			if("pawnDeselect")
 				var/ckey = params["ckey"]
-				src.deselectPawn(ckey)
+				src.deselectPiece(ckey)
 				. = TRUE
 			if("pawnPlace")
 				// Place the pawn on the board currently selected
@@ -516,7 +574,7 @@
 				var/x = text2num(params["x"])
 				var/y = text2num(params["y"])
 				if(src.active_users[ckey]["selected"])
-					src.placeSelectedPawn(ckey, x, y)
+					src.placeSelectedPiece(ckey, x, y)
 				else
 					src.placePalette(ckey, x, y)
 				. = TRUE
@@ -565,11 +623,9 @@
 		return src.attack_hand(user)
 
 	attackby(obj/item/W, mob/user, params)
+		/// Check if the board is hit by a paint can
 		if(istype(W, /obj/item/paint_can))
 			var/obj/item/paint_can/can = W
-
-			//Check which hand the paint can is in, style tileColour1 or tileColour2
-			// based on that
 
 			var/tileColour = "tileColour1"
 			if(user.l_hand == can)
@@ -587,11 +643,12 @@
 
 			//Apply the paint to the src.styling[tileColour]
 			src.styling[tileColour] = can.paint_color
+			// Reset filter to default, use custom styled board instead
+			src.remove_filter("paint_color")
 			can.uses--
-
 		return
 
+#undef MAP_TEXT_MOVE
+#undef MAP_TEXT_CAPTURE
 
-
-
-
+#undef PATTERN_CHECKERBOARD
