@@ -194,7 +194,7 @@ const GenerateSvgBoard = ({ preset, size }: GenerateSvgBoardProps, context) => {
 
   const { data } = useBackend<BoardgameData>(context);
   const { width } = data.boardInfo;
-  const { tileColour1, tileColour2 } = data.styling;
+  const { tileColor1, tileColor2 } = data.styling;
 
   const allPieces = fetchPieces();
   const codeRecords = fenCodeRecordFromPieces(allPieces);
@@ -206,10 +206,10 @@ const GenerateSvgBoard = ({ preset, size }: GenerateSvgBoardProps, context) => {
   return (
     <svg width="80" height="80" viewBox="0 0 80 80">
       <pattern id="pattern-checkerboard-preset" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-        <rect width="10" height="10" fill={tileColour1} />
-        <rect x="10" y="10" width="10" height="10" fill={tileColour1} />
-        <rect x="10" width="10" height="10" fill={tileColour2} />
-        <rect y="10" width="10" height="10" fill={tileColour2} />
+        <rect width="10" height="10" fill={tileColor1} />
+        <rect x="10" y="10" width="10" height="10" fill={tileColor1} />
+        <rect x="10" width="10" height="10" fill={tileColor2} />
+        <rect y="10" width="10" height="10" fill={tileColor2} />
       </pattern>
       <rect width="80" height="80" fill="url(#pattern-checkerboard-preset)" />
 

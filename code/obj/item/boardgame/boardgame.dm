@@ -1,9 +1,27 @@
-// Defines, don't change these unless you have a good reason to do so.
+/**
+ * Defines, don't change these unless you have a good reason to do so.
+ * Makes it easier to change the values later on and avoids typos.
+ *
+ * Most of these values are shared by both dm and tgui, so check both
+ * areas when changing them.
+ */
 
 #define MAP_TEXT_MOVE 0
 #define MAP_TEXT_CAPTURE 1
 
 #define PATTERN_CHECKERBOARD "checkerboard"
+
+#define SOUND_MOVE 0
+#define SOUND_CAPTURE 1
+#define SOUND_NEWGAME 2
+
+#define STYLING_TILECOLOR1 "tileColor1"
+#define STYLING_TILECOLOR2 "tileColor2"
+#define STYLING_OLDTILECOLOR1 "oldTileColor1"
+#define STYLING_OLDTILECOLOR2 "oldTileColor2"
+#define STYLING_BORDER "border"
+#define STYLING_ASPECT "aspectRatio"
+#define STYLING_NOTATIONS "useNotations"
 
 /**
  * # Boardgame
@@ -21,9 +39,9 @@
 	stamina_cost = 20
 
 	var/list/sounds = list(
-		"move" = 'sound/impact_sounds/Wood_Tap.ogg',
-		"capture" = 'sound/effects/capture.ogg',
-		"newgame" = 'sound/effects/sine_boop.ogg',
+		SOUND_MOVE = 'sound/impact_sounds/Wood_Tap.ogg',
+		SOUND_CAPTURE = 'sound/effects/capture.ogg',
+		SOUND_NEWGAME = 'sound/effects/sine_boop.ogg',
 	)
 
 	var/game = "chess"
@@ -58,16 +76,16 @@
 	 * Give the boardgame a custom look by changing these variables.
 	 */
 	var/list/styling = list(
-		"tileColour1" = rgb(240, 217, 181),
-		"tileColour2" = rgb(181, 136, 99),
-		"border" = rgb(131, 100, 74),
+		STYLING_TILECOLOR1 = rgb(240, 217, 181),
+		STYLING_TILECOLOR2 = rgb(181, 136, 99),
+		STYLING_BORDER = rgb(131, 100, 74),
 		/**
 		 * Aspect ratio of the board. This is the ratio of the width to the height.
 		 * 1 = 1:1
 		 * 2 = 2:1
 		 * 0.5 = 1:2
 		 */
-		"aspectRatio" = 1,
+		STYLING_ASPECT = 1,
 		 /**
 		  * Whether to use chess-like notation around the board.
 		  *    a b c d...
@@ -76,7 +94,7 @@
 			*  3
 			*  ...
 		  */
-		"useNotations" = TRUE,
+		STYLING_NOTATIONS = TRUE,
 	)
 
 	/**
@@ -101,21 +119,21 @@
 
 		New()
 			..()
-			src.styling["aspectRatio"] = 2
+			src.styling[STYLING_ASPECT] = 2
 
 	// End adding new boards here ^^^
 	New()
 		..()
 		// Store old styling if there is any reason to reset the board
-		styling["oldTileColour1"] = styling["tileColour1"]
-		styling["oldTileColour2"] = styling["tileColour2"]
+		styling[STYLING_OLDTILECOLOR1] = styling[STYLING_TILECOLOR1]
+		styling[STYLING_OLDTILECOLOR2] = styling[STYLING_TILECOLOR2]
 
 		if(src.use_cb)
 			src.initCustomBoardIcon()
 
 	proc/resetColorStyling()
-		styling["tileColour1"] = styling["oldTileColour1"]
-		styling["tileColour2"] = styling["oldTileColour2"]
+		styling[STYLING_TILECOLOR1] = styling[STYLING_OLDTILECOLOR1]
+		styling[STYLING_TILECOLOR2] = styling[STYLING_OLDTILECOLOR2]
 
 	proc/posToNotationString(x, y)
 		// Convert a position to a chess notation string
@@ -150,7 +168,7 @@
 				// Increase the index by 1
 				piece_index += 1
 
-		playsound(src.loc, src.sounds["newgame"], 30, 1)
+		playsound(src.loc, src.sounds[SOUND_NEWGAME], 30, 1)
 
 	proc/uniquePieceId()
 		// create a unique random id for a piece when adding it to the board
@@ -277,7 +295,7 @@
 		var/moverName = piece["selected"]["name"]
 
 		src.speakMapText(piece, oldX, oldY, newX, newY, MAP_TEXT_MOVE, moverName)
-		playsound(src.loc, src.sounds["move"], 30, 1)
+		playsound(src.loc, src.sounds[SOUND_MOVE], 30, 1)
 
 	proc/speakMapText(piece, newX, newY, oldX, oldY, mapTextType, captured=null)
 		var/map_text = ""
@@ -328,7 +346,7 @@
 	proc/capturePiece(piece, capturedby)
 		//src.drawBoardIcon()
 		if(!piece) return
-		playsound(src.loc, src.sounds["capture"], 30, 1)
+		playsound(src.loc, src.sounds[SOUND_CAPTURE], 30, 1)
 		src.removePiece(piece)
 		if(capturedby)
 			src.speakMapText(capturedby, capturedby["x"], capturedby["y"], capturedby["prevX"], capturedby["prevY"], MAP_TEXT_CAPTURE, piece)
@@ -352,9 +370,9 @@
 	proc/drawTile(x, y, updateIcon = FALSE)
 		if(!src.use_cb) return
 
-		var/usecolor = src.styling["tileColour1"]
+		var/usecolor = src.styling[STYLING_TILECOLOR1]
 		if ((x + y) % 2 == 0)
-			usecolor = src.styling["tileColour2"]
+			usecolor = src.styling[STYLING_TILECOLOR2]
 
 		// bottom left corner of the tile
 		var/x1 = x * src.cb_tsize - (src.cb_pad / 2)
@@ -627,11 +645,11 @@
 		if(istype(W, /obj/item/paint_can))
 			var/obj/item/paint_can/can = W
 
-			var/tileColour = "tileColour1"
+			var/tileColour = STYLING_TILECOLOR1
 			if(user.l_hand == can)
-				tileColour = "tileColour1"
+				tileColour = STYLING_TILECOLOR1
 			else if(user.r_hand == can)
-				tileColour = "tileColour2"
+				tileColour = STYLING_TILECOLOR2
 			else
 				boutput(user, "<span class='warning'>You need to hold the paint can in your hand to use it!</span>")
 				return
@@ -652,3 +670,15 @@
 #undef MAP_TEXT_CAPTURE
 
 #undef PATTERN_CHECKERBOARD
+
+#undef SOUND_MOVE
+#undef SOUND_CAPTURE
+#undef SOUND_NEWGAME
+
+#undef STYLING_TILECOLOR1
+#undef STYLING_TILECOLOR2
+#undef STYLING_OLDTILECOLOR1
+#undef STYLING_OLDTILECOLOR2
+#undef STYLING_BORDER
+#undef STYLING_ASPECT
+#undef STYLING_NOTATIONS

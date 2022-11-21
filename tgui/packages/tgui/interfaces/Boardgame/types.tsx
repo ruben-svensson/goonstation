@@ -12,8 +12,8 @@ export type BoardgameData = {
     lock: boolean;
   };
   styling: {
-    tileColour1: string;
-    tileColour2: string;
+    tileColor1: string;
+    tileColor2: string;
     border: string;
     aspectRatio: number;
     useNotations: boolean;

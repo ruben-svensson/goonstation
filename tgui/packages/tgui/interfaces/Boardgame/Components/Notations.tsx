@@ -14,7 +14,7 @@ export const Notations = ({ direction }: NotationsProps, context) => {
   const { boardInfo } = data;
   const { height, width } = boardInfo;
   const { currentUser } = data;
-  const { tileColour1, tileColour2, border } = data.styling;
+  const { tileColor1, tileColor2, border } = data.styling;
   const [flip, setFlip] = useLocalState(context, 'flip', false);
   let chars = 'abcdefghijklmnopqrstuvwxyz'.split('').slice(0, width);
 
@@ -47,8 +47,8 @@ export const Notations = ({ direction }: NotationsProps, context) => {
         }
       }}
       style={{
-        'background-color': border || tileColour2,
-        'color': tileColour1,
+        'background-color': border || tileColor2,
+        'color': tileColor1,
       }}
       className={classes(['boardgame__notations', notationDirectionClass])}>
       {Array.from(Array(direction === 'vertical' ? height : width).keys()).map((i) => {
