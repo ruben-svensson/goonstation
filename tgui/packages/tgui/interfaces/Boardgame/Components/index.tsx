@@ -1,6 +1,7 @@
-import { FenCodeSettings } from './FenCodeSettings';
+import { ConfigModal } from './ConfigModal';
 import { Piece } from './Piece';
 import { Notations } from './Notations';
 import { HeldPieceRenderer } from './HeldPieceRenderer';
+import { PieceDrawer } from './PieceDrawer';
 
-export { FenCodeSettings, Notations, Piece, HeldPieceRenderer };
+export { ConfigModal, Notations, Piece, HeldPieceRenderer, PieceDrawer };

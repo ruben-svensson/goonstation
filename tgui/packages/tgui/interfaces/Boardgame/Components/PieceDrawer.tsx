@@ -1,9 +1,9 @@
 declare const React;
 
 import { useBackend, useLocalState } from '../../../backend';
-import { BoardgameData } from '../types';
-import { Piece } from './';
-import { sets } from '../Pieces/sets';
+import { BoardgameData } from '../utils/types';
+import { Piece } from '.';
+import { sets } from '../games/sets';
 import { Box, Button, Flex } from '../../../components';
 
 export const PieceDrawer = (orps, context) => {

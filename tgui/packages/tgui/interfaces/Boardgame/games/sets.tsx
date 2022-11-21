@@ -1,9 +1,13 @@
-import { getPiecesByGame, PieceType } from '.';
+import { getPiecesByGame, PieceType } from './pieces';
 
 export type PieceSet = {
   name: string;
   pieces: PieceType[];
 };
+
+/**
+ * A collection of sets to be used by the palette drawer
+ */
 
 export const sets: PieceSet[] = [];
 

@@ -1,4 +1,6 @@
-import chessPieces from './chess';
+import chess from './chess';
+import draughts from './draughts';
+
 export type PieceType = {
   fenCode: string;
   name: string;
@@ -8,7 +10,8 @@ export type PieceType = {
 
 const pieces: PieceType[] = [];
 
-pieces.push(...chessPieces);
+pieces.push(...chess.pieces);
+pieces.push(...draughts.pieces);
 
 export const getPiece = (fenCode: string, game: string) => {
   return pieces.find((piece) => piece.fenCode === fenCode && piece.game === game);

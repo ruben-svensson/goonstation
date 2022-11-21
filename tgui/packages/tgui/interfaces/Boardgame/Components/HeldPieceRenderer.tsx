@@ -1,18 +1,16 @@
 declare const React;
 
-import { fenCodeRecordFromPieces, fetchPieces, PieceType } from '../Pieces';
+import { fenCodeRecordFromPieces, fetchPieces, PieceType } from '../games/pieces';
 import { Box } from '../../../components';
-import { BoardgameData } from '../types';
+import { BoardgameData } from '../utils/types';
 import { useBackend, useLocalState } from '../../../backend';
+import { STATES } from '../utils/config';
 
 export const HeldPieceRenderer = (_, context) => {
   const { act, data } = useBackend<BoardgameData>(context);
   const { currentUser } = data;
 
-  const [mouseCoords, setMouseCoords] = useLocalState<{
-    x: number;
-    y: number;
-  }>(context, 'mouseCoords', { x: 0, y: 0 });
+  const [mouseCoords] = STATES(context).mouseCoords;
 
   const code = currentUser?.palette || currentUser.selected?.code;
 

@@ -9,6 +9,7 @@
 		..()
 
 	movePiece(piece, x, y)
-		// Randomize the pieces position
+		..()
+		// Randomize the pieces position instead of being normal
 		piece["x"] = rand(0, board_width)
 		piece["y"] = rand(0, board_height)

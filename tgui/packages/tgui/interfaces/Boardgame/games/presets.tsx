@@ -1,6 +1,7 @@
 import { Component, InfernoNode, VNode } from 'inferno';
-import chessPresets from './chess';
-import draughtsPresets from './draughts';
+import chess from './chess';
+import draughts from './draughts';
+import draughtsPresets from './draughts/presets';
 
 /* eslint-disable max-len */
 export type PresetType = {
@@ -17,8 +18,8 @@ export type PresetType = {
 
 export const presets: PresetType[] = [];
 
-presets.push(...chessPresets);
-presets.push(...draughtsPresets);
+presets.push(...chess.presets);
+presets.push(...draughts.presets);
 
 export const getPresetsBySize = (width: number, height: number): PresetType[] => {
   return presets.filter((preset) => preset.boardWidth === width && preset.boardHeight === height);

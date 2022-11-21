@@ -1,9 +1,9 @@
 declare const React;
 
-import { flip } from '@popperjs/core';
+import { flip, hide } from '@popperjs/core';
 import { useBackend, useLocalState } from '../../../backend';
-import { fenCodeRecordFromPieces, fetchPieces, PieceType } from '../Pieces';
-import { BoardgameData } from '../types';
+import { fenCodeRecordFromPieces, fetchPieces, PieceType } from '../games/pieces';
+import { BoardgameData } from '../utils/types';
 import { CheckerBoard } from './checkerboard';
 
 export type BoardPattern = 'checkerboard' | 'hexagon' | 'go';
@@ -27,6 +27,8 @@ export const Pattern = ({ pattern }: PatternProps, context) => {
   const pieceRecords = fenCodeRecordFromPieces(fetchPieces());
 
   const [flip] = useLocalState(context, 'flip', false);
+
+  const [zoom, setZoom] = useLocalState(context, 'zoom', 1);
 
   const [, setTranslateCoords] = useLocalState<{
     x: number;
@@ -99,9 +101,38 @@ export const Pattern = ({ pattern }: PatternProps, context) => {
       height="100%">
       <PatternToUse pattern={pattern} />
       <PiecesSvgRenderer pieceRecords={pieceRecords} />
-      <OverlaySvg pieceRecords={pieceRecords} />
+      <NameOverlaySvg pieceRecords={pieceRecords} />
+      <SelectGuideSvg />
     </svg>
   );
+};
+
+const SelectGuideSvg = (_props, context) => {
+  const { data } = useBackend<BoardgameData>(context);
+
+  const [translateCoords, setTranslateCoords] = useLocalState<{
+    x: number;
+    y: number;
+  }>(context, 'translateCoords', { x: 0, y: 0 });
+
+  const [tileSize, setTileSize] = useLocalState(context, 'tileSize', {
+    width: 50,
+    height: 50,
+  });
+
+  const selectedPiece = data.currentUser?.selected;
+
+  if (!selectedPiece) return null;
+
+  // Use selectedPiece as key in pieces
+
+  const x1 = 0 * tileSize.width + tileSize.width / 2;
+  const y1 = 0 * tileSize.height + tileSize.height / 2;
+
+  const x2 = translateCoords.x * tileSize.width + tileSize.width / 2;
+  const y2 = translateCoords.y * tileSize.height + tileSize.height / 2;
+
+  return selectedPiece && <text x={x1} y={y1}>{`${JSON.stringify(selectedPiece)}`}</text>;
 };
 
 type OverlaySvgRendererProps = {
@@ -109,7 +140,7 @@ type OverlaySvgRendererProps = {
 };
 
 // Draw names of player moving the pieces, lines between moved pieces and the piece being moved
-const OverlaySvg = ({ pieceRecords }: OverlaySvgRendererProps, context) => {
+const NameOverlaySvg = ({ pieceRecords }: OverlaySvgRendererProps, context) => {
   const { act, data } = useBackend<BoardgameData>(context);
   const [flip] = useLocalState(context, 'flip', false);
   const { pieces, currentUser } = data;

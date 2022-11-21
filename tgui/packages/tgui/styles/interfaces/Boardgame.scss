@@ -2,11 +2,12 @@
 
 .boardgame__window {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
 }
 
 .boardgame__wrapper {
   flex: 1;
+  overflow-x: scroll;
 }
 
 .boardgame__window * {

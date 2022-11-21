@@ -2,14 +2,16 @@ declare const React;
 
 import { useBackend, useLocalState } from '../../../backend';
 import { Box, Button, Flex, Stack, Tabs, TextArea, Tooltip } from '../../../components';
-import { fenCodeRecordFromPieces, fetchPieces, getPiece, getPiecesByGame, PieceType } from '../Pieces';
-import { BoardgameData, Piece } from '../types';
-import { presets, PresetType, presetsByGame } from '../Presets';
+import { fenCodeRecordFromPieces, fetchPieces, getPiece, getPiecesByGame, PieceType } from '../games/pieces';
+import { BoardgameData, Piece } from '../utils/types';
+import { presets, PresetType, presetsByGame } from '../games/presets';
+import { STATES } from '../utils/config';
 
-export const FenCodeSettings = (_props, context) => {
-  const [tabIndex, setTabIndex] = useLocalState(context, 'tabIndex', 1);
-  const [configModalOpen, setConfigModalOpen] = useLocalState(context, 'configModalOpen', false);
-  return configModalOpen ? (
+export const ConfigModal = (_props, context) => {
+  const [tabIndex, setTabIndex] = STATES(context).cfgModalTabIndex;
+  const [cfgModalOpen, setConfigModalOpen] = STATES(context).cfgModalOpen;
+
+  return cfgModalOpen ? (
     <Box className="boardgame__modal">
       <Box className="boardgame__modal-inner">
         <Tabs fluid className="boardgame__modal-tabs">
@@ -22,8 +24,8 @@ export const FenCodeSettings = (_props, context) => {
           <Button onClick={() => setConfigModalOpen(false)}>Close</Button>
         </Tabs>
         <Box className="boardgame__modal-config">
-          {tabIndex === 1 && <ConfigTab />}
-          {tabIndex === 2 && <PresetsTab />}
+          {tabIndex === 1 && <PresetsTab />}
+          {tabIndex === 2 && <ConfigTab />}
         </Box>
       </Box>
     </Box>
@@ -126,7 +128,7 @@ const convertBoardToGNot = (width: number, height: number, pieces: Piece[]) => {
 
 const ConfigTab = (_props, context) => {
   const { act, data } = useBackend<BoardgameData>(context);
-  const [configModalOpen, setConfigModalOpen] = useLocalState(context, 'configModalOpen', false);
+  const [, setCfgModalOpen] = STATES(context).cfgModalOpen;
   const { width, height } = data.boardInfo;
   const { pieces } = data;
   const [gnot, setGnot] = useLocalState(context, 'gnot', '');
@@ -150,7 +152,7 @@ const ConfigTab = (_props, context) => {
           act('applyGNot', {
             gnot: gnot,
           });
-          setConfigModalOpen(false);
+          setCfgModalOpen(false);
         }}>
         Apply and close
       </Button>

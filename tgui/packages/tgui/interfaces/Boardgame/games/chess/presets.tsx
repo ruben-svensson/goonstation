@@ -2,9 +2,8 @@
 /* @ts-ignore */
 
 declare const React;
-
-import { PresetType } from '.';
-import { Box, Button, Flex, Stack, Tabs, TextArea, Tooltip } from '../../../components';
+import { PresetType } from '../presets';
+import { Box, Stack } from '../../../../components';
 
 const presets: PresetType[] = [];
 

@@ -1,12 +1,16 @@
 declare const React;
 
-import { useBackend } from '../../../backend';
-import { BoardgameData } from '../types';
+import { STATES } from '../utils/config';
+
+import { useBackend, useLocalState } from '../../../backend';
+import { BoardgameData } from '../utils/types';
 
 // Draw the board using svg
 export const CheckerBoard = (_props, context) => {
   const { data } = useBackend<BoardgameData>(context);
   const { tileColor1, tileColor2 } = data.styling;
+
+  const [zoom, setZoom] = STATES(context).zoom;
 
   const width = 100 / data.boardInfo.width;
   const height = 100 / data.boardInfo.height;

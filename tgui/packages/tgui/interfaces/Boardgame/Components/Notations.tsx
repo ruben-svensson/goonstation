@@ -3,7 +3,7 @@ declare const React;
 import { classes } from 'common/react';
 import { useBackend, useLocalState } from '../../../backend';
 import { Box, Flex } from '../../../components';
-import { BoardgameData } from '../types';
+import { BoardgameData } from '../utils/types';
 
 export type NotationsProps = {
   direction: 'vertical' | 'horizontal';

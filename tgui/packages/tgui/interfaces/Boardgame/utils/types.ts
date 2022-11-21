@@ -1,5 +1,5 @@
 import { BooleanLike } from 'common/react';
-import { BoardPattern } from './Patterns';
+import { BoardPattern } from '../patterns';
 
 export type BoardgameData = {
   boardInfo: {
@@ -26,6 +26,7 @@ export type BoardgameData = {
 };
 
 export type Piece = {
+  id: number;
   code: string;
   x: number;
   y: number;

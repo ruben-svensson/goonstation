@@ -28,8 +28,8 @@
  */
 
 /obj/item/boardgame
-	name = "game board"
-	desc = "A generic game board?"
+	name = "board game"
+	desc = "A generic board game?"
 	icon = 'icons/obj/items/gameboard.dmi'
 	icon_state = "chessboard"
 	flags = TGUI_INTERACTIVE
@@ -45,6 +45,7 @@
 	)
 
 	var/game = "chess"
+	/// Used by TGUI to render a board pattern
 	var/pattern = PATTERN_CHECKERBOARD
 
 	/**
@@ -58,32 +59,61 @@
 	var/lock_pieces_to_tile = TRUE // If true, pieces will be locked to the center of the tile they're on, otherwise they'll be free to move around
 
 	/**
-	 * # Gameboard styling
-	 *
-	 * Give the boardgame a custom look by changing these variables.
-	 */
+		* ## Boardgame styling
+		* ```dm
+		* src.styling[key] = value
+		* ```
+		*
+		* Give the boardgame a custom look by using these key value pairs.
+		*
+		* ```dm
+		* // Sets color of first tile
+		* [STYLING_TILECOLOR1] = "#FFFFFF" or rgb(255, 255, 255)
+		* ```
+		*
+		* ```dm
+		* // Sets color of second tile
+		* [STYLING_TILECOLOR2] = "#FFFFFF" or rgb(255, 255, 255)
+		* ```
+		*
+
+		*
+		* ```dm
+		* // Sets color of the border
+		* [STYLING_BORDER] = "#FFFFFF" or rgb(255, 255, 255)
+		* ```
+		*
+		* ```dm
+		* // Aspect ratio of the board. This is the ratio of the width to the height.
+		* 1 = 1:1, 2 = 2:1, 0.5 = 1:2
+		* [STYLING_ASPECT] = NUMBER
+		* ```dm
+		*
+		* ```
+		* // Whether to use chess-like notation around the board.
+		* ...
+		* [STYLING_NOTATIONS] = TRUE/FALSE
+		* ````
+		* The following keys are used by the boardgame itself and changes itself.
+		* ```dm
+		* // Sets original color of first tile
+		* [STYLING_OLDTILECOLOR1] = "#FFFFFF" or rgb(255, 255, 255)
+		* ```
+		*
+		* ```dm
+		* // Sets original color of first tile
+		* [STYLING_OLDTILECOLOR2] = "#FFFFFF" or rgb(255, 255, 255)
+		* ```
+		*/
 	var/list/styling = list(
 		STYLING_TILECOLOR1 = rgb(240, 217, 181),
 		STYLING_TILECOLOR2 = rgb(181, 136, 99),
+		STYLING_BORDER = rgb(131, 100, 74),
+		STYLING_ASPECT = 1,
+		STYLING_NOTATIONS = TRUE,
+		// These are used by the boardgame itself and changes itself.
 		STYLING_OLDTILECOLOR1 = rgb(240, 217, 181),
 		STYLING_OLDTILECOLOR2 = rgb(181, 136, 99),
-		STYLING_BORDER = rgb(131, 100, 74),
-		/**
-		 * Aspect ratio of the board. This is the ratio of the width to the height.
-		 * 1 = 1:1
-		 * 2 = 2:1
-		 * 0.5 = 1:2
-		 */
-		STYLING_ASPECT = 1,
-		 /**
-		  * Whether to use chess-like notation around the board.
-		  *    a b c d...
-			*  1 ♜♞♝♛
-			*  2 ♙♙♙♙
-			*  3
-			*  ...
-		  */
-		STYLING_NOTATIONS = TRUE,
 	)
 
 	/**
@@ -93,29 +123,17 @@
 	// Pieces layer
 	var/list/pieces = list()
 
-	chess
-		name = "chess board"
-		desc = "It's a board for playing chess and checkers!"
-		New()
-			..()
 
-	// Start adding new boards here vvv
 
-	longchess
-		name = "long chess board"
-		desc = "It's a board for playing chess and checkers!"
-		board_width = 16
-
-		New()
-			..()
-			src.styling[STYLING_ASPECT] = 2
-
-	// End adding new boards here ^^^
 	New()
 		..()
 		// Store old styling if there is any reason to reset the board
+		src.styling[STYLING_OLDTILECOLOR1] = src.styling[STYLING_TILECOLOR1]
+		src.styling[STYLING_OLDTILECOLOR2] = src.styling[STYLING_TILECOLOR2]
 
 	proc/resetColorStyling()
+		src.styling[STYLING_TILECOLOR1] = src.styling[STYLING_OLDTILECOLOR1]
+		src.styling[STYLING_TILECOLOR2] = src.styling[STYLING_OLDTILECOLOR2]
 
 	proc/posToNotationString(x, y)
 		// Convert a position to a chess notation string
@@ -162,6 +180,7 @@
 	proc/createPiece(code, x, y)
 		var/id = src.uniquePieceId()
 		src.pieces[id] = list(
+			"id" = id,
 			"code" = code,
 			"x" = x,
 			"y" = y,
@@ -171,7 +190,7 @@
 			"lastSelected" = null, // Last piece selected by the user
 			"palette" = null, // Code of the palette
 		)
-		playsound(src.loc, src.sounds["move"], 30, 1)
+		playsound(src.loc, src.sounds[SOUND_MOVE], 30, 1)
 
 
 	proc/setPalette(ckey, code)
@@ -203,9 +222,10 @@
 				src.removePiece(piece)
 
 	proc/selectPiece(ckey, pId)
-		src.active_users[ckey]["selected"] = pId
-		if (!pId)
+		var/piece = src.getPieceById(pId)
+		if(!piece)
 			return
+		src.active_users[ckey]["selected"] = piece
 		// Check if ["selected"] is null
 		if (src.active_users[ckey]["selected"])
 			pieces[pId]["selected"] = src.active_users[ckey]
@@ -465,6 +485,7 @@
 			else
 				boutput(user, "<span class='warning'>You need to hold the paint can in your hand to use it!</span>")
 				return
+
 
 			//Check if the paint can is empty
 			if(can.uses <= 0)
