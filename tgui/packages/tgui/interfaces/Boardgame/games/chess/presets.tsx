@@ -2,7 +2,7 @@
 /* @ts-ignore */
 
 declare const React;
-import { PresetType } from '../presets';
+import { PresetType, pushPresets } from '..';
 import { Box, Stack } from '../../../../components';
 
 const presets: PresetType[] = [];

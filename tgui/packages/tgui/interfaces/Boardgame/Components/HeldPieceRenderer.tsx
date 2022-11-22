@@ -1,6 +1,5 @@
 declare const React;
-
-import { fenCodeRecordFromPieces, fetchPieces, PieceType } from '../games/pieces';
+import { fenCodeRecordFromPieces, fetchPieces, PieceType } from '../games';
 import { Box } from '../../../components';
 import { BoardgameData } from '../utils/types';
 import { useBackend, useLocalState } from '../../../backend';

@@ -1,11 +1,9 @@
 declare const React;
+import { useBackend, useLocalState } from '../../../../../backend';
+import { fenCodeRecordFromPieces, PieceType, fetchPieces } from '../../../games';
+import { BoardgameData } from '../../../utils/types';
+import { STATES } from '../../../utils/config';
 
-import { STATES } from '../utils/config';
-
-import { useBackend, useLocalState } from '../../../backend';
-import { BoardgameData } from '../utils/types';
-
-// Draw the board using svg
 export const CheckerBoard = (_props, context) => {
   const { data } = useBackend<BoardgameData>(context);
   const { tileColor1, tileColor2 } = data.styling;

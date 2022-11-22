@@ -3,7 +3,7 @@ import { STATES } from '../utils/config';
 declare const React;
 
 import { Box, Button, Flex } from '../../../components';
-import { Pattern } from '../patterns';
+import { Pattern } from './board';
 import { useBackend } from '../../../backend';
 import { BoardgameData } from '../utils/types';
 import { Window } from '../../../layouts';

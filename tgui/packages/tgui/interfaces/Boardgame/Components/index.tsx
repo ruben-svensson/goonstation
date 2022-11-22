@@ -1,4 +1,4 @@
-import { ConfigModal } from './ConfigModal';
+import { ConfigModal } from './modal/ConfigModal';
 import { Piece } from './Piece';
 import { Notations } from './Notations';
 import { HeldPieceRenderer } from './HeldPieceRenderer';

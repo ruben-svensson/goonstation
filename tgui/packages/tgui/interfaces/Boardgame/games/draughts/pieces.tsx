@@ -1,4 +1,4 @@
-import { PieceType } from '../pieces';
+import { PieceType } from '..';
 
 /* eslint-disable max-len */
 const pieces: PieceType[] = [];

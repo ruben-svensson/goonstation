@@ -1,10 +1,10 @@
 declare const React;
 
-import { flip, hide } from '@popperjs/core';
-import { useBackend, useLocalState } from '../../../backend';
-import { fenCodeRecordFromPieces, fetchPieces, PieceType } from '../games/pieces';
-import { BoardgameData } from '../utils/types';
-import { CheckerBoard } from './checkerboard';
+import { useBackend, useLocalState } from '../../../../backend';
+import { fenCodeRecordFromPieces, PieceType, fetchPieces } from '../../games';
+import { STATES } from '../../utils/config';
+import { BoardgameData } from '../../utils/types';
+import { CheckerBoard } from './patterns/CheckerBoard';
 
 export type BoardPattern = 'checkerboard' | 'hexagon' | 'go';
 

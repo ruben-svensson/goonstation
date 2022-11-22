@@ -1,5 +1,5 @@
 import { BooleanLike } from 'common/react';
-import { BoardPattern } from '../patterns';
+import { BoardPattern } from '../components/board';
 
 export type BoardgameData = {
   boardInfo: {
