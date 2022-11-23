@@ -236,7 +236,7 @@ const PiecesSvgRenderer = ({ pieceRecords }: PiecesSvgRendererProps, context) =>
         const pieceType = pieceRecords[code];
 
         // Is the piece selected by currentUser?
-        const selected = pieces[val].selected;
+        const selected = currentUser.selected;
 
         // generate a unique color based on selected players name as a seed
         // make it so the same player always has the same color

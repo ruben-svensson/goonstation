@@ -3,6 +3,7 @@ import { GameName, kits } from './kits';
 export type GameKit = {
   pieces: PieceType[];
   presets: PresetType[];
+  // Palette drawer groups
   sets: PieceSet[];
 };
 

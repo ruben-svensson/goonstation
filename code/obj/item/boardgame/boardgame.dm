@@ -32,6 +32,7 @@
 	desc = "A generic board game?"
 	icon = 'icons/obj/items/gameboard.dmi'
 	icon_state = "chessboard"
+
 	flags = TGUI_INTERACTIVE
 	w_class = W_CLASS_NORMAL
 	two_handed = TRUE
@@ -131,6 +132,9 @@
 		src.styling[STYLING_OLDTILECOLOR1] = src.styling[STYLING_TILECOLOR1]
 		src.styling[STYLING_OLDTILECOLOR2] = src.styling[STYLING_TILECOLOR2]
 
+	/**
+	 * Reset the board to its color scheme, in case it has been changed
+	 */
 	proc/resetColorStyling()
 		src.styling[STYLING_TILECOLOR1] = src.styling[STYLING_OLDTILECOLOR1]
 		src.styling[STYLING_TILECOLOR2] = src.styling[STYLING_OLDTILECOLOR2]
@@ -138,9 +142,17 @@
 	proc/posToNotationString(x, y)
 		// Convert a position to a chess notation string
 		// eg. x:1, y:1 -> A1
+		// if x > 26, it will use AA, AB, AC, etc.
 		// Create a split list of the alphabet
 		var/list/letters = splittext("ABCDEFGHIJKLMNOPQRSTUVWXYZ", "")
-		return "[letters[x+1]][board_height - y]"
+		var/letterBuffer = ""
+		for(var/i = 1 to x)
+			if (i % length(letters) == 0)
+				letterBuffer += letters[length(letters)]
+			else
+				letterBuffer += letters[i % length(letters)]
+
+		return "[letterBuffer][y]"
 
 	proc/applyGNot(gnot)
 		// Like FEN but comma seperated
@@ -178,6 +190,12 @@
 		return id
 
 	proc/createPiece(code, x, y)
+		if (x < 0 || x >= src.board_width || y < 0 || y >= src.board_height)
+			return
+
+		// Delete any piece if there is one at the position
+		src.removePieceAt(x, y)
+
 		var/id = src.uniquePieceId()
 		src.pieces[id] = list(
 			"id" = id,
@@ -225,7 +243,6 @@
 		var/piece = src.getPieceById(pId)
 		if(!piece)
 			return
-		src.active_users[ckey]["selected"] = piece
 		// Check if ["selected"] is null
 		if (src.active_users[ckey]["selected"])
 			pieces[pId]["selected"] = src.active_users[ckey]

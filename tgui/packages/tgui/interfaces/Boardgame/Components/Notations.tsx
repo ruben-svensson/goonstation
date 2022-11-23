@@ -5,6 +5,8 @@ import { useBackend, useLocalState } from '../../../backend';
 import { Box, Flex } from '../../../components';
 import { BoardgameData } from '../utils/types';
 
+import { generateBoardNotationLetters } from '../utils/notations';
+
 export type NotationsProps = {
   direction: 'vertical' | 'horizontal';
 };
@@ -16,7 +18,7 @@ export const Notations = ({ direction }: NotationsProps, context) => {
   const { currentUser } = data;
   const { tileColor1, tileColor2, border } = data.styling;
   const [flip, setFlip] = useLocalState(context, 'flip', false);
-  let chars = 'abcdefghijklmnopqrstuvwxyz'.split('').slice(0, width);
+  let chars = generateBoardNotationLetters(width);
 
   if (flip) {
     chars = chars.reverse();

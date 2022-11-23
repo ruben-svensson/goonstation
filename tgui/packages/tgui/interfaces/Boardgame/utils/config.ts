@@ -22,7 +22,3 @@ export const STATES = (context) => {
     cfgModalOpen: useLocalState<boolean>(context, 'cfgModalOpen', DEFAULT.CFG_MODAL_OPEN),
   };
 };
-
-export const ACTS = (act) => {
-  return {};
-};

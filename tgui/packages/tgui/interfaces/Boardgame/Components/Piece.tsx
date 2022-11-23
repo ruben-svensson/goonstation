@@ -4,7 +4,7 @@ declare const twemoji;
 import { Box } from '../../../components';
 import { classes } from 'common/react';
 import { useBackend, useLocalState } from '../../../backend';
-import { TileSize, BoardgameData, User, StartingPosition } from '../utils/types';
+import { TileSize, BoardgameData, User } from '../utils/types';
 import { PieceType } from '../games';
 
 export type PieceProps = {

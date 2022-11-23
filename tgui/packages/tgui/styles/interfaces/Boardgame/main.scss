@@ -1,0 +1,13 @@
+@use 'sass:meta';
+
+// The window, everything that isn't components
+
+.boardgame {
+}
+
+// HERE we have the components, the pieces, the board, the notations, etc.
+
+@include meta.load-css('./palette.scss');
+@include meta.load-css('./notations.scss');
+@include meta.load-css('./board.scss');
+@include meta.load-css('./modal.scss');

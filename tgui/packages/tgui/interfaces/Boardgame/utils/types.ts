@@ -6,7 +6,6 @@ export type BoardgameData = {
     name: string;
     game: string;
     pattern: BoardPattern;
-    startingPositions: { [key: string]: string };
     width: number;
     height: number;
     lock: boolean;
@@ -35,11 +34,6 @@ export type Piece = {
   selected: User;
   lastSelected: User;
   palette: string;
-};
-
-export type StartingPosition = {
-  name: string;
-  fen: string;
 };
 
 export type User = {

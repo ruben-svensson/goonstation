@@ -1,11 +1,14 @@
 declare const React;
 
 import { useBackend, useLocalState } from '../../../../backend';
+
 import { Box, Button, Flex, Stack, Tabs, TextArea, Tooltip } from '../../../../components';
+
 import { fenCodeRecordFromPieces, fetchPieces, getPiece, getPiecesByGame, PieceType } from '../../games';
 import { BoardgameData, Piece } from '../../utils/types';
 import { PresetType, presetsByGame } from '../../games';
 import { STATES } from '../../utils/config';
+import ModalTooltip from './ModalTooltip';
 
 export const ConfigModal = (_props, context) => {
   const [tabIndex, setTabIndex] = STATES(context).cfgModalTabIndex;
@@ -55,37 +58,6 @@ const convertFenCodeToBoardArray = (fenCode: string) => {
   }
 
   return boardArray;
-};
-
-type ConfigTooltipProps = {
-  text: string;
-  tooltip: string;
-  link?: string;
-};
-
-const ConfigTooltip = ({ text, tooltip, link }: ConfigTooltipProps) => {
-  return (
-    <Tooltip position="bottom" content={tooltip}>
-      <Box
-        style={{
-          'padding': '0 0.5em',
-        }}
-        position="relative">
-        {text}
-        {link && (
-          <a
-            href={link}
-            target="_blank"
-            rel="noreferrer"
-            style={{
-              'padding': '0 0.5em',
-            }}>
-            (Wiki)
-          </a>
-        )}
-      </Box>
-    </Tooltip>
-  );
 };
 
 const convertBoardToGNot = (width: number, height: number, pieces: Piece[]) => {
@@ -142,9 +114,9 @@ const ConfigTab = (_props, context) => {
           'flex-direction': 'row',
         }}>
         <span>You can import: </span>
-        <ConfigTooltip text="GNot" tooltip="Goon Notation" link={'https://wiki.ss13.co/Main_Page'} />
-        <ConfigTooltip text="FEN" tooltip="Forsyth–Edwards Notation" />
-        <ConfigTooltip text="PDN" tooltip="Portable Draughts Notation" />
+        <ModalTooltip text="GNot" tooltip="Goon Notation" link={'https://wiki.ss13.co/Main_Page'} />
+        <ModalTooltip text="FEN" tooltip="Forsyth–Edwards Notation" />
+        <ModalTooltip text="PDN" tooltip="Portable Draughts Notation" />
       </Box>
       <TextArea value={gnot} style={{ 'height': '200px' }} />
       <Button

@@ -1,3 +1,5 @@
+declare const Byond, window;
+
 import { useBackend } from '../../../backend';
 import { BoardgameData } from './types';
 
