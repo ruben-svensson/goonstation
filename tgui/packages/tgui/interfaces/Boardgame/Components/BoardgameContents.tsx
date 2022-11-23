@@ -1,4 +1,4 @@
-import { STATES } from '../utils/config';
+import { useStates, useActions } from '../utils/config';
 
 declare const React;
 
@@ -8,29 +8,33 @@ import { useBackend } from '../../../backend';
 import { BoardgameData } from '../utils/types';
 import { Window } from '../../../layouts';
 import { Notations, HeldPieceRenderer, PieceDrawer } from '.';
+import TitleBar from './TitleBar';
 
 export const BoardgameContents = (props, context) => {
   const { act, data } = useBackend<BoardgameData>(context);
+  const { pawnCreate } = useActions(act);
+  const { isFlipped } = useStates(context);
 
   const { currentUser } = data;
   const { pattern } = data.boardInfo;
   const { useNotations } = data.styling;
-  const [zoom, setZoom] = STATES(context).zoom;
-  const [, setConfigModalOpen] = STATES(context).cfgModalOpen;
-  const [flip, setFlip] = STATES(context).flip;
-  const [, setMouseCoords] = STATES(context).mouseCoords;
+
+  /* const [zoom, setZoom] = states.zoom;
+  const [, setConfigModalOpen] = states.modalOpen;
+  const [flip, setFlip] = states.flip;
+  const [, setMouseCoords] = states.mouseCoords;*/
 
   return (
     <Window.Content
       onMouseMove={(e) => {
-        setMouseCoords({
+        /* setMouseCoords({
           x: e.clientX,
           y: e.clientY,
-        });
+        });*/
       }}
       onMouseUp={(e) => {
         // If mouse is released outside boardgame__board-inner, delete the held piece
-        const board = document.getElementsByClassName('boardgame__board-inner')[0];
+        /* const board = document.getElementsByClassName('boardgame__board-inner')[0];
         if (board) {
           let x = e.clientX;
           let y = e.clientY;
@@ -38,24 +42,14 @@ export const BoardgameContents = (props, context) => {
           if (x < boardRect.left || x > boardRect.right || y < boardRect.top || y > boardRect.bottom) {
             act('heldPiece', { heldPiece: null });
           }
-        }
+        }*/
       }}
       fitted
       className="boardgame__window">
-      {(currentUser?.palette || currentUser?.selected) && <HeldPieceRenderer />}
-      <Box className="boardgame__debug">
-        Zoom: {zoom}
-        <Button.Checkbox checked={flip} onClick={() => setFlip(!flip)}>
-          Flip board
-        </Button.Checkbox>
-        <Button title={'Setup'} icon={'cog'} onClick={() => setConfigModalOpen(true)} />
-      </Box>
+      <HeldPieceRenderer />
+      <TitleBar />
       <Flex className="boardgame__wrapper">
-        <div
-          className={`boardgame__board-inner`}
-          style={{
-            width: '1000px',
-          }}>
+        <div className={`boardgame__board-inner`}>
           {!!useNotations && <Notations direction={'horizontal'} />}
           <Flex className={`boardgame__board`}>
             {!!useNotations && <Notations direction={'vertical'} />}

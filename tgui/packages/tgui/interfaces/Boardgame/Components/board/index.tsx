@@ -1,8 +1,8 @@
 declare const React;
 
 import { useBackend, useLocalState } from '../../../../backend';
-import { fenCodeRecordFromPieces, PieceType, fetchPieces } from '../../games';
-import { STATES } from '../../utils/config';
+import { fenCodeRecordFromPieces, PaletteSetupType, fetchPieces } from '../../games';
+
 import { BoardgameData } from '../../utils/types';
 import { CheckerBoard } from './patterns/CheckerBoard';
 
@@ -136,7 +136,7 @@ const SelectGuideSvg = (_props, context) => {
 };
 
 type OverlaySvgRendererProps = {
-  pieceRecords: Record<string, PieceType>;
+  pieceRecords: Record<string, PaletteSetupType>;
 };
 
 // Draw names of player moving the pieces, lines between moved pieces and the piece being moved
@@ -166,7 +166,7 @@ const NameOverlaySvg = ({ pieceRecords }: OverlaySvgRendererProps, context) => {
       {Object.keys(pieces).map((val, index) => {
         const { x, y, prevX, prevY, code } = pieces[val];
         const selected = pieces[val].selected;
-        const pieceType = pieceRecords[code];
+        const PaletteSetupType = pieceRecords[code];
 
         const name = selected?.name || '';
         const firstName = name.split(' ')[0];
@@ -207,7 +207,7 @@ const NameOverlaySvg = ({ pieceRecords }: OverlaySvgRendererProps, context) => {
 };
 
 type PiecesSvgRendererProps = {
-  pieceRecords: Record<string, PieceType>;
+  pieceRecords: Record<string, PaletteSetupType>;
 };
 
 const PiecesSvgRenderer = ({ pieceRecords }: PiecesSvgRendererProps, context) => {
@@ -233,7 +233,7 @@ const PiecesSvgRenderer = ({ pieceRecords }: PiecesSvgRendererProps, context) =>
     <svg width="100%" height="100%">
       {Object.keys(pieces).map((val, index) => {
         const { x, y, prevX, prevY, code } = pieces[val];
-        const pieceType = pieceRecords[code];
+        const PaletteSetupType = pieceRecords[code];
 
         // Is the piece selected by currentUser?
         const selected = currentUser.selected;
@@ -288,7 +288,7 @@ const PiecesSvgRenderer = ({ pieceRecords }: PiecesSvgRendererProps, context) =>
                 y="0%"
                 width="100%"
                 height="100%"
-                xlinkHref={pieceType?.image}
+                xlinkHref={PaletteSetupType?.image}
               />
             </g>
           </svg>

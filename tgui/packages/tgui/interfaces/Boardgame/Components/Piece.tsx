@@ -5,10 +5,10 @@ import { Box } from '../../../components';
 import { classes } from 'common/react';
 import { useBackend, useLocalState } from '../../../backend';
 import { TileSize, BoardgameData, User } from '../utils/types';
-import { PieceType } from '../games';
+import { PaletteSetupType } from '../games';
 
 export type PieceProps = {
-  piece: PieceType;
+  piece: PaletteSetupType;
   isSetPiece: boolean;
   position?: {
     x: number;

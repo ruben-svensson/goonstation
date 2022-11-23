@@ -7,7 +7,7 @@ export const adjustWindowSize = (context) => {
   const { data } = useBackend<BoardgameData>(context);
   const { aspectRatio } = data.styling;
 
-  const pieceSetPadding = 100; // Add 100 pixels to the width
+  const PaletteSetPadding = 100; // Add 100 pixels to the width
   const titlebarHeightPadding = 32;
   let width = 500;
   let height = 400;
@@ -26,12 +26,12 @@ export const adjustWindowSize = (context) => {
     let shortestSide = wrapperWidth < wrapperHeight ? wrapperWidth : wrapperHeight;
 
     // Set the width and height to the shortest side
-    width = shortestSide + pieceSetPadding;
+    width = shortestSide + PaletteSetPadding;
     height = shortestSide + titlebarHeightPadding;
 
     // Set the width and height to the aspect ratio
     if (aspectRatio) {
-      width = shortestSide * aspectRatio + pieceSetPadding;
+      width = shortestSide * aspectRatio + PaletteSetPadding;
       height = shortestSide + titlebarHeightPadding;
     }
   }

@@ -3,7 +3,7 @@ declare const React;
 import { useBackend, useLocalState } from '../../../backend';
 import { BoardgameData } from '../utils/types';
 import { Piece } from '.';
-import { fetchSets } from '../games';
+import { fetchPalettes } from '../games';
 import { Box, Button, Flex } from '../../../components';
 
 export const PieceDrawer = (orps, context) => {
@@ -12,7 +12,7 @@ export const PieceDrawer = (orps, context) => {
   const [expandedSets, setExpandedSets] = useLocalState<boolean[]>(
     context,
     `expandedSets`,
-    new Array(fetchSets().length).fill(true)
+    new Array(fetchPalettes().length).fill(true)
   );
   return (
     <Box
@@ -28,7 +28,7 @@ export const PieceDrawer = (orps, context) => {
         }
       }}
       className={'boardgame__piece-set-wrapper'}>
-      {fetchSets().map((set, i) => (
+      {fetchPalettes().map((set, i) => (
         <Box key={set.name}>
           <Box className={'boardgame__piece-set-header'}>
             <ExpandedSetsButton index={i} setId={set.name} />
@@ -44,7 +44,7 @@ export const PieceDrawer = (orps, context) => {
                 onMouseDown={() => {
                   act('paletteSet', {
                     ckey: currentUser.ckey,
-                    code: piece.fenCode,
+                    code: piece.code,
                   });
                 }}>
                 <Piece piece={piece} isSetPiece />
@@ -66,7 +66,7 @@ const ExpandedSetsButton = ({ index, setId }: ExpandedSetsButtonProps, context) 
   const [expandedSets, setExpandedSets] = useLocalState<boolean[]>(
     context,
     `expandedSets`,
-    new Array(fetchSets().length).fill(true)
+    new Array(fetchPalettes().length).fill(true)
   );
   return (
     <Button.Checkbox

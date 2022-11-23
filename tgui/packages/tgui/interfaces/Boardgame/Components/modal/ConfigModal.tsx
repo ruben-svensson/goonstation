@@ -4,144 +4,43 @@ import { useBackend, useLocalState } from '../../../../backend';
 
 import { Box, Button, Flex, Stack, Tabs, TextArea, Tooltip } from '../../../../components';
 
-import { fenCodeRecordFromPieces, fetchPieces, getPiece, getPiecesByGame, PieceType } from '../../games';
+import { fenCodeRecordFromPieces, fetchPieces, getPiece, getPiecesByGame, PaletteSetupType } from '../../games';
 import { BoardgameData, Piece } from '../../utils/types';
 import { PresetType, presetsByGame } from '../../games';
-import { STATES } from '../../utils/config';
+import { useActions, useStates } from '../../utils/config';
 import ModalTooltip from './ModalTooltip';
+import { convertBoardToGNot } from '../../utils/notations';
+import ConfigTab from './ConfigTab';
 
 export const ConfigModal = (_props, context) => {
-  const [tabIndex, setTabIndex] = STATES(context).cfgModalTabIndex;
-  const [cfgModalOpen, setCfgModalOpen] = STATES(context).cfgModalOpen;
+  const { act, data } = useBackend<BoardgameData>(context);
+  const { closeModal, isModalOpen, setModalTabIndex, modalTabIndex } = useStates(context);
 
-  return cfgModalOpen ? (
+  return isModalOpen ? (
     <Box className="boardgame__modal">
       <Box className="boardgame__modal-inner">
         <Tabs fluid className="boardgame__modal-tabs">
-          <Tabs.Tab className="boardgame__modal-tab" selected={tabIndex === 1} onClick={() => setTabIndex(1)}>
+          <Tabs.Tab className="boardgame__modal-tab" selected={modalTabIndex === 1} onClick={() => setModalTabIndex(1)}>
             Presets
           </Tabs.Tab>
-          <Tabs.Tab className="boardgame__modal-tab" selected={tabIndex === 2} onClick={() => setTabIndex(2)}>
+          <Tabs.Tab className="boardgame__modal-tab" selected={modalTabIndex === 2} onClick={() => setModalTabIndex(2)}>
             Notation Setup
           </Tabs.Tab>
-          <Button onClick={() => setCfgModalOpen(false)}>Close</Button>
+          <Button onClick={closeModal}>Close</Button>
         </Tabs>
         <Box className="boardgame__modal-config">
-          {tabIndex === 1 && <PresetsTab />}
-          {tabIndex === 2 && <ConfigTab />}
+          {modalTabIndex === 1 && <PresetsTab />}
+          {modalTabIndex === 2 && <ConfigTab />}
         </Box>
       </Box>
     </Box>
   ) : null;
 };
 
-const convertFenCodeToBoardArray = (fenCode: string) => {
-  // For example, fenCode = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
-  // Should be split into ["r", "n", "b", "q", "k", "b", "n", "r", "..." and so on]
-  // The numbers add x empty spaces to the array
-  // The "/" should be ignored
-
-  const fenCodeArray = fenCode.split('/');
-  const boardArray: string[] = [];
-
-  for (const fenCodeRow of fenCodeArray) {
-    const fenCodeRowArray = fenCodeRow.split('');
-    for (const fenCodePiece of fenCodeRowArray) {
-      if (isNaN(Number(fenCodePiece))) {
-        boardArray.push(fenCodePiece);
-      } else {
-        for (let i = 0; i < Number(fenCodePiece); i++) {
-          boardArray.push('');
-        }
-      }
-    }
-  }
-
-  return boardArray;
-};
-
-const convertBoardToGNot = (width: number, height: number, pieces: Piece[]) => {
-  // Convert the pieces on a board into a GNot string, comma separated
-  // For example, if the board is 8x8 a string could formatted like this:
-  // r,n,b,q,k,b,n,r,p,p,p,p,p,p,p,p,32,P,P,P,P,P,P,P,P,R,N,B,Q,K,B,N,R
-  // The numbers are the number of empty spaces
-
-  // The pieces have x and y coordinates, but we need to convert them to a 1D array
-  // and place them in the correct order, filled with empty spaces in between
-
-  let boardArray = Array(width * height).fill('');
-
-  Object.keys(pieces).forEach((pieceKey) => {
-    const piece = pieces[pieceKey];
-    const index = piece.y * width + piece.x;
-    boardArray[index] = piece.code;
-  });
-
-  let gNotString = '';
-  let emptySpaces = 0;
-
-  for (const piece of boardArray) {
-    if (piece === '') {
-      emptySpaces++;
-    } else {
-      if (emptySpaces > 0) {
-        gNotString += `${emptySpaces},`;
-        emptySpaces = 0;
-      }
-      gNotString += `${piece},`;
-    }
-  }
-
-  // Remove the last comma
-  gNotString = gNotString.slice(0, -1);
-
-  return gNotString;
-};
-
-const ConfigTab = (_props, context) => {
-  const { act, data } = useBackend<BoardgameData>(context);
-  const [, setCfgModalOpen] = STATES(context).cfgModalOpen;
-  const { width, height } = data.boardInfo;
-  const { pieces } = data;
-  const [gnot, setGnot] = useLocalState(context, 'gnot', '');
-
-  return (
-    <Stack vertical>
-      <h4>Apply notation</h4>
-      <Box
-        style={{
-          'display': 'flex',
-          'flex-direction': 'row',
-        }}>
-        <span>You can import: </span>
-        <ModalTooltip text="GNot" tooltip="Goon Notation" link={'https://wiki.ss13.co/Main_Page'} />
-        <ModalTooltip text="FEN" tooltip="Forsyth–Edwards Notation" />
-        <ModalTooltip text="PDN" tooltip="Portable Draughts Notation" />
-      </Box>
-      <TextArea value={gnot} style={{ 'height': '200px' }} />
-      <Button
-        onClick={() => {
-          act('applyGNot', {
-            gnot: gnot,
-          });
-          setCfgModalOpen(false);
-        }}>
-        Apply and close
-      </Button>
-      <Button
-        onClick={() => {
-          const gnotString = convertBoardToGNot(width, height, pieces);
-          setGnot(gnotString);
-        }}>
-        Fetch GNot from board
-      </Button>
-    </Stack>
-  );
-};
 type PieceSVGImageProps = {
   width: number;
   height: number;
-  pieceData: PieceType;
+  pieceData: PaletteSetupType;
 };
 
 const PieceSVGImage = ({ width, height, pieceData }: PieceSVGImageProps) => {
@@ -149,8 +48,8 @@ const PieceSVGImage = ({ width, height, pieceData }: PieceSVGImageProps) => {
     return <image width={width} height={height} xlinkHref={pieceData.image} />;
   }
 
-  if (pieceData?.fenCode) {
-    return <text>{pieceData.fenCode} </text>;
+  if (pieceData?.code) {
+    return <text>{pieceData.code} </text>;
   }
   return null;
 };
@@ -337,7 +236,7 @@ type PresetItemProps = {
 const PresetItem = ({ preset, presetSetup }: PresetItemProps, context) => {
   const { act } = useBackend<BoardgameData>(context);
   const [selectedPreset, setSelectedPreset] = useLocalState<PresetType | null>(context, 'selectedPreset', null);
-  const [, setCfgModalOpen] = STATES(context).cfgModalOpen;
+  const { closeModal } = useStates(context);
   // Draw the board and a ? button on top of it
   return (
     <Box className="boardgame__preset-item">
@@ -351,7 +250,7 @@ const PresetItem = ({ preset, presetSetup }: PresetItemProps, context) => {
           act('applyGNot', {
             gnot: presetSetup,
           });
-          setCfgModalOpen(false);
+          closeModal();
           setTimeout(() => {
             setSelectedPreset(null);
           }, 200);

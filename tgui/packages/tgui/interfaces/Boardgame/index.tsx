@@ -6,7 +6,6 @@ import { BoardgameData } from './utils/types';
 import { ConfigModal } from './components';
 import { Component } from 'inferno';
 import { BoardgameContents } from './components/BoardgameContents';
-import { adjustWindowSize } from './utils';
 
 export class Boardgame extends Component<BoardgameData, any> {
   constructor(props) {

@@ -1,45 +1,45 @@
 import { GameName, kits } from './kits';
 
 export type GameKit = {
-  pieces: PieceType[];
+  pieces: PaletteSetupType[];
   presets: PresetType[];
   // Palette drawer groups
-  sets: PieceSet[];
+  palettes: PaletteSet[];
 };
 
 /**
  * Pieces
  */
 
-export type PieceType = {
-  fenCode: string;
+export type PaletteSetupType = {
+  code: string;
   name: string;
   game: GameName;
   image?: string;
 };
 
-const pieces: PieceType[] = [];
+const pieces: PaletteSetupType[] = [];
 
 // Push gamekit pieces into pieces array
 kits.forEach((kit: GameKit) => {
   pieces.push(...kit.pieces);
 });
 
-export const pushPieces = (newPieces: PieceType[]) => {
+export const pushPieces = (newPieces: PaletteSetupType[]) => {
   return pieces.push(...newPieces);
 };
 
 export const getPiece = (fenCode: string, game: string) => {
-  return pieces.find((piece) => piece.fenCode === fenCode && piece.game === game);
+  return pieces.find((piece) => piece.code === fenCode && piece.game === game);
 };
 
-export const getPiecesByGame = (game: string): PieceType[] => {
+export const getPiecesByGame = (game: string): PaletteSetupType[] => {
   return pieces.filter((piece) => piece.game === game);
 };
 
-export const fenCodeRecordFromPieces = (pieces: PieceType[]): Record<string, PieceType> => {
+export const fenCodeRecordFromPieces = (pieces: PaletteSetupType[]): Record<string, PaletteSetupType> => {
   return pieces.reduce((map, piece) => {
-    map[piece.fenCode] = piece;
+    map[piece.code] = piece;
     return map;
   }, {});
 };
@@ -95,16 +95,16 @@ export const fetchPresets = () => presets;
  * Sets
  */
 
-export type PieceSet = {
+export type PaletteSet = {
   name: string;
-  pieces: PieceType[];
+  pieces: PaletteSetupType[];
 };
 
-export const sets: PieceSet[] = [];
+export const palettes: PaletteSet[] = [];
 
 // Push gamekit presets into pieces array
 kits.forEach((kit: GameKit) => {
-  sets.push(...kit.sets);
+  palettes.push(...kit.palettes);
 });
 
-export const fetchSets = () => sets;
+export const fetchPalettes = () => palettes;

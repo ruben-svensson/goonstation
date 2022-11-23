@@ -6,7 +6,7 @@ import presets from './presets';
 export const kit: GameKit = {
   pieces,
   presets,
-  sets: [
+  palettes: [
     {
       name: 'Chess',
       pieces,

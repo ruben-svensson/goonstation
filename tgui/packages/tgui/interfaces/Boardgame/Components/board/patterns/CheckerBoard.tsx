@@ -1,6 +1,6 @@
 declare const React;
 import { useBackend, useLocalState } from '../../../../../backend';
-import { fenCodeRecordFromPieces, PieceType, fetchPieces } from '../../../games';
+import { fenCodeRecordFromPieces, PaletteSetupType, fetchPieces } from '../../../games';
 import { BoardgameData } from '../../../utils/types';
 import { STATES } from '../../../utils/config';
 

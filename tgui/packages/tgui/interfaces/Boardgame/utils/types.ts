@@ -18,34 +18,34 @@ export type BoardgameData = {
     useNotations: boolean;
   };
   board: string[];
-  pieces: Piece[];
+  pieces: PieceData[];
 
-  users: User[];
-  currentUser: User;
+  users: UserData[];
+  currentUser: UserData;
 };
 
-export type Piece = {
+export type PieceData = {
   id: number;
   code: string;
   x: number;
   y: number;
   prevX: number;
   prevY: number;
-  selected: User;
-  lastSelected: User;
+  selected: UserData;
+  lastSelected: UserData;
   palette: string;
 };
 
-export type User = {
+export type UserData = {
   ckey: string;
   name: string;
   mouseX: number;
   mouseY: number;
-  selected?: Piece;
+  selected?: UserData;
   palette?: string;
 };
 
-export type TileSize = {
+export type TileSizeData = {
   width: number;
   height: number;
 };
