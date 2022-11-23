@@ -2,7 +2,14 @@
 
 // The window, everything that isn't components
 
-.boardgame {
+.boardgame__ {
+  &titlebar {
+    position: fixed;
+    top: 4px;
+    right: 50px;
+    padding: 2px;
+    z-index: 20;
+  }
 }
 
 // HERE we have the components, the pieces, the board, the notations, etc.

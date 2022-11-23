@@ -14,7 +14,7 @@ export const numToBoardNotation = (num: number) => {
   return notation;
 };
 
-export const generateBoardNotationLetters = (size: number) => {
+export const generateBoardNotationLetters = (size: number, isFlipped?: boolean) => {
   let letterList: string[] = [];
 
   // Generate letters for the notations
@@ -22,7 +22,11 @@ export const generateBoardNotationLetters = (size: number) => {
   // Convert to base 26 pretty much
 
   for (let i = 0; i < size; i++) {
-    letterList.push(numToBoardNotation(i));
+    if (isFlipped) {
+      letterList.push(numToBoardNotation(size - i));
+    } else {
+      letterList.push(numToBoardNotation(i));
+    }
   }
 
   return letterList;

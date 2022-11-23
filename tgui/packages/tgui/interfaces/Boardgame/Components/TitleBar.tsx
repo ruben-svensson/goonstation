@@ -8,7 +8,7 @@ export const TitleBar = (props, context) => {
   const { isFlipped, toggleFlip, openModal } = useStates(context);
 
   return (
-    <Box className="boardgame__debug">
+    <Box className="boardgame__titlebar">
       <Button.Checkbox checked={isFlipped} onClick={toggleFlip}>
         Flip board
       </Button.Checkbox>

@@ -6,6 +6,7 @@ import { Box, Flex } from '../../../components';
 import { BoardgameData } from '../utils/types';
 
 import { generateBoardNotationLetters } from '../utils/notations';
+import { useStates } from '../utils/config';
 
 export type NotationsProps = {
   direction: 'vertical' | 'horizontal';
@@ -17,12 +18,8 @@ export const Notations = ({ direction }: NotationsProps, context) => {
   const { height, width } = boardInfo;
   const { currentUser } = data;
   const { tileColor1, tileColor2, border } = data.styling;
-  const [flip, setFlip] = useLocalState(context, 'flip', false);
-  let chars = generateBoardNotationLetters(width);
-
-  if (flip) {
-    chars = chars.reverse();
-  }
+  const { isFlipped } = useStates(context);
+  let chars = generateBoardNotationLetters(width, isFlipped);
 
   const heightPercentage = 100 / height;
   const widthPercentage = 100 / width;
@@ -37,17 +34,6 @@ export const Notations = ({ direction }: NotationsProps, context) => {
 
   return (
     <Flex.Item
-      onMouseUp={() => {
-        act('paletteClear', {
-          ckey: currentUser.ckey,
-        });
-
-        if (currentUser.selected) {
-          act('pawnRemove', {
-            id: currentUser.selected,
-          });
-        }
-      }}
       style={{
         'background-color': border || tileColor2,
         'color': tileColor1,
@@ -62,7 +48,7 @@ export const Notations = ({ direction }: NotationsProps, context) => {
             style={{
               'height': direction === 'vertical' ? `${heightPercentage}%` : 'auto',
             }}>
-            {direction === 'vertical' ? (flip ? i + 1 : height - i) : chars[i]}
+            {direction === 'vertical' ? (isFlipped ? i + 1 : height - i) : chars[i]}
           </Box>
         );
       })}

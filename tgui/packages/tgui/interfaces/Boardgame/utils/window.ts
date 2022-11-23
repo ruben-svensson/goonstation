@@ -3,11 +3,11 @@ declare const Byond, window;
 import { useBackend } from '../../../backend';
 import { BoardgameData } from './types';
 
-export const adjustWindowSize = (context) => {
+export const adjustAndSetBoardSizes = (context) => {
   const { data } = useBackend<BoardgameData>(context);
   const { aspectRatio } = data.styling;
 
-  const PaletteSetPadding = 100; // Add 100 pixels to the width
+  /* const PaletteSetPadding = 100; // Add 100 pixels to the width
   const titlebarHeightPadding = 32;
   let width = 500;
   let height = 400;
@@ -38,5 +38,7 @@ export const adjustWindowSize = (context) => {
 
   Byond.winset(window.__windowId__, {
     size: `${width}x${height}`,
-  });
+  });*/
 };
+
+const adjustWindowSize = (context) => {};

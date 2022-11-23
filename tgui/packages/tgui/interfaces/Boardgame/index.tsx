@@ -6,6 +6,7 @@ import { BoardgameData } from './utils/types';
 import { ConfigModal } from './components';
 import { Component } from 'inferno';
 import { BoardgameContents } from './components/BoardgameContents';
+import { adjustAndSetBoardSizes } from './utils/window';
 
 export class Boardgame extends Component<BoardgameData, any> {
   constructor(props) {
@@ -14,7 +15,7 @@ export class Boardgame extends Component<BoardgameData, any> {
 
   componentDidUpdate() {
     // Adjust window size
-    // adjustWindowSize(this.context);
+    adjustAndSetBoardSizes(this.context);
   }
 
   render() {
