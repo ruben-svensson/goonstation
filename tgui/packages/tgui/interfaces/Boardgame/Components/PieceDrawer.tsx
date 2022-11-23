@@ -40,6 +40,9 @@ export const PieceDrawer = (orps, context) => {
             {set.pieces.map((piece) => (
               <Flex.Item
                 className="boardgame__piece-set__piece"
+                style={{
+                  'width': `${set.minWidthPercentage}%`,
+                }}
                 key={piece.name}
                 onMouseDown={() => {
                   act('paletteSet', {

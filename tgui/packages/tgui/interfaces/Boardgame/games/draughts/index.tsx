@@ -10,6 +10,7 @@ export const kit: GameKit = {
   palettes: [
     {
       name: 'Draughts',
+      minWidthPercentage: 25,
       pieces,
     },
   ],

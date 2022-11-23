@@ -97,6 +97,7 @@ export const fetchPresets = () => presets;
 
 export type PaletteSet = {
   name: string;
+  minWidthPercentage: number;
   pieces: PaletteSetupType[];
 };
 

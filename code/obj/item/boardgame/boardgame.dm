@@ -57,7 +57,8 @@
 	var/board_width = 8
 	var/board_height = 8
 
-	var/lock_pieces_to_tile = TRUE // If true, pieces will be locked to the center of the tile they're on, otherwise they'll be free to move around
+	/// If true, pieces will be locked to the center of the tile they're on, otherwise they'll be free to move around
+	var/lock_pieces_to_tile = TRUE
 
 	/**
 		* ## Boardgame styling

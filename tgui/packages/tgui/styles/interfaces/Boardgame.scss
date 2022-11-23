@@ -294,7 +294,7 @@
 .boardgame__piece-set-header {
   font-size: 10px;
 
-  background-color: darken(rgb(131, 100, 74), 10%);
+  background-color: #563f2b;
 }
 
 .boardgame__piece-set-vertical {
@@ -332,7 +332,7 @@
 }
 
 .boardgame__piece-set-minimized > .boardgame__piece-set__piece {
-  width: 25%;
+  // width: 15.625%;
 
   font-size: 10px;
 }

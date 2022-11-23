@@ -1,5 +1,5 @@
 import { useBackend, useLocalState } from '../../../backend';
-import { BoardgameData } from './types';
+import { BoardgameData, PieceData } from './types';
 
 export const DEFAULT = {
   FLIP: false,
@@ -68,8 +68,12 @@ export const useActions = (act) => {
     pawnCreate: (pawn: string, x: number, y: number) => {
       act('pawnCreate', { pawn, x, y });
     },
-    pawnRemove: (pawn: string) => {
-      act('pawnRemove', { pawn });
+    /**
+     *
+     * @param id works both with number and a piece object
+     */
+    pawnRemove: (id: number | PieceData) => {
+      act('pawnRemove', { id });
     },
     pawnRemoveHeld: () => {
       act('pawnRemoveHeld');

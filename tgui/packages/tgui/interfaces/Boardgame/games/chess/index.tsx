@@ -9,6 +9,7 @@ export const kit: GameKit = {
   palettes: [
     {
       name: 'Chess',
+      minWidthPercentage: 15.625,
       pieces,
     },
   ],
