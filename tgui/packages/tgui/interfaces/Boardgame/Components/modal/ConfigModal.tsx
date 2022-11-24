@@ -4,7 +4,7 @@ import { useBackend, useLocalState } from '../../../../backend';
 
 import { Box, Button, Flex, Stack, Tabs, TextArea, Tooltip } from '../../../../components';
 
-import { fenCodeRecordFromPieces, fetchPieces, getPiece, getPiecesByGame, PaletteSetupType } from '../../games';
+import { fenCodeRecordFromPieces, fetchPieces, getPiece, getPiecesByGame, PieceSetupType } from '../../games';
 import { BoardgameData, PieceData } from '../../utils/types';
 import { PresetType, presetsByGame } from '../../games';
 import { useActions, useStates } from '../../utils/config';
@@ -40,7 +40,7 @@ export const ConfigModal = (_props, context) => {
 type PieceSVGImageProps = {
   width: number;
   height: number;
-  pieceData: PaletteSetupType;
+  pieceData: PieceSetupType;
 };
 
 const PieceSVGImage = ({ width, height, pieceData }: PieceSVGImageProps) => {

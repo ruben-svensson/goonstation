@@ -1,5 +1,5 @@
 declare const React;
-import { fenCodeRecordFromPieces, fetchPieces, PaletteSetupType } from '../games';
+import { fenCodeRecordFromPieces, fetchPieces, PieceSetupType } from '../games';
 import { Box } from '../../../components';
 import { BoardgameData } from '../utils/types';
 import { useBackend, useLocalState } from '../../../backend';
@@ -11,7 +11,7 @@ export const HeldPieceRenderer = (_, context) => {
 
   const [mouseCoords] = STATES(context).mouseCoords;
 
-  const code = currentUser?.palette || currentUser.selected?.code;
+  const code = '';
 
   if (!currentUser?.selected || currentUser.palette === '') {
     return null;
@@ -19,7 +19,7 @@ export const HeldPieceRenderer = (_, context) => {
 
   if (code) {
     const pieces = fetchPieces();
-    const piece: PaletteSetupType = fenCodeRecordFromPieces(pieces)[code];
+    const piece: PieceSetupType = fenCodeRecordFromPieces(pieces)[code];
 
     // Draw the piece with svg fixed to the mouse
 

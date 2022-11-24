@@ -7,7 +7,7 @@ import { Pattern } from './board';
 import { useBackend } from '../../../backend';
 import { BoardgameData } from '../utils/types';
 import { Window } from '../../../layouts';
-import { Notations, HeldPieceRenderer, PieceDrawer } from '.';
+import { Notations, HeldPieceRenderer, Palettes } from '.';
 import TitleBar from './TitleBar';
 
 export const BoardgameContents = (props, context) => {
@@ -46,8 +46,6 @@ export const BoardgameContents = (props, context) => {
       }}
       fitted
       className="boardgame__window">
-      <HeldPieceRenderer />
-      <TitleBar />
       <Flex className="boardgame__wrapper">
         <div className={`boardgame__board-inner`}>
           {!!useNotations && <Notations direction={'horizontal'} />}
@@ -59,7 +57,7 @@ export const BoardgameContents = (props, context) => {
           {!!useNotations && <Notations direction={'horizontal'} />}
         </div>
       </Flex>
-      <PieceDrawer />
+      <Palettes />
     </Window.Content>
   );
 };

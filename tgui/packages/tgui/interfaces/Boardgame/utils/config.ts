@@ -1,4 +1,5 @@
 import { useBackend, useLocalState } from '../../../backend';
+import { fetchPalettes, PieceSetupType } from '../games';
 import { BoardgameData, PieceData } from './types';
 
 export const DEFAULT = {
@@ -13,6 +14,14 @@ export type xyType = {
   x: number;
   y: number;
 };
+export type SizeType = {
+  width: number;
+  height: number;
+};
+
+type PalleteExpandType = {
+  [key: string]: boolean;
+};
 
 export const STATES = (context) => {
   return {
@@ -23,6 +32,8 @@ export const STATES = (context) => {
     // Config Modal
     modalTabIndex: useLocalState<number>(context, 'modalTabIndex', DEFAULT.CFG_MODAL_TAB_INDEX),
     modalOpen: useLocalState<boolean>(context, 'modalOpen', DEFAULT.CFG_MODAL_OPEN),
+    palettesExpanded: useLocalState<PalleteExpandType>(context, 'palettesExpanded', {}),
+    tileSize: useLocalState<SizeType>(context, 'tileSize', { width: 0, height: 0 }),
   };
 };
 
@@ -35,12 +46,14 @@ export const useStates = (context) => {
   const states = STATES(context);
 
   return {
-    // Flips the board
+    // Misc
     toggleFlip: () => {
       const [flip, setFlip] = states.flip;
       setFlip(!flip);
     },
     isFlipped: states.flip[0],
+
+    // Modal
     openModal: () => {
       const [, setmodalOpen] = states.modalOpen;
       setmodalOpen(true);
@@ -55,6 +68,28 @@ export const useStates = (context) => {
       setModalTabIndex(index);
     },
     modalTabIndex: states.modalTabIndex[0],
+
+    // Palettes
+    expandPalette: (index: number) => {
+      const [, setPalettesExpanded] = states.palettesExpanded;
+      setPalettesExpanded({ ...states.palettesExpanded[0], [index]: true });
+    },
+
+    togglePalette: (index: number) => {
+      const [, setPalettesExpanded] = states.palettesExpanded;
+      setPalettesExpanded({ ...states.palettesExpanded[0], [index]: !states.palettesExpanded[0][index] });
+    },
+
+    isExpanded: (index: number) => {
+      return !!states.palettesExpanded[0][index];
+    },
+
+    // Board
+    setTileSize: (size: SizeType) => {
+      const [, setTileSize] = states.tileSize;
+      setTileSize(size);
+    },
+    tileSize: states.tileSize[0],
   };
 };
 
@@ -90,7 +125,7 @@ export const useActions = (act) => {
     applyGNot: (gNot: string) => {
       act('applyGNot', { gNot });
     },
-    paletteSet: (pawn: string) => {
+    paletteSet: (ckey: string, pawn: string) => {
       act('paletteSet', { pawn });
     },
     paletteClear: () => {

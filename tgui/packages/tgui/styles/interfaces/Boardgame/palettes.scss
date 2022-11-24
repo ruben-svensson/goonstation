@@ -1,0 +1,17 @@
+.boardgame__palettes {
+  width: 100px;
+  max-height: 100%;
+  overflow-y: scroll;
+
+  &-header {
+    font-size: 10px;
+    // background-color: #563f2b;
+  }
+
+  &-set {
+    width: 100%;
+    overflow-y: auto;
+    background-color: rgb(230, 230, 230);
+    flex-wrap: wrap;
+  }
+}

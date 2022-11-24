@@ -9,7 +9,7 @@ import { PaletteSetupType } from '../games';
 
 export type PieceProps = {
   piece: PaletteSetupType;
-  isSetPiece: boolean;
+  isPresetPiece: boolean;
   position?: {
     x: number;
     y: number;
@@ -27,20 +27,14 @@ export const getTwemojiSrc = (code: string) => {
   return src;
 };
 
-export const Piece = ({ piece, isSetPiece, position }: PieceProps, context) => {
-  const { act, data } = useBackend<BoardgameData>(context);
-  const { currentUser, pieces } = data;
-  const { fenCode, name, game, image } = piece;
-  const { x, y } = position || { x: -1, y: -1 }; // Default to 0,0 if no position is provided
-
-  return <Box className={`boardgame__piece`}>{image ? <img src={image} /> : <img src={getTwemojiSrc(fenCode)} />}</Box>;
-};
-
 type SvgFenRendererProps = {
   fenCode: string;
 };
 
-const SvgFenRenderer = ({ fenCode }: SvgFenRendererProps) => {
+/**
+ * USed for drawing the piece onto
+ */
+const SvgPieve = ({ fenCode }: SvgFenRendererProps) => {
   return (
     <svg viewBox="0 0 45 45" width="45" height="45">
       <text y="50%" x="50%" dy=".3em">
@@ -48,4 +42,19 @@ const SvgFenRenderer = ({ fenCode }: SvgFenRendererProps) => {
       </text>
     </svg>
   );
+};
+
+export const Piece = ({ piece, isPresetPiece, position }: PieceProps, context) => {
+  const { act, data } = useBackend<BoardgameData>(context);
+  const { currentUser, pieces } = data;
+  const { fenCode, name, game, image } = piece;
+  const { x, y } = position || { x: -1, y: -1 }; // Default to 0,0 if no position is provided
+
+  return isPresetPiece ? (
+    <Box className={`boardgame__piece`}>{image ? <img src={image} /> : <img src={getTwemojiSrc(fenCode)} />}</Box>
+  ) : (
+    <SvgPieve />
+  );
+
+  return;
 };

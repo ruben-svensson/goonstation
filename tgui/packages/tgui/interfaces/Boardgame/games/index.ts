@@ -1,7 +1,7 @@
 import { GameName, kits } from './kits';
 
 export type GameKit = {
-  pieces: PaletteSetupType[];
+  pieces: PieceSetupType[];
   presets: PresetType[];
   // Palette drawer groups
   palettes: PaletteSet[];
@@ -11,21 +11,21 @@ export type GameKit = {
  * Pieces
  */
 
-export type PaletteSetupType = {
+export type PieceSetupType = {
   code: string;
   name: string;
   game: GameName;
   image?: string;
 };
 
-const pieces: PaletteSetupType[] = [];
+const pieces: PieceSetupType[] = [];
 
 // Push gamekit pieces into pieces array
 kits.forEach((kit: GameKit) => {
   pieces.push(...kit.pieces);
 });
 
-export const pushPieces = (newPieces: PaletteSetupType[]) => {
+export const pushPieces = (newPieces: PieceSetupType[]) => {
   return pieces.push(...newPieces);
 };
 
@@ -33,11 +33,11 @@ export const getPiece = (fenCode: string, game: string) => {
   return pieces.find((piece) => piece.code === fenCode && piece.game === game);
 };
 
-export const getPiecesByGame = (game: string): PaletteSetupType[] => {
+export const getPiecesByGame = (game: string): PieceSetupType[] => {
   return pieces.filter((piece) => piece.game === game);
 };
 
-export const fenCodeRecordFromPieces = (pieces: PaletteSetupType[]): Record<string, PaletteSetupType> => {
+export const fenCodeRecordFromPieces = (pieces: PieceSetupType[]): Record<string, PieceSetupType> => {
   return pieces.reduce((map, piece) => {
     map[piece.code] = piece;
     return map;
@@ -98,7 +98,7 @@ export const fetchPresets = () => presets;
 export type PaletteSet = {
   name: string;
   minWidthPercentage: number;
-  pieces: PaletteSetupType[];
+  pieces: PieceSetupType[];
 };
 
 export const palettes: PaletteSet[] = [];

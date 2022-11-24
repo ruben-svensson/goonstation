@@ -1,7 +1,7 @@
 declare const React;
 
 import { useBackend, useLocalState } from '../../../../backend';
-import { fenCodeRecordFromPieces, PaletteSetupType, fetchPieces } from '../../games';
+import { fenCodeRecordFromPieces, PieceSetupType, fetchPieces } from '../../games';
 
 import { BoardgameData } from '../../utils/types';
 import { CheckerBoard } from './patterns/CheckerBoard';
@@ -136,7 +136,7 @@ const SelectGuideSvg = (_props, context) => {
 };
 
 type OverlaySvgRendererProps = {
-  pieceRecords: Record<string, PaletteSetupType>;
+  pieceRecords: Record<string, PieceSetupType>;
 };
 
 // Draw names of player moving the pieces, lines between moved pieces and the piece being moved
@@ -207,7 +207,7 @@ const NameOverlaySvg = ({ pieceRecords }: OverlaySvgRendererProps, context) => {
 };
 
 type PiecesSvgRendererProps = {
-  pieceRecords: Record<string, PaletteSetupType>;
+  pieceRecords: Record<string, PieceSetupType>;
 };
 
 const PiecesSvgRenderer = ({ pieceRecords }: PiecesSvgRendererProps, context) => {
