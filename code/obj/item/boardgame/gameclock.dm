@@ -9,8 +9,9 @@
 	flags = TGUI_INTERACTIVE
 	var/timing = FALSE
 	var/turn = WHITE
-	var/whiteTime = 5 MINUTES
-	var/blackTime = 5 MINUTES
+	var/defaultTime = 5 MINUTES
+	var/whiteTime
+	var/blackTime
 	var/lastTick = 0
 	var/const/maxTime = 1 HOUR
 	var/const/minTime = 0
@@ -61,6 +62,11 @@
 		src.icon_state = "[src.icon_state]_stopped"
 		playsound(src.loc, 'sound/effects/bell_high_pitch.ogg', 30)
 
+	New()
+		. = ..()
+		src.whiteTime = src.defaultTime
+		src.blackTime = src.defaultTime
+
 	examine()
 		. = ..()
 		if (src.timing)
@@ -97,6 +103,7 @@
 			"name" = src.name,
 			"maxTime" = round(src.maxTime / 10),
 			"minTime" = round(src.minTime / 10),
+			"defaultTime" = round(src.defaultTime / 10),
 		)
 
 	ui_data(mob/user)
@@ -111,10 +118,12 @@
 	ui_act(action, params)
 		switch(action)
 			if ("set_turn")
+				if (src.timing) return
 				src.add_fingerprint(usr)
 				src.turn = !src.turn
 				. = TRUE
 			if ("set_time")
+				if (src.timing) return
 				src.add_fingerprint(usr)
 				var/whiteTime = text2num_safe(params["whiteTime"])
 				var/blackTime = text2num_safe(params["blackTime"])
@@ -131,6 +140,7 @@
 					icon_state = "chessclock"
 				. = TRUE
 			if ("end_turn")
+				if (!src.timing) return
 				src.add_fingerprint(usr)
 				src.lastTick = null
 				src.turn = !src.turn
@@ -139,9 +149,9 @@
 				. = TRUE
 
 	mouse_drop(var/mob/user)
-		if((istype(user,/mob/living/carbon/human))&&(!user.stat)&&!(src in user.contents)&&!src.anchored)
-			user.put_in_hand_or_drop(src)
-		return ..()
+		if(user == usr && !user.restrained() && !user.stat && (user.contents.Find(src) || in_interact_range(src, user)))
+			if(!user.put_in_hand(src))
+				return ..()
 
 	attack_hand(var/mob/user)
 		src.ui_interact(user)
