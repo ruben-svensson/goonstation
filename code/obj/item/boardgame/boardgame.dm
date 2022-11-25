@@ -232,21 +232,21 @@
 			src.pieces -= piece
 
 
-	proc/removePieceById(id)
-		src.removePiece(src.getPieceById(id))
+	proc/removePieceById(piece)
+		src.removePiece(src.getPieceById(piece))
 
 	proc/removePieceAt(x, y)
 		for (var/piece in src.pieces)
 			if (src.pieces[piece]["x"] == x && src.pieces[piece]["y"] == y)
 				src.removePiece(piece)
 
-	proc/selectPiece(ckey, pId)
-		var/piece = src.getPieceById(pId)
+	proc/selectPiece(ckey, pieceId)
+		var/piece = src.getPieceById(pieceId)
 		if(!piece)
 			return
 		// Check if ["selected"] is null
 		if (src.active_users[ckey]["selected"])
-			pieces[pId]["selected"] = src.active_users[ckey]
+			pieces[pieceId]["selected"] = src.active_users[ckey]
 
 
 
@@ -385,7 +385,8 @@
 				src.active_users[user.ckey] = list(
 					"ckey" = user.ckey,
 					"name" = user.name,
-					"selected" = null
+					"selected" = null,
+					"palette" = null,
 				)
 
 	ui_static_data(mob/user)
@@ -412,33 +413,33 @@
 		if(. || !IN_RANGE(src, ui.user, 1))
 			return
 		switch(action)
-			if("pawnCreate")
-				var/fenCode = params["fenCode"]
+			if("pieceCreate")
+				var/code = params["code"]
 				var/x = text2num(params["x"])
 				var/y = text2num(params["y"])
-				src.createPiece(fenCode, x, y)
+				src.createPiece(code, x, y)
 				. = TRUE
-			if("pawnRemove")
-				var/id = params["id"]
-				src.removePiece(id)
+			if("pieceRemove")
+				var/piece = params["piece"]
+				src.removePiece(piece)
 				. = TRUE
-			if("pawnRemoveHeld")
+			if("pieceRemoveHeld")
 				var/ckey = params["ckey"]
-				var/id = src.active_users[ckey]["selected"]
+				var/piece = src.active_users[ckey]["selected"]
 				src.deselectPiece(ckey)
-				src.removePiece(id)
+				src.removePiece(piece)
 				. = TRUE
-			if("pawnSelect")
+			if("pieceSelect")
 				var/ckey = params["ckey"]
-				var/pId = params["pId"]
-				src.selectPiece(ckey, pId)
+				var/piece = params["piece"]
+				src.selectPiece(ckey, piece)
 				//src.removePiece
 				. = TRUE
-			if("pawnDeselect")
+			if("pieceDeselect")
 				var/ckey = params["ckey"]
 				src.deselectPiece(ckey)
 				. = TRUE
-			if("pawnPlace")
+			if("piecePlace")
 				// Place the pawn on the board currently selected
 				var/ckey = params["ckey"]
 				var/x = text2num(params["x"])
@@ -464,9 +465,16 @@
 				var/ckey = params["ckey"]
 				src.clearPalette(ckey)
 				. = TRUE
+			if("heldClear")
+				var/ckey = params["ckey"]
+				if(src.active_users[ckey]["selected"])
+					src.deselectPiece(ckey)
+				if(src.active_users[ckey]["palette"])
+					src.clearPalette(ckey)
+				. = TRUE
 
 	ui_close(mob/user)
-		src.active_users -= user
+		src.active_users -= user.ckey
 		. = ..()
 
 	ui_status(mob/user, datum/ui_state/state)

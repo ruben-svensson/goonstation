@@ -1,7 +1,5 @@
-declare const React;
-
 import { classes } from 'common/react';
-import { useBackend, useLocalState } from '../../../backend';
+import { useBackend } from '../../../backend';
 import { Box, Flex } from '../../../components';
 import { BoardgameData } from '../utils/types';
 

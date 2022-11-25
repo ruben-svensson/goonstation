@@ -1,22 +1,14 @@
-import { useStates, useActions } from '../utils/config';
-
-declare const React;
-
-import { Box, Button, Flex } from '../../../components';
-import { Pattern } from './board';
+import { Flex } from '../../../components';
+import { Board } from './board';
 import { useBackend } from '../../../backend';
 import { BoardgameData } from '../utils/types';
 import { Window } from '../../../layouts';
-import { Notations, HeldPieceRenderer, Palettes } from '.';
-import TitleBar from './TitleBar';
+import { Notations, Palettes } from '.';
+import { useStates } from '../utils/config';
 
 export const BoardgameContents = (props, context) => {
   const { act, data } = useBackend<BoardgameData>(context);
-  const { pawnCreate } = useActions(act);
-  const { isFlipped } = useStates(context);
-
-  const { currentUser } = data;
-  const { pattern } = data.boardInfo;
+  const { mouseCoordsSet } = useStates(context);
   const { useNotations } = data.styling;
 
   /* const [zoom, setZoom] = states.zoom;
@@ -27,10 +19,10 @@ export const BoardgameContents = (props, context) => {
   return (
     <Window.Content
       onMouseMove={(e) => {
-        /* setMouseCoords({
+        mouseCoordsSet({
           x: e.clientX,
           y: e.clientY,
-        });*/
+        });
       }}
       onMouseUp={(e) => {
         // If mouse is released outside boardgame__board-inner, delete the held piece
@@ -51,7 +43,7 @@ export const BoardgameContents = (props, context) => {
           {!!useNotations && <Notations direction={'horizontal'} />}
           <Flex className={`boardgame__board`}>
             {!!useNotations && <Notations direction={'vertical'} />}
-            <Pattern pattern={pattern} />
+            <Board />
             {!!useNotations && <Notations direction={'vertical'} />}
           </Flex>
           {!!useNotations && <Notations direction={'horizontal'} />}

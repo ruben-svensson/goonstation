@@ -1,7 +1,7 @@
-import { PaletteSetupType } from '..';
+import { PieceSetupType } from '..';
 
 /* eslint-disable max-len */
-const pieces: PaletteSetupType[] = [];
+const pieces: PieceSetupType[] = [];
 
 pieces.push({
   code: 'd',

@@ -1,8 +1,7 @@
 /* eslint-disable react/no-unescaped-entities */
 /* @ts-ignore */
 
-declare const React;
-import { PresetType, pushPresets } from '..';
+import { PresetType } from '..';
 import { Box, Stack } from '../../../../components';
 
 const presets: PresetType[] = [];

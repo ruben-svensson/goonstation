@@ -1,14 +1,9 @@
-declare const React;
-declare const twemoji;
-
-import { Box } from '../../../components';
-import { classes } from 'common/react';
-import { useBackend, useLocalState } from '../../../backend';
-import { TileSize, BoardgameData, User } from '../utils/types';
-import { PaletteSetupType } from '../games';
+import { useBackend } from '../../../backend';
+import { BoardgameData } from '../utils/types';
+import { PieceSetupType } from '../games';
 
 export type PieceProps = {
-  piece: PaletteSetupType;
+  piece: PieceSetupType;
   isPresetPiece: boolean;
   position?: {
     x: number;
@@ -16,7 +11,7 @@ export type PieceProps = {
   };
 };
 
-export const getTwemojiSrc = (code: string) => {
+/* export const getTwemojiSrc = (code: string) => {
   const image = twemoji.parse(code); // img as with src set to twemoji image
   // Get src from image
   // Example string: <img class="emoji" draggable="false" alt="😀" src="https://twemoji.maxcdn.com/v/14.0.2/72x72/1f600.png">
@@ -25,7 +20,7 @@ export const getTwemojiSrc = (code: string) => {
     src = image.split('src="')[1].split('"')[0];
   }
   return src;
-};
+};*/
 
 type SvgFenRendererProps = {
   fenCode: string;
@@ -47,14 +42,16 @@ const SvgPieve = ({ fenCode }: SvgFenRendererProps) => {
 export const Piece = ({ piece, isPresetPiece, position }: PieceProps, context) => {
   const { act, data } = useBackend<BoardgameData>(context);
   const { currentUser, pieces } = data;
-  const { fenCode, name, game, image } = piece;
+  const { code, name, game, image } = piece;
   const { x, y } = position || { x: -1, y: -1 }; // Default to 0,0 if no position is provided
 
-  return isPresetPiece ? (
-    <Box className={`boardgame__piece`}>{image ? <img src={image} /> : <img src={getTwemojiSrc(fenCode)} />}</Box>
-  ) : (
-    <SvgPieve />
-  );
+  return <img src={image} />;
+
+  /* return (
+    <Box className={`boardgame__piece`}>
+      <img src={image} />
+    </Box>
+  );*/
 
   return;
 };

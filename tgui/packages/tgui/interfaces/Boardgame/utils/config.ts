@@ -1,6 +1,5 @@
-import { useBackend, useLocalState } from '../../../backend';
-import { fetchPalettes, PieceSetupType } from '../games';
-import { BoardgameData, PieceData } from './types';
+import { useLocalState } from '../../../backend';
+import { PieceData, UserData } from './types';
 
 export const DEFAULT = {
   FLIP: false,
@@ -33,6 +32,7 @@ export const STATES = (context) => {
     modalTabIndex: useLocalState<number>(context, 'modalTabIndex', DEFAULT.CFG_MODAL_TAB_INDEX),
     modalOpen: useLocalState<boolean>(context, 'modalOpen', DEFAULT.CFG_MODAL_OPEN),
     palettesExpanded: useLocalState<PalleteExpandType>(context, 'palettesExpanded', {}),
+    paletteLastElement: useLocalState<HTMLElement>(context, 'paletteLastElement', null),
     tileSize: useLocalState<SizeType>(context, 'tileSize', { width: 0, height: 0 }),
   };
 };
@@ -46,6 +46,19 @@ export const useStates = (context) => {
   const states = STATES(context);
 
   return {
+    paletteLastElementSet: (element: HTMLElement) => {
+      const [, setPaletteLastElement] = states.paletteLastElement;
+      setPaletteLastElement(element);
+    },
+    paletteLastElement: states.paletteLastElement[0],
+    mouseCoordsSet: (coords: xyType) => {
+      const [, setMouseCoords] = states.mouseCoords;
+      setMouseCoords({
+        x: coords.x,
+        y: coords.y,
+      });
+    },
+    mouseCoords: states.mouseCoords[0],
     // Misc
     toggleFlip: () => {
       const [flip, setFlip] = states.flip;
@@ -100,36 +113,45 @@ export const useStates = (context) => {
  */
 export const useActions = (act) => {
   const actions = {
-    pawnCreate: (pawn: string, x: number, y: number) => {
-      act('pawnCreate', { pawn, x, y });
+    pieceCreate: (code: string, x: number, y: number) => {
+      act('pieceCreate', { code, x, y });
     },
     /**
      *
      * @param id works both with number and a piece object
      */
-    pawnRemove: (id: number | PieceData) => {
-      act('pawnRemove', { id });
+    pieceRemove: (piece: number | PieceData) => {
+      act('pieceRemove', { piece });
     },
-    pawnRemoveHeld: () => {
-      act('pawnRemoveHeld');
+    pieceRemoveHeld: (ckey: string | UserData) => {
+      act('pieceRemoveHeld', {
+        ckey,
+      });
     },
-    pawnSelect: (pawn: string) => {
-      act('pawnSelect', { pawn });
+    pieceSelect: (ckey: string | UserData, piece: string | PieceData) => {
+      act('pieceSelect', { ckey, piece });
     },
-    pawnDeselect: () => {
-      act('pawnDeselect');
+    pieceDeselect: (ckey: string | UserData) => {
+      act('pieceDeselect', {
+        ckey,
+      });
     },
-    pawnPlace: (pawn: string, x: number, y: number) => {
-      act('pawnPlace', { pawn, x, y });
+    piecePlace: (ckey: string | UserData, x: number, y: number) => {
+      act('piecePlace', { ckey, x, y });
     },
-    applyGNot: (gNot: string) => {
-      act('applyGNot', { gNot });
+    applyGNot: (gnot: string) => {
+      act('applyGNot', { gnot });
     },
-    paletteSet: (ckey: string, pawn: string) => {
-      act('paletteSet', { pawn });
+    paletteSet: (ckey: string, code: string) => {
+      act('paletteSet', {
+        ckey: ckey,
+        code: code,
+      });
     },
-    paletteClear: () => {
-      act('paletteClear');
+    paletteClear: (ckey: string | UserData) => {
+      act('paletteClear', {
+        ckey,
+      });
     },
   };
 

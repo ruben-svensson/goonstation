@@ -1,4 +1,4 @@
-import { PresetType, pushPresets } from '..';
+import { PresetType } from '..';
 
 const presets: PresetType[] = [];
 

@@ -1,7 +1,4 @@
-declare const React;
-import { Box, Button, Flex } from '../../../components';
-import { useBackend } from '../../../backend';
-import { BoardgameData } from '../utils/types';
+import { Box, Button } from '../../../components';
 import { useStates } from '../utils/config';
 
 export const TitleBar = (props, context) => {

@@ -1,42 +1,50 @@
-declare const React;
-import { fenCodeRecordFromPieces, fetchPieces, PieceSetupType } from '../games';
 import { Box } from '../../../components';
 import { BoardgameData } from '../utils/types';
-import { useBackend, useLocalState } from '../../../backend';
-import { STATES } from '../utils/config';
+import { useBackend } from '../../../backend';
+import { useStates } from '../utils/config';
+import { Piece } from './Piece';
+import { fenCodeRecordFromPieces, fetchPieces } from '../games';
 
 export const HeldPieceRenderer = (_, context) => {
   const { act, data } = useBackend<BoardgameData>(context);
-  const { currentUser } = data;
 
-  const [mouseCoords] = STATES(context).mouseCoords;
+  if (!data.currentUser) return null;
 
-  const code = '';
+  const { mouseCoords, paletteLastElement } = useStates(context);
+  const { x, y } = mouseCoords;
 
-  if (!currentUser?.selected || currentUser.palette === '') {
-    return null;
+  let code;
+  if (data.currentUser.palette) {
+    code = data.currentUser.palette;
+  } else if (data.currentUser.selected) {
+    code = data.currentUser.selected.code;
   }
 
-  if (code) {
-    const pieces = fetchPieces();
-    const piece: PieceSetupType = fenCodeRecordFromPieces(pieces)[code];
+  if (!code) return null;
 
-    // Draw the piece with svg fixed to the mouse
+  const pieces = fetchPieces();
+  const piece = fenCodeRecordFromPieces(pieces)[code];
 
-    return (
-      <Box
-        className="boardgame__heldpiece"
-        style={{
-          top: mouseCoords.y + 'px',
-          left: mouseCoords.x + 'px',
-          width: '30px',
-          height: '30px',
-        }}>
-        <img src={piece?.image} />
-        <span>{piece?.name}</span>
+  return (
+    <Box
+      className={`boardgame__heldpiece`}
+      style={{
+        'top': y + 'px',
+        'left': x + 'px',
+        width: '120px',
+        height: '120px',
+      }}>
+      <Box className="boardgame__heldpiece-inner">
+        <Piece piece={piece} isPresetPiece />
       </Box>
-    );
-  } else {
-    return null;
-  }
+      <Box
+        style={{
+          'font-size': '12px',
+          'font-weight': 'bold',
+          'text-shadow': '0 0 2px black',
+        }}>
+        Right click to cancel
+      </Box>
+    </Box>
+  );
 };

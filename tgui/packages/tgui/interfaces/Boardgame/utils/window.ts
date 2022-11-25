@@ -1,7 +1,7 @@
 declare const Byond, window;
 
 import { useBackend } from '../../../backend';
-import { useStates } from './config';
+import { useActions, useStates } from './config';
 import { BoardgameData } from './types';
 
 export const adjustSizes = (context) => {
@@ -69,4 +69,24 @@ const adjustWindowSize = (context) => {
   Byond.winset(window.__windowId__, {
     size: `${width}x${height}`,
   });
+};
+
+export const handleEvents = (context) => {
+  const { act, data } = useBackend<BoardgameData>(context);
+  const { paletteClear, pieceDeselect } = useActions(act);
+
+  document.body.oncontextmenu = (e) => {
+    e.preventDefault();
+
+    return false;
+  };
+
+  document.body.onmouseleave = () => {
+    if (data.currentUser?.palette) {
+      paletteClear(data.currentUser.ckey);
+    }
+    if (data.currentUser?.selected) {
+      pieceDeselect(data.currentUser.ckey);
+    }
+  };
 };

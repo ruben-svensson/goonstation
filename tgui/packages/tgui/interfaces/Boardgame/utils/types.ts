@@ -1,25 +1,25 @@
-import { BooleanLike } from 'common/react';
-import { BoardPattern } from '../components/board';
+export type BoardInfo = {
+  name: string;
+  game: string;
+  pattern: string;
+  width: number;
+  height: number;
+  lock: boolean;
+};
+
+export type Styling = {
+  tileColor1: string;
+  tileColor2: string;
+  border: string;
+  aspectRatio: number;
+  useNotations: boolean;
+};
 
 export type BoardgameData = {
-  boardInfo: {
-    name: string;
-    game: string;
-    pattern: BoardPattern;
-    width: number;
-    height: number;
-    lock: boolean;
-  };
-  styling: {
-    tileColor1: string;
-    tileColor2: string;
-    border: string;
-    aspectRatio: number;
-    useNotations: boolean;
-  };
+  boardInfo: BoardInfo;
+  styling: Styling;
   board: string[];
   pieces: PieceData[];
-
   users: UserData[];
   currentUser: UserData;
 };
@@ -39,9 +39,7 @@ export type PieceData = {
 export type UserData = {
   ckey: string;
   name: string;
-  mouseX: number;
-  mouseY: number;
-  selected?: UserData;
+  selected?: PieceData;
   palette?: string;
 };
 

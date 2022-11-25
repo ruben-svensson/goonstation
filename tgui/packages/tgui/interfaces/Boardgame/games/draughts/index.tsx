@@ -1,4 +1,4 @@
-import { GameKit, getPiecesByGame } from '..';
+import { GameKit } from '..';
 import pieces from './pieces';
 import presets from './presets';
 
