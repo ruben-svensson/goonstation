@@ -4,6 +4,9 @@
  *
  * Most of these values are shared by both dm and tgui, so check both
  * areas when changing them.
+ *
+ *
+ * A note from Github Copilot:
  */
 
 #define MAP_TEXT_MOVE 0
@@ -22,6 +25,7 @@
 #define STYLING_BORDER "border"
 #define STYLING_ASPECT "aspectRatio"
 #define STYLING_NOTATIONS "useNotations"
+#define STYLING_FLIPBUTTON "flipButton"
 
 /**
  * # Boardgame
@@ -109,13 +113,13 @@
 		*/
 	var/list/styling = list(
 		STYLING_TILECOLOR1 = rgb(240, 217, 181),
+		STYLING_OLDTILECOLOR1 = rgb(240, 217, 181),
+		STYLING_OLDTILECOLOR2 = rgb(181, 136, 99),
 		STYLING_TILECOLOR2 = rgb(181, 136, 99),
 		STYLING_BORDER = rgb(131, 100, 74),
 		STYLING_ASPECT = 1,
 		STYLING_NOTATIONS = TRUE,
-		// These are used by the boardgame itself and changes itself.
-		STYLING_OLDTILECOLOR1 = rgb(240, 217, 181),
-		STYLING_OLDTILECOLOR2 = rgb(181, 136, 99),
+		STYLING_FLIPBUTTON = TRUE,
 	)
 
 	/**
@@ -228,8 +232,9 @@
 		return src.pieces[id]
 
 	proc/removePiece(piece)
-		if(piece)
-			src.pieces -= piece
+		var/target = src.pieces[piece]
+		if(target)
+			src.pieces -= target
 
 
 	proc/removePieceById(piece)
@@ -244,20 +249,17 @@
 		var/piece = src.getPieceById(pieceId)
 		if(!piece)
 			return
-		// Check if ["selected"] is null
-		if (src.active_users[ckey]["selected"])
-			pieces[pieceId]["selected"] = src.active_users[ckey]
-
-
+		src.active_users[ckey]["selected"] = pieceId
+		src.pieces[pieceId]["selected"] = ckey
 
 	proc/deselectPiece(ckey)
 		// Check if ckey exists
-		if (ckey in src.active_users)
-			// Check if the user has a selected piece
-			if (src.active_users[ckey]["selected"])
-				// Deselect the piece
-				pieces[src.active_users[ckey]["selected"]]["selected"] = null
-				src.active_users[ckey]["selected"] = null
+		if (src.active_users[ckey])
+			var/pieceId = src.active_users[ckey]["selected"]
+			src.active_users[ckey]["selected"] = null
+			if (pieceId)
+				src.pieces[pieceId]["selected"] = null
+
 
 	proc/getPieceAt(x, y)
 
@@ -312,7 +314,8 @@
 		piece["x"] = newX
 		piece["y"] = newY
 
-		var/moverName = piece["selected"]["name"]
+		var/user = src.active_users[piece["selected"]]
+		var/moverName = user["name"]
 
 		src.speakMapText(piece, oldX, oldY, newX, newY, MAP_TEXT_MOVE, moverName)
 		playsound(src.loc, src.sounds[SOUND_MOVE], 30, 1)
@@ -321,7 +324,8 @@
 		var/map_text = ""
 		if(!piece) return // If the piece doesn't exist, return
 		if(!piece["selected"]) return // If the piece isn't selected, return
-		var/moverName = piece["selected"]["name"]
+		var/user = src.active_users[piece["selected"]]
+		var/moverName = user["name"]
 		var/prevPosString = src.posToNotationString(newX, newY)
 		var/newPosString = src.posToNotationString(oldX, oldY)
 
@@ -367,7 +371,7 @@
 		//src.drawBoardIcon()
 		if(!piece) return
 		playsound(src.loc, src.sounds[SOUND_CAPTURE], 30, 1)
-		src.removePiece(piece)
+		src.removePieceById(piece)
 		if(capturedby)
 			src.speakMapText(capturedby, capturedby["x"], capturedby["y"], capturedby["prevX"], capturedby["prevY"], MAP_TEXT_CAPTURE, piece)
 

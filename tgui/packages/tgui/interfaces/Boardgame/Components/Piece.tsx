@@ -41,10 +41,7 @@ const SvgPieve = ({ fenCode }: SvgFenRendererProps) => {
 
 export const Piece = ({ piece, isPresetPiece, position }: PieceProps, context) => {
   const { act, data } = useBackend<BoardgameData>(context);
-  const { currentUser, pieces } = data;
-  const { code, name, game, image } = piece;
-  const { x, y } = position || { x: -1, y: -1 }; // Default to 0,0 if no position is provided
-
+  const { image } = piece;
   return <img src={image} />;
 
   /* return (

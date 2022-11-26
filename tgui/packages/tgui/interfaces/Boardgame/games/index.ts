@@ -5,6 +5,7 @@ export type GameKit = {
   presets: PresetType[];
   // Palette drawer groups
   palettes: PaletteSet[];
+  facts?: string[];
 };
 
 /**
@@ -59,6 +60,7 @@ export type PresetType = {
   setup: string | (() => string);
   boardWidth: number;
   boardHeight: number;
+  kit: GameKit;
   wikiPage?: string; // Wiki page for the game from https://wiki.ss13.co/
 };
 
@@ -66,7 +68,7 @@ export const presets: PresetType[] = [];
 
 // Push gamekit presets into pieces array
 kits.forEach((kit: GameKit) => {
-  presets.push(...kit.presets);
+  presets.push(...kit.presets.map((preset) => ({ ...preset, kit })));
 });
 
 export const pushPresets = (newPresets: PresetType[]) => {
@@ -97,7 +99,6 @@ export const fetchPresets = () => presets;
 
 export type PaletteSet = {
   name: string;
-  minWidthPercentage: number;
   pieces: PieceSetupType[];
 };
 

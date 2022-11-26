@@ -9,10 +9,11 @@ export const kit: GameKit = {
   palettes: [
     {
       name: 'Chess',
-      minWidthPercentage: 15.625,
       pieces,
     },
   ],
+  // Generate 10 fun facts about chess
+  facts: ['The first chess set was made in 1470.'],
 };
 
 export default kit;

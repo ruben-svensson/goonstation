@@ -12,6 +12,10 @@
   }
 }
 
+.boardgame__piecesvg-ignore {
+  pointer-events: none;
+}
+
 // HERE we have the components, the pieces, the board, the notations, etc.
 
 @include meta.load-css('./palettes.scss');

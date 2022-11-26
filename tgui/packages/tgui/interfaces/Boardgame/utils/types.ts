@@ -10,9 +10,12 @@ export type BoardInfo = {
 export type Styling = {
   tileColor1: string;
   tileColor2: string;
+  oldTileColor1: string;
+  oldTileColor2: string;
   border: string;
   aspectRatio: number;
   useNotations: boolean;
+  flipBoard: boolean;
 };
 
 export type BoardgameData = {
@@ -31,8 +34,8 @@ export type PieceData = {
   y: number;
   prevX: number;
   prevY: number;
-  selected: UserData;
-  lastSelected: UserData;
+  selected: string;
+  lastSelected: string;
   palette: string;
 };
 

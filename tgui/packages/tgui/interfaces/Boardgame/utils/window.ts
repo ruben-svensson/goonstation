@@ -77,7 +77,14 @@ export const handleEvents = (context) => {
 
   document.body.oncontextmenu = (e) => {
     e.preventDefault();
-
+    if (e.button === 2) {
+      if (data.currentUser?.palette) {
+        paletteClear(data.currentUser.ckey);
+      }
+      if (data.currentUser?.selected) {
+        pieceDeselect(data.currentUser.ckey);
+      }
+    }
     return false;
   };
 

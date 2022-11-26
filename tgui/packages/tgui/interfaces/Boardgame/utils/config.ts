@@ -116,10 +116,6 @@ export const useActions = (act) => {
     pieceCreate: (code: string, x: number, y: number) => {
       act('pieceCreate', { code, x, y });
     },
-    /**
-     *
-     * @param id works both with number and a piece object
-     */
     pieceRemove: (piece: number | PieceData) => {
       act('pieceRemove', { piece });
     },

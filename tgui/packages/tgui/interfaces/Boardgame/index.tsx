@@ -22,9 +22,10 @@ export class Boardgame extends Component<BoardgameData, any> {
   render() {
     const { data } = useBackend<BoardgameData>(this.context);
     const name = data?.boardInfo?.name || 'Boardgame';
+    const user = data.currentUser;
 
     return (
-      <Window title={name + ` palette: ${data.currentUser?.palette || 'None'}`} width={580} height={512}>
+      <Window title={name} width={580} height={512}>
         <ConfigModal />
         <TitleBar />
         <HeldPieceRenderer />

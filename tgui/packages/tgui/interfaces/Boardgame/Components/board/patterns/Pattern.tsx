@@ -1,17 +1,12 @@
 import { Component } from 'inferno';
 
 export default abstract class Pattern extends Component {
-  constructor(context) {
+  constructor(context: any) {
     super(context);
   }
-
   /**
    * Triggered whenever the user places a piece on the board.
+   * Returns void
    */
-  onPlace: (
-    x: number,
-    y: number
-  ) => {
-    // ToDo: Implement board to tile conversion
-  };
+  abstract onPlace(x: number, y: number);
 }

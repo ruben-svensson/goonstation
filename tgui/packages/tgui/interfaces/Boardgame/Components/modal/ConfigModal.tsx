@@ -2,14 +2,12 @@ declare const React;
 
 import { useBackend, useLocalState } from '../../../../backend';
 
-import { Box, Button, Flex, Stack, Tabs, TextArea, Tooltip } from '../../../../components';
+import { Box, Button, Flex, Tabs, Tooltip } from '../../../../components';
 
-import { fenCodeRecordFromPieces, fetchPieces, getPiece, getPiecesByGame, PieceSetupType } from '../../games';
-import { BoardgameData, PieceData } from '../../utils/types';
+import { fenCodeRecordFromPieces, fetchPieces, PieceSetupType } from '../../games';
+import { BoardgameData } from '../../utils/types';
 import { PresetType, presetsByGame } from '../../games';
-import { useActions, useStates } from '../../utils/config';
-import ModalTooltip from './ModalTooltip';
-import { convertBoardToGNot } from '../../utils/notations';
+import { useStates } from '../../utils/config';
 import ConfigTab from './ConfigTab';
 
 export const ConfigModal = (_props, context) => {
@@ -26,7 +24,6 @@ export const ConfigModal = (_props, context) => {
           <Tabs.Tab className="boardgame__modal-tab" selected={modalTabIndex === 2} onClick={() => setModalTabIndex(2)}>
             Notation Setup
           </Tabs.Tab>
-          <Button onClick={closeModal}>Close</Button>
         </Tabs>
         <Box className="boardgame__modal-config">
           {modalTabIndex === 1 && <PresetsTab />}
@@ -201,8 +198,16 @@ const PresetsRow = ({ game, presets }: PresetsRowProps, context) => {
   return (
     <Flex.Item>
       <Flex direction="column" className="boardgame__presets">
-        <Flex.Item>
+        <Flex.Item className="boardgame__presets-header">
           <h4>{prettyGameName}</h4>
+          {presets.length > 0 && (
+            // Pick a random fact depending on the day
+            <Flex.Item key={'fact'} className="boardgame__randomfact">
+              {presets[0].kit.facts.length > 0
+                ? 'Fun fact: ' + presets[0].kit.facts[new Date().getSeconds() % presets[0].kit.facts.length]
+                : ''}
+            </Flex.Item>
+          )}
         </Flex.Item>
         <Flex.Item className="boardgame__presets-grid">
           {presets.map((preset, i) => {

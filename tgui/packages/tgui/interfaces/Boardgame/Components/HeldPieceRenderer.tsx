@@ -2,7 +2,6 @@ import { Box } from '../../../components';
 import { BoardgameData } from '../utils/types';
 import { useBackend } from '../../../backend';
 import { useStates } from '../utils/config';
-import { Piece } from './Piece';
 import { fenCodeRecordFromPieces, fetchPieces } from '../games';
 
 export const HeldPieceRenderer = (_, context) => {
@@ -17,13 +16,15 @@ export const HeldPieceRenderer = (_, context) => {
   if (data.currentUser.palette) {
     code = data.currentUser.palette;
   } else if (data.currentUser.selected) {
-    code = data.currentUser.selected.code;
+    code = data.currentUser.selected;
   }
 
   if (!code) return null;
 
   const pieces = fetchPieces();
   const piece = fenCodeRecordFromPieces(pieces)[code];
+
+  if (!piece) return null;
 
   return (
     <Box
@@ -35,7 +36,7 @@ export const HeldPieceRenderer = (_, context) => {
         height: '120px',
       }}>
       <Box className="boardgame__heldpiece-inner">
-        <Piece piece={piece} isPresetPiece />
+        <img src={piece.image} />
       </Box>
       <Box
         style={{
