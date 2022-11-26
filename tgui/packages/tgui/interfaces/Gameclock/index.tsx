@@ -8,6 +8,7 @@ import {
   Icon,
   LabeledList,
   NumberInput,
+  Section,
   Stack,
   Tooltip,
 } from '../../components';
@@ -26,10 +27,24 @@ export const Gameclock = (_props, context) => {
   const [configModalOpen] = useLocalState(context, 'configModalOpen', false);
   const [swap] = useLocalState(context, 'swap', false);
 
+  const [helpModalOpen, setHelpModalOpen] = useLocalState(context, 'helpModalOpen', false);
+
   return (
-    <Window title={name} width={220} height={350}>
+    <Window title={name} width={220} height={380}>
       <Window.Content className="gameclock__window" fitted>
         {configModalOpen && <ConfigModal />}
+        {helpModalOpen && <HelpModal />}
+        <Box className="gameclock__help">
+          <Button
+            className="gameclock__helpbutton"
+            tooltip="Toggle Help"
+            icon={helpModalOpen ? 'xmark' : 'question'}
+            color={helpModalOpen && 'orange'}
+            onClick={() => {
+              setHelpModalOpen(!helpModalOpen);
+            }}
+          />
+        </Box>
         <TeamIcon team={swap ? 'white' : 'black'} />
         <SidePart team={swap ? 'white' : 'black'} />
         <MidPart />
@@ -41,11 +56,13 @@ export const Gameclock = (_props, context) => {
 };
 
 const ConfigModal = (_, context) => {
-  const { act } = useBackend<GameClockData>(context);
+  const { data, act } = useBackend<GameClockData>(context);
+
+  const { defaultTime } = data.clockStatic;
 
   const [, setConfigModalOpen] = useLocalState(context, 'configModalOpen', false);
-  const [whiteTimeBuffer] = useLocalState(context, 'whiteTimeBuffer', 0);
-  const [blackTimeBuffer] = useLocalState(context, 'blackTimeBuffer', 0);
+  const [whiteTimeBuffer, setWhiteTimeBuffer] = useLocalState(context, 'whiteTimeBuffer', 0);
+  const [blackTimeBuffer, setBlackTimeBuffer] = useLocalState(context, 'blackTimeBuffer', 0);
 
   const setTime = (whiteTime, blackTime) => {
     act('set_time', {
@@ -66,6 +83,13 @@ const ConfigModal = (_, context) => {
       </LabeledList>
       <Box className="gameclock__configmodalbuttoncontainer">
         <Button
+          content="Reset to default"
+          onClick={() => {
+            setWhiteTimeBuffer(defaultTime);
+            setBlackTimeBuffer(defaultTime);
+          }}
+        />
+        <Button
           content="Apply"
           onClick={() => {
             setConfigModalOpen(false);
@@ -74,6 +98,23 @@ const ConfigModal = (_, context) => {
         />
         <Button content="Cancel" onClick={() => setConfigModalOpen(false)} />
       </Box>
+    </Dimmer>
+  );
+};
+
+const HelpModal = () => {
+  return (
+    <Dimmer>
+      <Section>
+        <p>
+          <strong>Help</strong>
+        </p>
+        <p>These clocks are used in two-player games where the players move in turns.</p>
+        <p>Click on the clock face corresponding to your color to end your turn.</p>
+        <p>The time value (in seconds) for each clock can be set using the Clocks Setup button.</p>
+        <p>Before starting the clock, ensure that the Current Turn is set to the correct side.</p>
+        <p>The positions of the White and Black clocks can be swapped on your client using the rotate view button.</p>
+      </Section>
     </Dimmer>
   );
 };
@@ -157,7 +198,7 @@ const MidPart = (_, context) => {
         <Button
           className="gameclock__utilbutton"
           disabled={data.timing}
-          tooltip="Setup"
+          tooltip="Clocks Setup"
           tooltipPosition="top"
           icon="cog"
           onClick={() => {
@@ -171,10 +212,10 @@ const MidPart = (_, context) => {
         <Button
           className="gameclock__utilbutton"
           disabled={data.timing}
-          tooltip={"Current Turn: " + (data.turn ? "White" : "Black")}
+          tooltip={'Current Turn: ' + (data.turn ? 'White' : 'Black')}
           tooltipPosition="top"
           icon="flag"
-          color={data.turn ? "white" : "black"}
+          color={data.turn ? 'white' : 'black'}
           onClick={() => act('set_turn')}
         />
       </Box>
@@ -192,7 +233,6 @@ const MidPart = (_, context) => {
       <Box>
         <Button
           className="gameclock__utilbutton"
-          disabled={data.timing}
           tooltip="Rotate view"
           tooltipPosition="top"
           icon="rotate"
