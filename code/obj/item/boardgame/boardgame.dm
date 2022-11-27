@@ -232,9 +232,7 @@
 		return src.pieces[id]
 
 	proc/removePiece(piece)
-		var/target = src.pieces[piece]
-		if(target)
-			src.pieces -= target
+		src.pieces.Remove(piece)
 
 
 	proc/removePieceById(piece)
@@ -253,7 +251,8 @@
 
 		for (var/piece in src.pieces)
 			if (src.pieces[piece]["x"] == newX && src.pieces[piece]["y"] == newY)
-				src.removePiece(piece)
+				src.pieces.Remove(piece)
+				return
 
 	proc/selectPiece(ckey, pieceId)
 		var/piece = src.getPieceById(pieceId)
@@ -388,9 +387,10 @@
 		//src.drawBoardIcon()
 		if(!piece) return
 		playsound(src.loc, src.sounds[SOUND_CAPTURE], 30, 1)
-		src.pieces -= src.pieces[piece]
+		src.removePieceById(piece)
 		if(capturedby)
 			src.speakMapText(capturedby, capturedby["x"], capturedby["y"], capturedby["prevX"], capturedby["prevY"], MAP_TEXT_CAPTURE, piece)
+		src.movePiece(capturedby, capturedby["prevX"], capturedby["prevY"])
 
 	proc/capturePieceAt(piece, capturedby, x, y)
 		//src.drawBoardIcon()
@@ -399,24 +399,26 @@
 		src.removePieceAt(x, y)
 		if(capturedby)
 			src.speakMapText(capturedby, capturedby["x"], capturedby["y"], capturedby["prevX"], capturedby["prevY"], MAP_TEXT_CAPTURE, piece)
-
+		src.movePiece(capturedby, x, y)
 
 	can_access_remotely(mob/user)
 		. = can_access_remotely_default(user)
 
 	ui_interact(mob/user, datum/tgui/ui)
 		ui = tgui_process.try_update_ui(user, src, ui)
+
+		if(!src.active_users[user.ckey])
+			src.active_users[user.ckey] = list(
+				"ckey" = user.ckey,
+				"name" = user.name,
+				"selected" = null,
+				"palette" = null,
+			)
+
 		if(!ui)
 			ui = new(user, src, "Boardgame")
 			ui.open()
 
-			if(!src.active_users[user.ckey])
-				src.active_users[user.ckey] = list(
-					"ckey" = user.ckey,
-					"name" = user.name,
-					"selected" = null,
-					"palette" = null,
-				)
 
 	ui_static_data(mob/user)
 		. = list()
