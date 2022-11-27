@@ -241,8 +241,18 @@
 		src.removePiece(src.getPieceById(piece))
 
 	proc/removePieceAt(x, y)
+		if (x < 0 || x >= src.board_width || y < 0 || y >= src.board_height)
+			return
+
+		var/newX = x
+		var/newY = y
+
+		if(src.lock_pieces_to_tile)
+			newX = round(x)
+			newY = round(y)
+
 		for (var/piece in src.pieces)
-			if (src.pieces[piece]["x"] == x && src.pieces[piece]["y"] == y)
+			if (src.pieces[piece]["x"] == newX && src.pieces[piece]["y"] == newY)
 				src.removePiece(piece)
 
 	proc/selectPiece(ckey, pieceId)
@@ -345,6 +355,13 @@
 		if (x < 0 || x >= src.board_width || y < 0 || y >= src.board_height)
 			return
 
+		var/newX = x
+		var/newY = y
+
+		if(src.lock_pieces_to_tile)
+			newX = round(x)
+			newY = round(y)
+
 		// Check if the user has a selected piece
 		var/piece = src.getPieceById(src.active_users[ckey]["selected"])
 		if (!piece)
@@ -353,16 +370,16 @@
 			return
 
 		// Check if the pawn is moving to a tile that is already occupied
-		var/occupied = src.getPieceAt(x, y)
+		var/occupied = src.getPieceAt(newX, newY)
 
 		if (occupied)
 			// Check if the piece is moving to a tile that is occupied by an enemy
 			if (piece != occupied)
 				// Capture the piece
-				src.capturePiece(occupied, piece)
+				src.capturePieceAt(occupied, piece, newX, newY)
 		else
 			// The space is not occupied, move the piece
-			src.movePiece(piece, x, y)
+			src.movePiece(piece, newX, newY)
 
 		// Deselect the piece
 		src.deselectPiece(ckey)
@@ -371,7 +388,15 @@
 		//src.drawBoardIcon()
 		if(!piece) return
 		playsound(src.loc, src.sounds[SOUND_CAPTURE], 30, 1)
-		src.removePieceById(piece)
+		src.pieces -= src.pieces[piece]
+		if(capturedby)
+			src.speakMapText(capturedby, capturedby["x"], capturedby["y"], capturedby["prevX"], capturedby["prevY"], MAP_TEXT_CAPTURE, piece)
+
+	proc/capturePieceAt(piece, capturedby, x, y)
+		//src.drawBoardIcon()
+		if(!piece) return
+		playsound(src.loc, src.sounds[SOUND_CAPTURE], 30, 1)
+		src.removePieceAt(x, y)
 		if(capturedby)
 			src.speakMapText(capturedby, capturedby["x"], capturedby["y"], capturedby["prevX"], capturedby["prevY"], MAP_TEXT_CAPTURE, piece)
 

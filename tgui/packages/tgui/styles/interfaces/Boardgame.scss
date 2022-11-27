@@ -84,7 +84,13 @@
 
 .boardgame__randomfact {
   background: rgb(0, 0, 0, 0.2);
-  padding: 1px;
+  padding: 3px;
+  width: 100%;
+  font-size: 10px;
+  flex-grow: 1;
+  font-style: italic;
+  & > span {
+  }
 }
 
 .boardgame__presets-header {

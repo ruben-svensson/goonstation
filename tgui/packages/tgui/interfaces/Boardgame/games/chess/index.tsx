@@ -13,7 +13,7 @@ export const kit: GameKit = {
     },
   ],
   // Generate 10 fun facts about chess
-  facts: ['The first chess set was made in 1470.'],
+  facts: ['This is a very long fact, chess is a very long game, and it is very fun to play and watch.'],
 };
 
 export default kit;

@@ -194,22 +194,23 @@ type PresetsRowProps = {
 
 const PresetsRow = ({ game, presets }: PresetsRowProps, context) => {
   const prettyGameName = game.charAt(0).toUpperCase() + game.slice(1);
+  const dateSeed = new Date().getFullYear() + new Date().getMonth() + new Date().getDate();
 
   return (
     <Flex.Item>
       <Flex direction="column" className="boardgame__presets">
         <Flex.Item className="boardgame__presets-header">
           <h4>{prettyGameName}</h4>
+        </Flex.Item>
+        <Flex.Item className="boardgame__presets-grid">
           {presets.length > 0 && (
             // Pick a random fact depending on the day
             <Flex.Item key={'fact'} className="boardgame__randomfact">
-              {presets[0].kit.facts.length > 0
-                ? 'Fun fact: ' + presets[0].kit.facts[new Date().getSeconds() % presets[0].kit.facts.length]
-                : ''}
+              <span>
+                {presets[0].kit.facts.length > 0 ? presets[0].kit.facts[dateSeed % presets[0].kit.facts.length] : ''}
+              </span>
             </Flex.Item>
           )}
-        </Flex.Item>
-        <Flex.Item className="boardgame__presets-grid">
           {presets.map((preset, i) => {
             const setup = preset.setup;
             // if setup is a function, call it to get the setup
@@ -231,6 +232,10 @@ const PresetsRow = ({ game, presets }: PresetsRowProps, context) => {
       </Flex>
     </Flex.Item>
   );
+};
+
+PresetsRow.defaultHooks = {
+  // onComponentShouldUpdate: () => false,
 };
 
 type PresetItemProps = {
