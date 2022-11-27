@@ -1,9 +1,6 @@
-declare const React;
+import { useBackend } from '../../../../../backend';
+import { BoardgameData } from '../../../utils/types';
 
-import { useBackend } from '../../../backend';
-import { BoardgameData } from '../types';
-
-// Draw the board using svg
 export const CheckerBoard = (_props, context) => {
   const { data } = useBackend<BoardgameData>(context);
   const { tileColor1, tileColor2 } = data.styling;

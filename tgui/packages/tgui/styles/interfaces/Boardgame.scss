@@ -2,7 +2,8 @@
 
 .boardgame__window {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  background-color: darken(rgb(131, 100, 74), 30%);
 }
 
 .boardgame__wrapper {
@@ -17,14 +18,6 @@
   -ms-user-select: none; /* Internet Explorer/Edge */
   user-select: none; /* Non-prefixed version, currently
                                 supported by Chrome, Edge, Opera and Firefox */
-}
-
-.boardgame__debug {
-  position: fixed;
-  top: 4px;
-  right: 50px;
-  padding: 2px;
-  z-index: 20;
 }
 
 .boardgame__modal {
@@ -83,13 +76,38 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: center;
+  justify-content: space-around;
   flex-wrap: wrap;
   padding: 2px;
   background-color: rgb(0, 0, 0, 0.2);
 }
 
+.boardgame__randomfact {
+  background: rgb(0, 0, 0, 0.2);
+  padding: 3px;
+  width: 100%;
+  font-size: 10px;
+  flex-grow: 1;
+  font-style: italic;
+  & > span {
+  }
+}
+
+.boardgame__presets-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  // Italics
+  font-style: italic;
+  font-size: 10px;
+}
+
+.boardgame__presets-grid:last-child {
+}
+
 .boardgame__preset-item {
+  flex-grow: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -212,6 +230,17 @@
   position: fixed;
   z-index: 10;
   pointer-events: none;
+  margin-left: 10px;
+  margin-top: 10px;
+}
+
+.boardgame__heldpiece-inner {
+  width: 30px;
+  height: 30px;
+  & > img {
+    width: 100%;
+    height: auto;
+  }
 }
 
 .boardgame__settings {
@@ -253,15 +282,6 @@
   width: 100%;
 }
 
-.boardgame__piece-set-wrapper {
-  width: 100px;
-  max-height: 100%;
-  overflow-y: scroll;
-}
-
-.boardgame__menubutton {
-}
-
 .boardgame__piece-set-container {
   text-align: center;
 
@@ -280,18 +300,6 @@
   justify-content: space-around;
   align-items: center;
   font-weight: bold;
-}
-
-.boardgame__piece-set {
-  width: 100%;
-  overflow-y: auto;
-  background-color: #e0e0e0;
-  flex-wrap: wrap;
-}
-
-.boardgame__piece-set-header {
-  font-size: 10px;
-  padding: 2px;
 }
 
 .boardgame__piece-set-vertical {
@@ -321,21 +329,9 @@
   font-weight: bold;
 }
 
-.boardgame__piece-set__piece {
-  transition: 0.3s all;
-
-  font-size: 40px;
-  width: 50%;
-}
-
-.boardgame__piece-set-minimized > .boardgame__piece-set__piece {
-  width: 20%;
-
-  font-size: 10px;
-}
-
 .boardgame__notations {
   font-weight: bold;
+  background-color: red;
 }
 
 .boardgame__verticalnotations > div {

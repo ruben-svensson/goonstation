@@ -1,41 +1,51 @@
-declare const React;
-
-import { fenCodeRecordFromPieces, fetchPieces, PieceType } from '../Pieces';
 import { Box } from '../../../components';
-import { BoardgameData } from '../types';
-import { useBackend, useLocalState } from '../../../backend';
+import { BoardgameData } from '../utils/types';
+import { useBackend } from '../../../backend';
+import { useStates } from '../utils/config';
+import { fenCodeRecordFromPieces, fetchPieces } from '../games';
 
 export const HeldPieceRenderer = (_, context) => {
   const { act, data } = useBackend<BoardgameData>(context);
-  const { currentUser } = data;
 
-  const [mouseCoords, setMouseCoords] = useLocalState<{
-    x: number;
-    y: number;
-  }>(context, 'mouseCoords', { x: 0, y: 0 });
+  if (!data.currentUser) return null;
 
-  const code = currentUser?.palette || currentUser.selected?.code;
+  const { mouseCoords, paletteLastElement } = useStates(context);
+  const { x, y } = mouseCoords;
 
-  if (code) {
-    const pieces = fetchPieces();
-    const piece: PieceType = fenCodeRecordFromPieces(pieces)[code];
-
-    // Draw the piece with svg fixed to the mouse
-
-    return (
-      <Box
-        className="boardgame__heldpiece"
-        style={{
-          top: mouseCoords.y + 'px',
-          left: mouseCoords.x + 'px',
-          width: '30px',
-          height: '30px',
-        }}>
-        <img src={piece?.image} />
-        <span>{piece?.name}</span>
-      </Box>
-    );
-  } else {
-    return null;
+  let code;
+  if (data.currentUser.palette) {
+    code = data.currentUser.palette;
+  } else if (data.currentUser.selected) {
+    code = data.currentUser.selected;
   }
+
+  if (!code) return null;
+
+  const pieces = fetchPieces();
+  const piece = fenCodeRecordFromPieces(pieces)[code];
+
+  if (!piece) return null;
+
+  return (
+    <Box
+      className={`boardgame__heldpiece`}
+      style={{
+        'top': y + 'px',
+        'left': x + 'px',
+        width: '120px',
+        height: '120px',
+      }}>
+      <Box className="boardgame__heldpiece-inner">
+        <img src={piece.image} />
+      </Box>
+      <Box
+        style={{
+          'font-size': '12px',
+          'font-weight': 'bold',
+          'text-shadow': '0 0 2px black',
+        }}>
+        Right click to cancel
+      </Box>
+    </Box>
+  );
 };

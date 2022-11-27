@@ -4,6 +4,9 @@
  *
  * Most of these values are shared by both dm and tgui, so check both
  * areas when changing them.
+ *
+ *
+ * A note from Github Copilot:
  */
 
 #define MAP_TEXT_MOVE 0
@@ -22,16 +25,18 @@
 #define STYLING_BORDER "border"
 #define STYLING_ASPECT "aspectRatio"
 #define STYLING_NOTATIONS "useNotations"
+#define STYLING_FLIPBUTTON "flipButton"
 
 /**
  * # Boardgame
  */
 
 /obj/item/boardgame
-	name = "game board"
-	desc = "A generic game board?"
+	name = "board game"
+	desc = "A generic board game?"
 	icon = 'icons/obj/items/gameboard.dmi'
 	icon_state = "chessboard"
+
 	flags = TGUI_INTERACTIVE
 	w_class = W_CLASS_NORMAL
 	two_handed = TRUE
@@ -45,6 +50,7 @@
 	)
 
 	var/game = "chess"
+	/// Used by TGUI to render a board pattern
 	var/pattern = PATTERN_CHECKERBOARD
 
 	/**
@@ -55,35 +61,65 @@
 	var/board_width = 8
 	var/board_height = 8
 
-	var/lock_pieces_to_tile = TRUE // If true, pieces will be locked to the center of the tile they're on, otherwise they'll be free to move around
+	/// If true, pieces will be locked to the center of the tile they're on, otherwise they'll be free to move around
+	var/lock_pieces_to_tile = TRUE
 
 	/**
-	 * # Gameboard styling
-	 *
-	 * Give the boardgame a custom look by changing these variables.
-	 */
+		* ## Boardgame styling
+		* ```dm
+		* src.styling[key] = value
+		* ```
+		*
+		* Give the boardgame a custom look by using these key value pairs.
+		*
+		* ```dm
+		* // Sets color of first tile
+		* [STYLING_TILECOLOR1] = "#FFFFFF" or rgb(255, 255, 255)
+		* ```
+		*
+		* ```dm
+		* // Sets color of second tile
+		* [STYLING_TILECOLOR2] = "#FFFFFF" or rgb(255, 255, 255)
+		* ```
+		*
+
+		*
+		* ```dm
+		* // Sets color of the border
+		* [STYLING_BORDER] = "#FFFFFF" or rgb(255, 255, 255)
+		* ```
+		*
+		* ```dm
+		* // Aspect ratio of the board. This is the ratio of the width to the height.
+		* 1 = 1:1, 2 = 2:1, 0.5 = 1:2
+		* [STYLING_ASPECT] = NUMBER
+		* ```dm
+		*
+		* ```
+		* // Whether to use chess-like notation around the board.
+		* ...
+		* [STYLING_NOTATIONS] = TRUE/FALSE
+		* ````
+		* The following keys are used by the boardgame itself and changes itself.
+		* ```dm
+		* // Sets original color of first tile
+		* [STYLING_OLDTILECOLOR1] = "#FFFFFF" or rgb(255, 255, 255)
+		* ```
+		*
+		* ```dm
+		* // Sets original color of first tile
+		* [STYLING_OLDTILECOLOR2] = "#FFFFFF" or rgb(255, 255, 255)
+		* ```
+		*/
 	var/list/styling = list(
 		STYLING_TILECOLOR1 = rgb(240, 217, 181),
-		STYLING_TILECOLOR2 = rgb(181, 136, 99),
 		STYLING_OLDTILECOLOR1 = rgb(240, 217, 181),
 		STYLING_OLDTILECOLOR2 = rgb(181, 136, 99),
+		STYLING_TILECOLOR2 = rgb(181, 136, 99),
 		STYLING_BORDER = rgb(131, 100, 74),
-		/**
-		 * Aspect ratio of the board. This is the ratio of the width to the height.
-		 * 1 = 1:1
-		 * 2 = 2:1
-		 * 0.5 = 1:2
-		 */
 		STYLING_ASPECT = 1,
-		 /**
-		  * Whether to use chess-like notation around the board.
-		  *    a b c d...
-			*  1 ♜♞♝♛
-			*  2 ♙♙♙♙
-			*  3
-			*  ...
-		  */
 		STYLING_NOTATIONS = TRUE,
+		STYLING_FLIPBUTTON = TRUE,
 	)
 
 	/**
@@ -93,36 +129,35 @@
 	// Pieces layer
 	var/list/pieces = list()
 
-	chess
-		name = "chess board"
-		desc = "It's a board for playing chess and checkers!"
-		New()
-			..()
 
-	// Start adding new boards here vvv
 
-	longchess
-		name = "long chess board"
-		desc = "It's a board for playing chess and checkers!"
-		board_width = 16
-
-		New()
-			..()
-			src.styling[STYLING_ASPECT] = 2
-
-	// End adding new boards here ^^^
 	New()
 		..()
 		// Store old styling if there is any reason to reset the board
+		src.styling[STYLING_OLDTILECOLOR1] = src.styling[STYLING_TILECOLOR1]
+		src.styling[STYLING_OLDTILECOLOR2] = src.styling[STYLING_TILECOLOR2]
 
+	/**
+	 * Reset the board to its color scheme, in case it has been changed
+	 */
 	proc/resetColorStyling()
+		src.styling[STYLING_TILECOLOR1] = src.styling[STYLING_OLDTILECOLOR1]
+		src.styling[STYLING_TILECOLOR2] = src.styling[STYLING_OLDTILECOLOR2]
 
 	proc/posToNotationString(x, y)
 		// Convert a position to a chess notation string
 		// eg. x:1, y:1 -> A1
+		// if x > 26, it will use AA, AB, AC, etc.
 		// Create a split list of the alphabet
 		var/list/letters = splittext("ABCDEFGHIJKLMNOPQRSTUVWXYZ", "")
-		return "[letters[x+1]][board_height - y]"
+		var/letterBuffer = ""
+		for(var/i = 1 to x)
+			if (i % length(letters) == 0)
+				letterBuffer += letters[length(letters)]
+			else
+				letterBuffer += letters[i % length(letters)]
+
+		return "[letterBuffer][y]"
 
 	proc/applyGNot(gnot)
 		// Like FEN but comma seperated
@@ -160,8 +195,15 @@
 		return id
 
 	proc/createPiece(code, x, y)
+		if (x < 0 || x >= src.board_width || y < 0 || y >= src.board_height)
+			return
+
+		// Delete any piece if there is one at the position
+		src.removePieceAt(x, y)
+
 		var/id = src.uniquePieceId()
 		src.pieces[id] = list(
+			"id" = id,
 			"code" = code,
 			"x" = x,
 			"y" = y,
@@ -171,7 +213,7 @@
 			"lastSelected" = null, // Last piece selected by the user
 			"palette" = null, // Code of the palette
 		)
-		playsound(src.loc, src.sounds["move"], 30, 1)
+		playsound(src.loc, src.sounds[SOUND_MOVE], 30, 1)
 
 
 	proc/setPalette(ckey, code)
@@ -190,36 +232,43 @@
 		return src.pieces[id]
 
 	proc/removePiece(piece)
-		if(piece)
-			src.pieces -= piece
+		src.pieces.Remove(piece)
 
 
-	proc/removePieceById(id)
-		src.removePiece(src.getPieceById(id))
+	proc/removePieceById(piece)
+		src.removePiece(src.getPieceById(piece))
 
 	proc/removePieceAt(x, y)
-		for (var/piece in src.pieces)
-			if (src.pieces[piece]["x"] == x && src.pieces[piece]["y"] == y)
-				src.removePiece(piece)
-
-	proc/selectPiece(ckey, pId)
-		src.active_users[ckey]["selected"] = pId
-		if (!pId)
+		if (x < 0 || x >= src.board_width || y < 0 || y >= src.board_height)
 			return
-		// Check if ["selected"] is null
-		if (src.active_users[ckey]["selected"])
-			pieces[pId]["selected"] = src.active_users[ckey]
 
+		var/newX = x
+		var/newY = y
 
+		if(src.lock_pieces_to_tile)
+			newX = round(x)
+			newY = round(y)
+
+		for (var/piece in src.pieces)
+			if (src.pieces[piece]["x"] == newX && src.pieces[piece]["y"] == newY)
+				src.pieces.Remove(piece)
+				return
+
+	proc/selectPiece(ckey, pieceId)
+		var/piece = src.getPieceById(pieceId)
+		if(!piece)
+			return
+		src.active_users[ckey]["selected"] = pieceId
+		src.pieces[pieceId]["selected"] = ckey
 
 	proc/deselectPiece(ckey)
 		// Check if ckey exists
-		if (ckey in src.active_users)
-			// Check if the user has a selected piece
-			if (src.active_users[ckey]["selected"])
-				// Deselect the piece
-				pieces[src.active_users[ckey]["selected"]]["selected"] = null
-				src.active_users[ckey]["selected"] = null
+		if (src.active_users[ckey])
+			var/pieceId = src.active_users[ckey]["selected"]
+			src.active_users[ckey]["selected"] = null
+			if (pieceId)
+				src.pieces[pieceId]["selected"] = null
+
 
 	proc/getPieceAt(x, y)
 
@@ -274,7 +323,8 @@
 		piece["x"] = newX
 		piece["y"] = newY
 
-		var/moverName = piece["selected"]["name"]
+		var/user = src.active_users[piece["selected"]]
+		var/moverName = user["name"]
 
 		src.speakMapText(piece, oldX, oldY, newX, newY, MAP_TEXT_MOVE, moverName)
 		playsound(src.loc, src.sounds[SOUND_MOVE], 30, 1)
@@ -283,7 +333,8 @@
 		var/map_text = ""
 		if(!piece) return // If the piece doesn't exist, return
 		if(!piece["selected"]) return // If the piece isn't selected, return
-		var/moverName = piece["selected"]["name"]
+		var/user = src.active_users[piece["selected"]]
+		var/moverName = user["name"]
 		var/prevPosString = src.posToNotationString(newX, newY)
 		var/newPosString = src.posToNotationString(oldX, oldY)
 
@@ -303,6 +354,13 @@
 		if (x < 0 || x >= src.board_width || y < 0 || y >= src.board_height)
 			return
 
+		var/newX = x
+		var/newY = y
+
+		if(src.lock_pieces_to_tile)
+			newX = round(x)
+			newY = round(y)
+
 		// Check if the user has a selected piece
 		var/piece = src.getPieceById(src.active_users[ckey]["selected"])
 		if (!piece)
@@ -311,16 +369,16 @@
 			return
 
 		// Check if the pawn is moving to a tile that is already occupied
-		var/occupied = src.getPieceAt(x, y)
+		var/occupied = src.getPieceAt(newX, newY)
 
 		if (occupied)
 			// Check if the piece is moving to a tile that is occupied by an enemy
 			if (piece != occupied)
 				// Capture the piece
-				src.capturePiece(occupied, piece)
+				src.capturePieceAt(occupied, piece, newX, newY)
 		else
 			// The space is not occupied, move the piece
-			src.movePiece(piece, x, y)
+			src.movePiece(piece, newX, newY)
 
 		// Deselect the piece
 		src.deselectPiece(ckey)
@@ -329,26 +387,38 @@
 		//src.drawBoardIcon()
 		if(!piece) return
 		playsound(src.loc, src.sounds[SOUND_CAPTURE], 30, 1)
-		src.removePiece(piece)
+		src.removePieceById(piece)
 		if(capturedby)
 			src.speakMapText(capturedby, capturedby["x"], capturedby["y"], capturedby["prevX"], capturedby["prevY"], MAP_TEXT_CAPTURE, piece)
+		src.movePiece(capturedby, capturedby["prevX"], capturedby["prevY"])
 
+	proc/capturePieceAt(piece, capturedby, x, y)
+		//src.drawBoardIcon()
+		if(!piece) return
+		playsound(src.loc, src.sounds[SOUND_CAPTURE], 30, 1)
+		src.removePieceAt(x, y)
+		if(capturedby)
+			src.speakMapText(capturedby, capturedby["x"], capturedby["y"], capturedby["prevX"], capturedby["prevY"], MAP_TEXT_CAPTURE, piece)
+		src.movePiece(capturedby, x, y)
 
 	can_access_remotely(mob/user)
 		. = can_access_remotely_default(user)
 
 	ui_interact(mob/user, datum/tgui/ui)
 		ui = tgui_process.try_update_ui(user, src, ui)
+
+		if(!src.active_users[user.ckey])
+			src.active_users[user.ckey] = list(
+				"ckey" = user.ckey,
+				"name" = user.name,
+				"selected" = null,
+				"palette" = null,
+			)
+
 		if(!ui)
 			ui = new(user, src, "Boardgame")
 			ui.open()
 
-			if(!src.active_users[user.ckey])
-				src.active_users[user.ckey] = list(
-					"ckey" = user.ckey,
-					"name" = user.name,
-					"selected" = null
-				)
 
 	ui_static_data(mob/user)
 		. = list()
@@ -374,33 +444,33 @@
 		if(. || !IN_RANGE(src, ui.user, 1))
 			return
 		switch(action)
-			if("pawnCreate")
-				var/fenCode = params["fenCode"]
+			if("pieceCreate")
+				var/code = params["code"]
 				var/x = text2num(params["x"])
 				var/y = text2num(params["y"])
-				src.createPiece(fenCode, x, y)
+				src.createPiece(code, x, y)
 				. = TRUE
-			if("pawnRemove")
-				var/id = params["id"]
-				src.removePiece(id)
+			if("pieceRemove")
+				var/piece = params["piece"]
+				src.removePiece(piece)
 				. = TRUE
-			if("pawnRemoveHeld")
+			if("pieceRemoveHeld")
 				var/ckey = params["ckey"]
-				var/id = src.active_users[ckey]["selected"]
+				var/piece = src.active_users[ckey]["selected"]
 				src.deselectPiece(ckey)
-				src.removePiece(id)
+				src.removePiece(piece)
 				. = TRUE
-			if("pawnSelect")
+			if("pieceSelect")
 				var/ckey = params["ckey"]
-				var/pId = params["pId"]
-				src.selectPiece(ckey, pId)
+				var/piece = params["piece"]
+				src.selectPiece(ckey, piece)
 				//src.removePiece
 				. = TRUE
-			if("pawnDeselect")
+			if("pieceDeselect")
 				var/ckey = params["ckey"]
 				src.deselectPiece(ckey)
 				. = TRUE
-			if("pawnPlace")
+			if("piecePlace")
 				// Place the pawn on the board currently selected
 				var/ckey = params["ckey"]
 				var/x = text2num(params["x"])
@@ -426,9 +496,16 @@
 				var/ckey = params["ckey"]
 				src.clearPalette(ckey)
 				. = TRUE
+			if("heldClear")
+				var/ckey = params["ckey"]
+				if(src.active_users[ckey]["selected"])
+					src.deselectPiece(ckey)
+				if(src.active_users[ckey]["palette"])
+					src.clearPalette(ckey)
+				. = TRUE
 
 	ui_close(mob/user)
-		src.active_users -= user
+		src.active_users -= user.ckey
 		. = ..()
 
 	ui_status(mob/user, datum/ui_state/state)
@@ -465,6 +542,7 @@
 			else
 				boutput(user, "<span class='warning'>You need to hold the paint can in your hand to use it!</span>")
 				return
+
 
 			//Check if the paint can is empty
 			if(can.uses <= 0)
