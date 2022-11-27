@@ -1,11 +1,12 @@
-import { Box, Button } from '../../../components';
-import { useStates } from '../utils/config';
+import { Box, Button } from '../../../../components';
+import { useStates } from '../../utils/config';
 
 export const TitleBar = (props, context) => {
-  const { isFlipped, toggleFlip, openModal, closeModal, isModalOpen } = useStates(context);
+  const { isFlipped, toggleFlip, openModal, closeModal, isModalOpen, helpModalOpen } = useStates(context);
 
   return (
     <Box className="boardgame__titlebar">
+      <Button icon="question" onClick={() => helpModalOpen()} />
       <Button onClick={toggleFlip}>Flip board</Button>
       <Button>Clear board</Button>
       <SetupButton />

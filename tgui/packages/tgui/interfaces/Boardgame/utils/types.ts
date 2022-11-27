@@ -1,7 +1,7 @@
 export type BoardInfo = {
   name: string;
   game: string;
-  pattern: string;
+  design: string;
   width: number;
   height: number;
   lock: boolean;
@@ -25,6 +25,7 @@ export type BoardgameData = {
   pieces: PieceData[];
   users: UserData[];
   currentUser: UserData;
+  lastMovedPiece: string;
 };
 
 export type PieceData = {

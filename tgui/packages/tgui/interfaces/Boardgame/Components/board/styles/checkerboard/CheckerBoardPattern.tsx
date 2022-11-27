@@ -1,8 +1,8 @@
-import { useBackend } from '../../../../../backend';
-import { BoardgameData } from '../../../utils/types';
+import { useBackend } from '../../../../../../backend';
+import { BoardgameData } from '../../../../utils/types';
 
-export const CheckerBoard = (_props, context) => {
-  const { data } = useBackend<BoardgameData>(context);
+const CheckerBoardPattern = (props, context) => {
+  const { data, act } = useBackend<BoardgameData>(context);
   const { tileColor1, tileColor2 } = data.styling;
 
   const width = 100 / data.boardInfo.width;
@@ -20,3 +20,5 @@ export const CheckerBoard = (_props, context) => {
     </svg>
   );
 };
+
+export default CheckerBoardPattern;

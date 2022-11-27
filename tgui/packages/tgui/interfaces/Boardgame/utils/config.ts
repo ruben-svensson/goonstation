@@ -34,6 +34,7 @@ export const STATES = (context) => {
     palettesExpanded: useLocalState<PalleteExpandType>(context, 'palettesExpanded', {}),
     paletteLastElement: useLocalState<HTMLElement>(context, 'paletteLastElement', null),
     tileSize: useLocalState<SizeType>(context, 'tileSize', { width: 0, height: 0 }),
+    helpModalOpen: useLocalState<boolean>(context, 'helpModalOpen', false),
   };
 };
 
@@ -81,6 +82,17 @@ export const useStates = (context) => {
       setModalTabIndex(index);
     },
     modalTabIndex: states.modalTabIndex[0],
+
+    // Help Modal
+    helpModalClose: () => {
+      const [, setHelpModalOpen] = states.helpModalOpen;
+      setHelpModalOpen(false);
+    },
+    helpModalOpen: () => {
+      const [, setHelpModalOpen] = states.helpModalOpen;
+      setHelpModalOpen(true);
+    },
+    isHelpModalOpen: states.helpModalOpen[0],
 
     // Palettes
     expandPalette: (index: number) => {

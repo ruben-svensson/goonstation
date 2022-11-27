@@ -60,7 +60,7 @@ export type PresetType = {
   setup: string | (() => string);
   boardWidth: number;
   boardHeight: number;
-  kit: GameKit;
+  kit?: GameKit; // Set when added to the game
   wikiPage?: string; // Wiki page for the game from https://wiki.ss13.co/
 };
 

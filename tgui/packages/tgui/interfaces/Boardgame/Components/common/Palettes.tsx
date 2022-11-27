@@ -1,6 +1,6 @@
 import { useBackend } from '../../../backend';
 import { BoardgameData } from '../utils/types';
-import { Piece } from '.';
+import { Piece } from '..';
 import { fetchPalettes, PieceSetupType } from '../games';
 import { Box, Button, Flex } from '../../../components';
 import { useActions, useStates } from '../utils/config';

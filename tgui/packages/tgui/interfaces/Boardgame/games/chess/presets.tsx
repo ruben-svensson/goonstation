@@ -12,7 +12,6 @@ presets.push({
   name: 'Empty Board',
   game: 'chess',
   description: 'An empty board.',
-
   setup: '64',
   boardWidth: 8,
   boardHeight: 8,

@@ -1,15 +1,18 @@
 import { classes } from 'common/react';
-import { useBackend } from '../../../../backend';
-import { fenCodeRecordFromPieces, fetchPieces } from '../../games';
-import { useActions, useStates } from '../../utils/config';
-import { BoardgameData } from '../../utils/types';
-import { screenToBoard } from './helpers';
+import { useBackend } from '../../../../../backend';
+import { fenCodeRecordFromPieces, fetchPieces } from '../../../games';
+import { useActions, useStates } from '../../../utils/config';
+import { BoardgameData, PieceData } from '../../../utils/types';
+import { screenToBoard } from './../helpers';
 
-const BoardPieceSvg = (props, context) => {
+type GridPieceRendererProps = {
+  pieces: PieceData[];
+};
+
+const GridPieceRenderer = ({ pieces }: GridPieceRendererProps, context) => {
   const { act, data } = useBackend<BoardgameData>(context);
 
   const { currentUser } = data;
-  const { pieces } = data;
   const { isFlipped, tileSize } = useStates(context);
   const { pieceSelect, pieceRemove, piecePlace } = useActions(act);
 
@@ -85,4 +88,10 @@ const BoardPieceSvg = (props, context) => {
   );
 };
 
-export default BoardPieceSvg;
+GridPieceRenderer.defaultHooks = {
+  shouldComponentUpdate(nextProps: GridPieceRendererProps) {
+    return nextProps.pieces !== this.props.pieces;
+  },
+};
+
+export default GridPieceRenderer;

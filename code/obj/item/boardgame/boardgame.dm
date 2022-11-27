@@ -12,7 +12,7 @@
 #define MAP_TEXT_MOVE 0
 #define MAP_TEXT_CAPTURE 1
 
-#define PATTERN_CHECKERBOARD "checkerboard"
+#define DESIGN_CHECKERBOARD "checkerboard"
 
 #define SOUND_MOVE "move"
 #define SOUND_CAPTURE "capture"
@@ -50,8 +50,8 @@
 	)
 
 	var/game = "chess"
-	/// Used by TGUI to render a board pattern
-	var/pattern = PATTERN_CHECKERBOARD
+	/// Used by TGUI to render a board design
+	var/design = DESIGN_CHECKERBOARD
 
 	/**
 	 * Designate the size of the board
@@ -128,6 +128,7 @@
 	var/list/active_users = list()
 	// Pieces layer
 	var/list/pieces = list()
+	var/list/lastMovedPiece = list()
 
 
 
@@ -304,6 +305,8 @@
 		if (x < 0 || x >= src.board_width || y < 0 || y >= src.board_height)
 			return
 
+		piece["prevX"] = piece["x"]
+		piece["prevY"] = piece["y"]
 		var/newX = x
 		var/newY = y
 
@@ -311,12 +314,10 @@
 			newX = round(x)
 			newY = round(y)
 
-		var/oldX = piece["x"]
-		var/oldY = piece["y"]
+		var/oldX = piece["prevX"]
+		var/oldY = piece["prevY"]
 
-		// Update old pos
-		piece["prevX"] = newX
-		piece["prevY"] = newY
+
 		piece["lastSelected"] = piece["selected"]
 
 		// Move the piece to the new tile
@@ -327,6 +328,7 @@
 		var/moverName = user["name"]
 
 		src.speakMapText(piece, oldX, oldY, newX, newY, MAP_TEXT_MOVE, moverName)
+		src.lastMovedPiece = piece
 		playsound(src.loc, src.sounds[SOUND_MOVE], 30, 1)
 
 	proc/speakMapText(piece, newX, newY, oldX, oldY, mapTextType, captured=null)
@@ -425,7 +427,7 @@
 		.["boardInfo"] = list(
 			"name" = src.name,
 			"game" = src.game,
-			"pattern" = src.pattern,
+			"design" = src.design,
 			"width" = src.board_width,
 			"height" = src.board_height,
 			"lock" = src.lock_pieces_to_tile
@@ -438,6 +440,7 @@
 		.["styling"] = src.styling
 		.["users"] = src.active_users
 		.["currentUser"] = src.active_users[user.ckey]
+		.["lastMovedPiece"] = src.lastMovedPiece
 
 	ui_act(action, list/params, datum/tgui/ui, datum/ui_state/state)
 		. = ..()

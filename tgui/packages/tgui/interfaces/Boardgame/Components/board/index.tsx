@@ -1,4 +1,4 @@
-import CheckerBoard from './patterns/CheckerBoard';
+import CheckerBoard from './styles/checkerboard';
 import { Notations } from '../';
 import { Flex } from '../../../../components';
 import { BoardgameData } from '../../utils/types';
@@ -13,7 +13,7 @@ export const Board = (props, context) => {
         <Flex className={`boardgame__board`}>
           <Notations direction={'vertical'} />
           <Flex.Item grow>
-            <CheckerBoard />
+            <DesignSelector />
           </Flex.Item>
           <Notations direction={'vertical'} />
         </Flex>
@@ -21,4 +21,16 @@ export const Board = (props, context) => {
       </div>
     </Flex>
   );
+};
+
+const DesignSelector = (props, context) => {
+  const { data } = useBackend<BoardgameData>(context);
+  const { design } = data.boardInfo;
+  switch (design) {
+    // Apply new designs here
+    case 'checkerboard':
+      return <CheckerBoard />;
+    default:
+      return <div>Unknown design: {design}</div>;
+  }
 };
