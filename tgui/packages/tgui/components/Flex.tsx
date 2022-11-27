@@ -18,16 +18,38 @@ export type FlexProps = BoxProps & {
 export const computeFlexClassName = (props: FlexProps) => {
   return classes([
     'Flex',
+<<<<<<< HEAD
     props.inline && 'Flex--inline',
     Byond.IS_LTE_IE10 && 'Flex--iefix',
     Byond.IS_LTE_IE10 && props.direction === 'column' && 'Flex--iefix--column',
     computeBoxClassName(props),
+=======
+    Byond.IS_LTE_IE10 && (
+      props.direction === 'column'
+        ? 'Flex--iefix--column'
+        : 'Flex--iefix'
+    ),
+    props.inline && 'Flex--inline',
+>>>>>>> 78591096281ec448bc371e2b580a3df0a5918fcc
   ]);
 };
 
 export const computeFlexProps = (props: FlexProps) => {
+<<<<<<< HEAD
   const { className, direction, wrap, align, justify, inline, ...rest } = props;
   return computeBoxProps({
+=======
+  const {
+    className,
+    direction,
+    wrap,
+    align,
+    justify,
+    inline,
+    ...rest
+  } = props;
+  return {
+>>>>>>> 78591096281ec448bc371e2b580a3df0a5918fcc
     style: {
       ...rest.style,
       'flex-direction': direction,
@@ -39,12 +61,25 @@ export const computeFlexProps = (props: FlexProps) => {
   });
 };
 
+<<<<<<< HEAD
 export const Flex = (props) => {
   const { className, ...rest } = props;
   return (
     <div
       className={classes([className, computeFlexClassName(rest)])}
       {...computeFlexProps(rest)}
+=======
+export const Flex = props => {
+  const { className, ...rest } = props;
+  return (
+    <div
+      className={classes([
+        className,
+        computeFlexClassName(rest),
+        computeBoxClassName(rest),
+      ])}
+      {...computeBoxProps(computeFlexProps(rest))}
+>>>>>>> 78591096281ec448bc371e2b580a3df0a5918fcc
     />
   );
 };
@@ -63,7 +98,11 @@ export const computeFlexItemClassName = (props: FlexItemProps) => {
   return classes([
     'Flex__item',
     Byond.IS_LTE_IE10 && 'Flex__item--iefix',
+<<<<<<< HEAD
     computeBoxClassName(props),
+=======
+    Byond.IS_LTE_IE10 && (props.grow && props.grow > 0) && 'Flex__item--iefix--grow',
+>>>>>>> 78591096281ec448bc371e2b580a3df0a5918fcc
   ]);
 };
 
@@ -79,6 +118,7 @@ export const computeFlexItemProps = (props: FlexItemProps) => {
     align,
     ...rest
   } = props;
+<<<<<<< HEAD
   // prettier-ignore
   const computedBasis = basis
     // IE11: Set basis to specified width if it's known, which fixes certain
@@ -88,6 +128,9 @@ export const computeFlexItemProps = (props: FlexItemProps) => {
     // flex css shorthand `flex: 1`.
     ?? (grow !== undefined ? 0 : undefined);
   return computeBoxProps({
+=======
+  return {
+>>>>>>> 78591096281ec448bc371e2b580a3df0a5918fcc
     style: {
       ...style,
       'flex-grow': grow !== undefined && Number(grow),
@@ -100,12 +143,25 @@ export const computeFlexItemProps = (props: FlexItemProps) => {
   });
 };
 
+<<<<<<< HEAD
 const FlexItem = (props) => {
   const { className, ...rest } = props;
   return (
     <div
       className={classes([className, computeFlexItemClassName(props)])}
       {...computeFlexItemProps(rest)}
+=======
+const FlexItem = props => {
+  const { className, ...rest } = props;
+  return (
+    <div
+      className={classes([
+        className,
+        computeFlexItemClassName(props),
+        computeBoxClassName(props),
+      ])}
+      {...computeBoxProps(computeFlexItemProps(rest))}
+>>>>>>> 78591096281ec448bc371e2b580a3df0a5918fcc
     />
   );
 };

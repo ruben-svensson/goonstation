@@ -8,7 +8,7 @@ import { KEY_ENTER, KEY_ESCAPE, KEY_SPACE } from 'common/keycodes';
 import { classes, pureComponentHooks } from 'common/react';
 import { Component, createRef } from 'inferno';
 import { createLogger } from '../logging';
-import { Box } from './Box';
+import { Box, computeBoxClassName, computeBoxProps } from './Box';
 import { Icon } from './Icon';
 import { Tooltip } from './Tooltip';
 
@@ -57,7 +57,7 @@ export const Button = props => {
     rest.unselectable = true;
   }
   let buttonContent = (
-    <Box
+    <div
       className={classes([
         'Button',
         fluid && 'Button--fluid',
@@ -75,6 +75,7 @@ export const Button = props => {
           ? 'Button--color--' + color
           : 'Button--color--default',
         className,
+        computeBoxClassName(rest),
       ])}
       tabIndex={!disabled && '0'}
       onKeyDown={e => {
@@ -97,6 +98,7 @@ export const Button = props => {
           return;
         }
       }}
+<<<<<<< HEAD
       {...rest}>
       <div className="Button__content">
         {icon && iconPosition !== 'right' && (
@@ -119,6 +121,18 @@ export const Button = props => {
         )}
       </div>
     </Box>
+=======
+      {...computeBoxProps(rest)}>
+      {icon && (
+        <Icon
+          name={icon}
+          rotation={iconRotation}
+          spin={iconSpin} />
+      )}
+      {content}
+      {children}
+    </div>
+>>>>>>> 78591096281ec448bc371e2b580a3df0a5918fcc
   );
 
   if (tooltip) {
