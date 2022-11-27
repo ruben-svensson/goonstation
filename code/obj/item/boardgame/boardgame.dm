@@ -519,9 +519,9 @@
 			return src.ui_interact(user)
 
 	mouse_drop(var/mob/user)
-		if((istype(user,/mob/living/carbon/human))&&(!user.stat)&&!(src in user.contents)&&!src.anchored)
-			user.put_in_hand_or_drop(src)
-		return ..()
+		if(user == usr && !user.restrained() && !user.stat && (user.contents.Find(src) || in_interact_range(src, user)))
+			if(!user.put_in_hand(src))
+				return ..()
 
 	attack_hand(var/mob/user) // open browser window when board is clicked
 		src.ui_interact(user)

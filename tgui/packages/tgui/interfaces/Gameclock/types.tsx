@@ -5,6 +5,7 @@ export type GameClockData = {
     name: string;
     minTime: number;
     maxTime: number;
+    defaultTime: number;
   };
   timing: BooleanLike;
   turn: boolean;
