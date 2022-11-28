@@ -34,7 +34,8 @@ const setup = async () => {
   });
 
   server.get('/', async (req, res) => {
-    return res.type('text/html').send(page);
+    return 'Test';
+    // return res.type('text/html').send(page);
   });
 
   server.post('/message', async (req, res) => {
@@ -72,7 +73,8 @@ const setup = async () => {
   }
 
   if (process.platform === 'win32') {
-    exec(`start "" "iexplore" "http://127.0.0.1:3002"`);
+    // Open any desired browser for now
+    // exec(`start "" "firefox" "http://127.0.0.1:3002"`);
   }
 
   console.log('Waiting for Internet Explorer to respond.');

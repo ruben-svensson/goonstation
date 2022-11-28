@@ -76,6 +76,14 @@ td, th {
   background-color: rgba(0, 0, 0, 0.25);
 }
 
+.centered-image {
+  position: absolute;
+  height: 100%;
+  left: 50%;
+  top: 50%;
+  transform: translateX(-50%) translateY(-50%) scale(0.8);
+}
+
 /**
  * Copyright (c) 2020 Aleksej Komarov
  * SPDX-License-Identifier: MIT
@@ -138,6 +146,10 @@ td, th {
 
 .color-grey {
   color: #848484 !important;
+}
+
+.color-light-grey {
+  color: #b3b3b3 !important;
 }
 
 .color-good {
@@ -212,6 +224,10 @@ td, th {
   background-color: #646464 !important;
 }
 
+.color-bg-light-grey {
+  background-color: #919191 !important;
+}
+
 .color-bg-good {
   background-color: #4d9121 !important;
 }
@@ -244,6 +260,117 @@ td, th {
 .debug-layout:hover,
 .debug-layout *:not(g):not(path):hover {
   outline-color: rgba(255, 255, 255, 0.8) !important;
+}
+
+@media all and (min-width: 100px) {
+  .fit-text {
+    font-size: 0.1em;
+  }
+}
+@media all and (min-width: 200px) {
+  .fit-text {
+    font-size: 0.2em;
+  }
+}
+@media all and (min-width: 300px) {
+  .fit-text {
+    font-size: 0.3em;
+  }
+}
+@media all and (min-width: 400px) {
+  .fit-text {
+    font-size: 0.4em;
+  }
+}
+@media all and (min-width: 500px) {
+  .fit-text {
+    font-size: 0.5em;
+  }
+}
+@media all and (min-width: 600px) {
+  .fit-text {
+    font-size: 0.6em;
+  }
+}
+@media all and (min-width: 700px) {
+  .fit-text {
+    font-size: 0.7em;
+  }
+}
+@media all and (min-width: 800px) {
+  .fit-text {
+    font-size: 0.8em;
+  }
+}
+@media all and (min-width: 900px) {
+  .fit-text {
+    font-size: 0.9em;
+  }
+}
+@media all and (min-width: 1000px) {
+  .fit-text {
+    font-size: 1em;
+  }
+}
+@media all and (min-width: 1100px) {
+  .fit-text {
+    font-size: 1.1em;
+  }
+}
+@media all and (min-width: 1200px) {
+  .fit-text {
+    font-size: 1.2em;
+  }
+}
+@media all and (min-width: 1300px) {
+  .fit-text {
+    font-size: 1.3em;
+  }
+}
+@media all and (min-width: 1400px) {
+  .fit-text {
+    font-size: 1.4em;
+  }
+}
+@media all and (min-width: 1500px) {
+  .fit-text {
+    font-size: 1.5em;
+  }
+}
+@media all and (min-width: 1600px) {
+  .fit-text {
+    font-size: 1.6em;
+  }
+}
+@media all and (min-width: 1700px) {
+  .fit-text {
+    font-size: 1.7em;
+  }
+}
+@media all and (min-width: 1800px) {
+  .fit-text {
+    font-size: 1.8em;
+  }
+}
+@media all and (min-width: 1900px) {
+  .fit-text {
+    font-size: 1.9em;
+  }
+}
+/**
+ * Copyright (c) 2020 Aleksej Komarov
+ * SPDX-License-Identifier: MIT
+ */
+/**
+ * Copyright (c) 2021 Celotajs (https://github.com/celotajstg)
+ * SPDX-License-Identifier: MIT
+ */
+a:link, a:visited {
+  color: #2185d0;
+}
+
+a:hover, a:active {
+  color: #4972a1;
 }
 
 /**
@@ -340,6 +467,10 @@ td, th {
 
 .outline-color-grey {
   outline: 0.167rem solid #848484 !important;
+}
+
+.outline-color-light-grey {
+  outline: 0.167rem solid #b3b3b3 !important;
 }
 
 .outline-color-good {
@@ -440,6 +571,7 @@ td, th {
 /**
  * Copyright (c) 2020 Aleksej Komarov
  * SPDX-License-Identifier: MIT
+ * Changes: ZeWaka (FA6)
  */
 .Button {
   position: relative;
@@ -460,15 +592,20 @@ td, th {
   margin-bottom: 0;
 }
 
-.Button .fa, .Button .fas, .Button .far {
-  margin-left: -0.25em;
+.Button .fa, .Button .fa-solid, .Button .fa-regular {
+  margin-left: 0em;
   margin-right: -0.25em;
   min-width: 1.333em;
   text-align: center;
 }
 
-.Button--hasContent .fa, .Button--hasContent .fas, .Button--hasContent .far {
+.Button--hasContent .fa, .Button--hasContent .fa-solid, .Button--hasContent .fa-regular {
   margin-right: 0.25em;
+}
+
+.Button--hasContent.Button--iconPosition--right .fa, .Button--hasContent.Button--iconPosition--right .fas, .Button--hasContent.Button--iconPosition--right .far {
+  margin-right: 0px;
+  margin-left: 3px;
 }
 
 .Button--ellipsis {
@@ -813,6 +950,29 @@ td, th {
   background-color: #a8a8a8;
 }
 
+.Button--color--light-grey {
+  transition: color 50ms, background-color 50ms;
+  background-color: #919191;
+  color: white;
+}
+
+.Button--color--light-grey:hover {
+  transition: color 0ms, background-color 0ms;
+}
+
+.Button--color--light-grey:focus {
+  transition: color 100ms, background-color 100ms;
+}
+
+.Button--color--light-grey:hover, .Button--color--light-grey:focus {
+  background-color: #bababa;
+  color: white;
+}
+
+.Button--color--light-grey:active {
+  background-color: #e2e2e2;
+}
+
 .Button--color--good {
   transition: color 50ms, background-color 50ms;
   background-color: #4d9121;
@@ -1026,6 +1186,32 @@ td, th {
   background-color: #59da78;
 }
 
+.Button--flex {
+  display: inline-flex;
+  flex-direction: column;
+}
+
+.Button--flex--fluid {
+  width: 100%;
+}
+
+.Button--verticalAlignContent--top {
+  justify-content: flex-start;
+}
+
+.Button--verticalAlignContent--middle {
+  justify-content: center;
+}
+
+.Button--verticalAlignContent--bottom {
+  justify-content: flex-end;
+}
+
+.Button__content {
+  display: block;
+  align-self: stretch;
+}
+
 /**
  * Copyright (c) 2020 Aleksej Komarov
  * SPDX-License-Identifier: MIT
@@ -1162,7 +1348,6 @@ td, th {
 .Dropdown__selected-text {
   display: inline-block;
   text-overflow: ellipsis;
-  overflow: hidden;
   white-space: nowrap;
   height: 1.4166666667em;
   width: calc(100% - 1.2em);
@@ -1182,42 +1367,19 @@ td, th {
 }
 
 .Flex--iefix {
-  display: table !important;
-  width: 105%;
-  border-collapse: collapse;
-  border-spacing: 0;
+  display: block;
 }
 
-.Flex--iefix:after {
-  content: "";
-  display: table-cell;
-  width: 5%;
-}
-
-.Flex--iefix--column {
-  display: table !important;
-  width: 100% !important;
-  height: 100% !important;
-  border-collapse: collapse;
-  border-spacing: 0;
-}
-
-.Flex--iefix--column > .Flex__item--iefix {
-  display: table-row !important;
-}
-
-.Flex--iefix--column > .Flex__item--iefix--grow {
-  height: 100% !important;
+.Flex--iefix.Flex--inline {
+  display: inline-block;
 }
 
 .Flex__item--iefix {
-  display: table-cell !important;
-  width: 1% !important;
-  min-width: 99%;
+  display: inline-block;
 }
 
-.Flex__item--iefix--grow {
-  width: auto !important;
+.Flex--iefix--column > .Flex__item--iefix {
+  display: block;
 }
 
 /**
@@ -1556,10 +1718,6 @@ td, th {
   content: ".";
 }
 
-.Image--pixelated {
-  -ms-interpolation-mode: nearest-neighbor;
-}
-
 /**
  * Copyright (c) 2020 Aleksej Komarov
  * SPDX-License-Identifier: MIT
@@ -1797,6 +1955,10 @@ td, th {
   stroke: #848484;
 }
 
+.Knob--color--light-grey .Knob__ringFill {
+  stroke: #b3b3b3;
+}
+
 .Knob--color--good .Knob__ringFill {
   stroke: #68c22d;
 }
@@ -1846,10 +2008,9 @@ td, th {
   padding: 0.25em 0.5em;
   border: 0;
   text-align: left;
-  vertical-align: baseline;
 }
 
-.LabeledList__label {
+.LabeledList__label--nowrap {
   width: 1%;
   white-space: nowrap;
   min-width: 5em;
@@ -1972,6 +2133,11 @@ td, th {
 .NoticeBox--color--grey {
   color: white;
   background-color: #3e3e3e;
+}
+
+.NoticeBox--color--light-grey {
+  color: white;
+  background-color: #6a6a6a;
 }
 
 .NoticeBox--color--good {
@@ -2314,6 +2480,14 @@ td, th {
   background-color: #646464;
 }
 
+.ProgressBar--color--light-grey {
+  border-color: #919191 !important;
+}
+
+.ProgressBar--color--light-grey .ProgressBar__fill {
+  background-color: #919191;
+}
+
 .ProgressBar--color--good {
   border-color: #4d9121 !important;
 }
@@ -2461,6 +2635,10 @@ td, th {
   stroke: #848484;
 }
 
+.RoundGauge--color--light-grey.RoundGauge__ringFill {
+  stroke: #b3b3b3;
+}
+
 .RoundGauge--color--good.RoundGauge__ringFill {
   stroke: #68c22d;
 }
@@ -2557,6 +2735,12 @@ td, th {
 
 .RoundGauge__alert--grey {
   fill: #848484;
+  transition: opacity 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+  animation: RoundGauge__alertAnim 1s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
+}
+
+.RoundGauge__alert--light-grey {
+  fill: #b3b3b3;
   transition: opacity 0.6s cubic-bezier(0.25, 1, 0.5, 1);
   animation: RoundGauge__alertAnim 1s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
 }
@@ -3182,6 +3366,18 @@ td, th {
   border-right-color: #848484;
 }
 
+.Tab--selected.Tab--color--light-grey {
+  color: #c6c6c6;
+}
+
+.Tabs--horizontal .Tab--selected.Tab--color--light-grey {
+  border-bottom-color: #b3b3b3;
+}
+
+.Tabs--vertical .Tab--selected.Tab--color--light-grey {
+  border-right-color: #b3b3b3;
+}
+
 .Tab--selected.Tab--color--good {
   color: #8cd95a;
 }
@@ -3368,7 +3564,7 @@ td, th {
   padding: 0.5em 0.75em;
   pointer-events: none;
   text-align: left;
-  transition: all 150ms ease-out;
+  transition: opacity 150ms ease-out;
   background-color: #000000;
   color: #ffffff;
   box-shadow: 0.1em 0.1em 1.25em -0.1em rgba(0, 0, 0, 0.5);
@@ -3406,6 +3602,7 @@ td, th {
 /**
  * Copyright (c) 2020 Aleksej Komarov
  * SPDX-License-Identifier: MIT
+ * Changes: ZeWaka (FA6)
  */
 .Button {
   position: relative;
@@ -3426,15 +3623,20 @@ td, th {
   margin-bottom: 0;
 }
 
-.Button .fa, .Button .fas, .Button .far {
-  margin-left: -0.25em;
+.Button .fa, .Button .fa-solid, .Button .fa-regular {
+  margin-left: 0em;
   margin-right: -0.25em;
   min-width: 1.333em;
   text-align: center;
 }
 
-.Button--hasContent .fa, .Button--hasContent .fas, .Button--hasContent .far {
+.Button--hasContent .fa, .Button--hasContent .fa-solid, .Button--hasContent .fa-regular {
   margin-right: 0.25em;
+}
+
+.Button--hasContent.Button--iconPosition--right .fa, .Button--hasContent.Button--iconPosition--right .fas, .Button--hasContent.Button--iconPosition--right .far {
+  margin-right: 0px;
+  margin-left: 3px;
 }
 
 .Button--ellipsis {
@@ -3779,6 +3981,29 @@ td, th {
   background-color: #a8a8a8;
 }
 
+.Button--color--light-grey {
+  transition: color 50ms, background-color 50ms;
+  background-color: #919191;
+  color: white;
+}
+
+.Button--color--light-grey:hover {
+  transition: color 0ms, background-color 0ms;
+}
+
+.Button--color--light-grey:focus {
+  transition: color 100ms, background-color 100ms;
+}
+
+.Button--color--light-grey:hover, .Button--color--light-grey:focus {
+  background-color: #bababa;
+  color: white;
+}
+
+.Button--color--light-grey:active {
+  background-color: #e2e2e2;
+}
+
 .Button--color--good {
   transition: color 50ms, background-color 50ms;
   background-color: #4d9121;
@@ -3990,6 +4215,32 @@ td, th {
 
 .Button--selected:active {
   background-color: #59da78;
+}
+
+.Button--flex {
+  display: inline-flex;
+  flex-direction: column;
+}
+
+.Button--flex--fluid {
+  width: 100%;
+}
+
+.Button--verticalAlignContent--top {
+  justify-content: flex-start;
+}
+
+.Button--verticalAlignContent--middle {
+  justify-content: center;
+}
+
+.Button--verticalAlignContent--bottom {
+  justify-content: flex-end;
+}
+
+.Button__content {
+  display: block;
+  align-self: stretch;
 }
 
 .AccessPanel-wires-btn.Button--selected {
@@ -4057,6 +4308,7 @@ td, th {
 /**
  * Copyright (c) 2020 Aleksej Komarov
  * SPDX-License-Identifier: MIT
+ * Changes: ZeWaka (FA6)
  */
 .Button {
   position: relative;
@@ -4077,15 +4329,20 @@ td, th {
   margin-bottom: 0;
 }
 
-.Button .fa, .Button .fas, .Button .far {
-  margin-left: -0.25em;
+.Button .fa, .Button .fa-solid, .Button .fa-regular {
+  margin-left: 0em;
   margin-right: -0.25em;
   min-width: 1.333em;
   text-align: center;
 }
 
-.Button--hasContent .fa, .Button--hasContent .fas, .Button--hasContent .far {
+.Button--hasContent .fa, .Button--hasContent .fa-solid, .Button--hasContent .fa-regular {
   margin-right: 0.25em;
+}
+
+.Button--hasContent.Button--iconPosition--right .fa, .Button--hasContent.Button--iconPosition--right .fas, .Button--hasContent.Button--iconPosition--right .far {
+  margin-right: 0px;
+  margin-left: 3px;
 }
 
 .Button--ellipsis {
@@ -4430,6 +4687,29 @@ td, th {
   background-color: #a8a8a8;
 }
 
+.Button--color--light-grey {
+  transition: color 50ms, background-color 50ms;
+  background-color: #919191;
+  color: white;
+}
+
+.Button--color--light-grey:hover {
+  transition: color 0ms, background-color 0ms;
+}
+
+.Button--color--light-grey:focus {
+  transition: color 100ms, background-color 100ms;
+}
+
+.Button--color--light-grey:hover, .Button--color--light-grey:focus {
+  background-color: #bababa;
+  color: white;
+}
+
+.Button--color--light-grey:active {
+  background-color: #e2e2e2;
+}
+
 .Button--color--good {
   transition: color 50ms, background-color 50ms;
   background-color: #4d9121;
@@ -4641,6 +4921,32 @@ td, th {
 
 .Button--selected:active {
   background-color: #59da78;
+}
+
+.Button--flex {
+  display: inline-flex;
+  flex-direction: column;
+}
+
+.Button--flex--fluid {
+  width: 100%;
+}
+
+.Button--verticalAlignContent--top {
+  justify-content: flex-start;
+}
+
+.Button--verticalAlignContent--middle {
+  justify-content: center;
+}
+
+.Button--verticalAlignContent--bottom {
+  justify-content: flex-end;
+}
+
+.Button__content {
+  display: block;
+  align-self: stretch;
 }
 
 /**
@@ -4695,6 +5001,7 @@ td, th {
 /**
  * Copyright (c) 2020 Aleksej Komarov
  * SPDX-License-Identifier: MIT
+ * Changes: ZeWaka (FA6)
  */
 .Button {
   position: relative;
@@ -4715,15 +5022,20 @@ td, th {
   margin-bottom: 0;
 }
 
-.Button .fa, .Button .fas, .Button .far {
-  margin-left: -0.25em;
+.Button .fa, .Button .fa-solid, .Button .fa-regular {
+  margin-left: 0em;
   margin-right: -0.25em;
   min-width: 1.333em;
   text-align: center;
 }
 
-.Button--hasContent .fa, .Button--hasContent .fas, .Button--hasContent .far {
+.Button--hasContent .fa, .Button--hasContent .fa-solid, .Button--hasContent .fa-regular {
   margin-right: 0.25em;
+}
+
+.Button--hasContent.Button--iconPosition--right .fa, .Button--hasContent.Button--iconPosition--right .fas, .Button--hasContent.Button--iconPosition--right .far {
+  margin-right: 0px;
+  margin-left: 3px;
 }
 
 .Button--ellipsis {
@@ -5068,6 +5380,29 @@ td, th {
   background-color: #a8a8a8;
 }
 
+.Button--color--light-grey {
+  transition: color 50ms, background-color 50ms;
+  background-color: #919191;
+  color: white;
+}
+
+.Button--color--light-grey:hover {
+  transition: color 0ms, background-color 0ms;
+}
+
+.Button--color--light-grey:focus {
+  transition: color 100ms, background-color 100ms;
+}
+
+.Button--color--light-grey:hover, .Button--color--light-grey:focus {
+  background-color: #bababa;
+  color: white;
+}
+
+.Button--color--light-grey:active {
+  background-color: #e2e2e2;
+}
+
 .Button--color--good {
   transition: color 50ms, background-color 50ms;
   background-color: #4d9121;
@@ -5279,6 +5614,32 @@ td, th {
 
 .Button--selected:active {
   background-color: #59da78;
+}
+
+.Button--flex {
+  display: inline-flex;
+  flex-direction: column;
+}
+
+.Button--flex--fluid {
+  width: 100%;
+}
+
+.Button--verticalAlignContent--top {
+  justify-content: flex-start;
+}
+
+.Button--verticalAlignContent--middle {
+  justify-content: center;
+}
+
+.Button--verticalAlignContent--bottom {
+  justify-content: flex-end;
+}
+
+.Button__content {
+  display: block;
+  align-self: stretch;
 }
 
 .chem-dispenser__buttons {
@@ -5464,6 +5825,200 @@ td, th {
   text-transform: capitalize;
 }
 
+.instrument__keyboardwrapper {
+  border-top-left-radius: 30px;
+  border-top-right-radius: 30px;
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
+  margin: 10px;
+  padding-top: 20px;
+  background: #49504a;
+  background: linear-gradient(180deg, #49504a 0%, #49504a 22%, #575e57 100%);
+  border-left: 5px solid #3d3d3d;
+  border-bottom: 5px solid #333333;
+  overflow-x: auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-direction: column;
+}
+
+.instruments__piano {
+  display: flex;
+  justify-content: center;
+  list-style-type: none;
+  padding: 0 10px 10px 10px;
+  overflow-x: auto;
+}
+
+.instrument__outerpanel {
+  display: flex;
+  width: 100%;
+  padding: 0 40px;
+  justify-content: space-between;
+  flex-direction: row;
+}
+
+.instrument__speaker {
+  border-top-left-radius: 30%;
+  width: 360px;
+  height: 100px;
+  margin: 0px 20px;
+  border-radius: 10px;
+  box-shadow: 0px 0px 5px #4d4d4d inset;
+  background: #646464;
+  background-image: linear-gradient(#3d3d3d 0.1em, transparent 0.1em), linear-gradient(90deg, #3d3d3d 0.1em, transparent 0.1em);
+  background-size: 2px 2px;
+}
+
+.instruments__piano-key {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  font-size: 12px;
+  background: green;
+  font-weight: bold;
+  text-align: center;
+  padding: 2px 2px 10px 2px;
+  user-select: none;
+  -ms-user-select: none;
+}
+
+.instruments__piano-key-white {
+  height: 16em;
+  width: 4em;
+  min-width: 4em;
+  z-index: 1;
+  color: #383838;
+  border: 1px solid #d6d6d6;
+  border-radius: 0 0 5px 5px;
+  box-shadow: -1px 0 0 rgba(255, 255, 255, 0.8) inset, 0 0 5px #ccc inset, 0 0 3px rgba(0, 0, 0, 0.2);
+  background: linear-gradient(to bottom, #eee 0%, #fff 100%);
+  transition: 0.05s all;
+}
+
+.instruments__piano-key-black {
+  height: 9em;
+  width: 3em;
+  min-width: 3em;
+  z-index: 10;
+  color: #cecece;
+  border-bottom-left-radius: 5px;
+  border-bottom-right-radius: 5px;
+  border: 1px solid #3b3b3b;
+  margin: 0 0 0 -1.5em;
+  box-shadow: -1px -1px 2px rgba(255, 255, 255, 0.2) inset, 0 -5px 2px 3px rgba(0, 0, 0, 0.6) inset, 0 2px 12px rgba(0, 0, 0, 0.5);
+  background: linear-gradient(0deg, #222 0%, #555 100%);
+  transition: 0.05s all;
+}
+
+.instruments__piano-key-white:active,
+.instruments__piano-key-white-active {
+  border: 1px solid #b4b4b4;
+  box-shadow: 2px 0 3px rgba(0, 0, 0, 0.1) inset, -5px 5px 20px rgba(0, 0, 0, 0.2) inset, 0 0 3px rgba(0, 0, 0, 0.2);
+  background: linear-gradient(to bottom, #fff 0%, #e9e9e9 100%);
+}
+
+.instruments__piano-key-black:active,
+.instruments__piano-key-black-active {
+  border: 1px solid #222222;
+  box-shadow: -1px -1px 2px rgba(255, 255, 255, 0.2) inset, 0 -2px 2px 3px rgba(0, 0, 0, 0.6) inset, 0 1px 2px rgba(0, 0, 0, 0.5);
+  background: linear-gradient(to bottom, #444 0%, #222 100%);
+}
+
+.instruments__piano-key-white-offset {
+  margin-left: -1.5em;
+}
+
+.instruments__piano-key:first-child {
+  margin-left: 10px;
+  border-top-left-radius: 10px;
+  border-bottom-left-radius: 10px;
+}
+
+.instruments__piano-key:last-child {
+  margin-right: 10px;
+  border-top-right-radius: 10px;
+  border-bottom-right-radius: 10px;
+}
+
+.instruments__notedetails {
+  display: flex;
+  flex-direction: column;
+  user-select: none;
+  pointer-events: none;
+}
+
+.instruments__notename {
+  font-size: 10px;
+}
+
+.instruments__notekey {
+  font-size: 15px;
+  padding-bottom: 10px;
+}
+
+.instruments__piano-key-white > .instruments__notename {
+  font-size: 14px;
+  text-shadow: 0px 0px 1px 5px white;
+}
+
+.instrument__keybind-indicator {
+  border-radius: 20px;
+  width: 20px;
+  height: 10px;
+}
+
+.instrument__panel {
+  display: flex;
+  justify-content: center;
+  flex-direction: row;
+  align-items: center;
+  border-radius: 10px;
+  padding: 6px;
+  background: #333333;
+}
+
+.instrument__keyboardsupport {
+  padding-right: 5px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.instrument__panel-input {
+  text-align: center;
+  font-size: 9px;
+  font-weight: bold;
+  padding: 0px 5px;
+}
+
+.instrument__toggle-keyboard-button {
+  width: 100%;
+  text-align: center;
+  margin-bottom: 4px;
+}
+
+.instrument_panel-info {
+  flex-grow: 1;
+  text-align: center;
+  color: black;
+  padding: 0 10px;
+  margin: 0 10px;
+  background: white;
+  border-radius: 5px;
+}
+
+.instrument__instructions {
+  width: 100%;
+  text-align: center;
+}
+
+.instrument__input_keyorder {
+  width: 100%;
+}
+
 /**
  * Copyright (c) 2020 Aleksej Komarov
  * SPDX-License-Identifier: MIT
@@ -5552,6 +6107,7 @@ td, th {
 /**
  * Copyright (c) 2020 Aleksej Komarov
  * SPDX-License-Identifier: MIT
+ * Changes: ZeWaka (FA6)
  */
 .Button {
   position: relative;
@@ -5572,15 +6128,20 @@ td, th {
   margin-bottom: 0;
 }
 
-.Button .fa, .Button .fas, .Button .far {
-  margin-left: -0.25em;
+.Button .fa, .Button .fa-solid, .Button .fa-regular {
+  margin-left: 0em;
   margin-right: -0.25em;
   min-width: 1.333em;
   text-align: center;
 }
 
-.Button--hasContent .fa, .Button--hasContent .fas, .Button--hasContent .far {
+.Button--hasContent .fa, .Button--hasContent .fa-solid, .Button--hasContent .fa-regular {
   margin-right: 0.25em;
+}
+
+.Button--hasContent.Button--iconPosition--right .fa, .Button--hasContent.Button--iconPosition--right .fas, .Button--hasContent.Button--iconPosition--right .far {
+  margin-right: 0px;
+  margin-left: 3px;
 }
 
 .Button--ellipsis {
@@ -5925,6 +6486,29 @@ td, th {
   background-color: #a8a8a8;
 }
 
+.Button--color--light-grey {
+  transition: color 50ms, background-color 50ms;
+  background-color: #919191;
+  color: white;
+}
+
+.Button--color--light-grey:hover {
+  transition: color 0ms, background-color 0ms;
+}
+
+.Button--color--light-grey:focus {
+  transition: color 100ms, background-color 100ms;
+}
+
+.Button--color--light-grey:hover, .Button--color--light-grey:focus {
+  background-color: #bababa;
+  color: white;
+}
+
+.Button--color--light-grey:active {
+  background-color: #e2e2e2;
+}
+
 .Button--color--good {
   transition: color 50ms, background-color 50ms;
   background-color: #4d9121;
@@ -6136,6 +6720,32 @@ td, th {
 
 .Button--selected:active {
   background-color: #59da78;
+}
+
+.Button--flex {
+  display: inline-flex;
+  flex-direction: column;
+}
+
+.Button--flex--fluid {
+  width: 100%;
+}
+
+.Button--verticalAlignContent--top {
+  justify-content: flex-start;
+}
+
+.Button--verticalAlignContent--middle {
+  justify-content: center;
+}
+
+.Button--verticalAlignContent--bottom {
+  justify-content: flex-end;
+}
+
+.Button__content {
+  display: block;
+  align-self: stretch;
 }
 
 .WeaponVendor .Button--color--sidearm {
@@ -6551,7 +7161,7 @@ td, th {
 }
 
 .Layout__content {
-  background-image: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB2ZXJzaW9uPSIxLjAiIHZpZXdCb3g9IjAgMCA0MjUgMjAwIiBvcGFjaXR5PSIuMSI+CiAgPHBhdGggZD0ibSAxNzguMDAzOTksMC4wMzg2OSAtNzEuMjAzOTMsMCBhIDYuNzYxMzQyMiw2LjAyNTU0OTUgMCAwIDAgLTYuNzYxMzQsNi4wMjU1NSBsIDAsMTg3Ljg3MTQ3IGEgNi43NjEzNDIyLDYuMDI1NTQ5NSAwIDAgMCA2Ljc2MTM0LDYuMDI1NTQgbCA1My4xMDcyLDAgYSA2Ljc2MTM0MjIsNi4wMjU1NDk1IDAgMCAwIDYuNzYxMzUsLTYuMDI1NTQgbCAwLC0xMDEuNTQ0MDE4IDcyLjIxNjI4LDEwNC42OTkzOTggYSA2Ljc2MTM0MjIsNi4wMjU1NDk1IDAgMCAwIDUuNzYwMTUsMi44NzAxNiBsIDczLjU1NDg3LDAgYSA2Ljc2MTM0MjIsNi4wMjU1NDk1IDAgMCAwIDYuNzYxMzUsLTYuMDI1NTQgbCAwLC0xODcuODcxNDcgYSA2Ljc2MTM0MjIsNi4wMjU1NDk1IDAgMCAwIC02Ljc2MTM1LC02LjAyNTU1IGwgLTU0LjcxNjQ0LDAgYSA2Ljc2MTM0MjIsNi4wMjU1NDk1IDAgMCAwIC02Ljc2MTMzLDYuMDI1NTUgbCAwLDEwMi42MTkzNSBMIDE4My43NjQxMywyLjkwODg2IGEgNi43NjEzNDIyLDYuMDI1NTQ5NSAwIDAgMCAtNS43NjAxNCwtMi44NzAxNyB6IiAvPgogIDxwYXRoIGQ9Ik0gNC44NDQ2MzMzLDIyLjEwODc1IEEgMTMuNDEyMDM5LDEyLjUwMTg0MiAwIDAgMSAxMy40Nzc1ODgsMC4wMzkyNCBsIDY2LjExODMxNSwwIGEgNS4zNjQ4MTU4LDUuMDAwNzM3IDAgMCAxIDUuMzY0ODIzLDUuMDAwNzMgbCAwLDc5Ljg3OTMxIHoiIC8+CiAgPHBhdGggZD0ibSA0MjAuMTU1MzUsMTc3Ljg5MTE5IGEgMTMuNDEyMDM4LDEyLjUwMTg0MiAwIDAgMSAtOC42MzI5NSwyMi4wNjk1MSBsIC02Ni4xMTgzMiwwIGEgNS4zNjQ4MTUyLDUuMDAwNzM3IDAgMCAxIC01LjM2NDgyLC01LjAwMDc0IGwgMCwtNzkuODc5MzEgeiIgLz4KPC9zdmc+CjwhLS0gVGhpcyB3b3JrIGlzIGxpY2Vuc2VkIHVuZGVyIGEgQ3JlYXRpdmUgQ29tbW9ucyBBdHRyaWJ1dGlvbi1TaGFyZUFsaWtlIDQuMCBJbnRlcm5hdGlvbmFsIExpY2Vuc2UuIC0tPgo8IS0tIGh0dHA6Ly9jcmVhdGl2ZWNvbW1vbnMub3JnL2xpY2Vuc2VzL2J5LXNhLzQuMC8gLS0+Cg==);
+  background-image: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+DQo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgdmVyc2lvbj0iMS4wIiB2aWV3Qm94PSIwIDAgNDI1IDIwMCIgb3BhY2l0eT0iLjEiPg0KICA8cGF0aCBkPSJtIDE3OC4wMDM5OSwwLjAzODY5IC03MS4yMDM5MywwIGEgNi43NjEzNDIyLDYuMDI1NTQ5NSAwIDAgMCAtNi43NjEzNCw2LjAyNTU1IGwgMCwxODcuODcxNDcgYSA2Ljc2MTM0MjIsNi4wMjU1NDk1IDAgMCAwIDYuNzYxMzQsNi4wMjU1NCBsIDUzLjEwNzIsMCBhIDYuNzYxMzQyMiw2LjAyNTU0OTUgMCAwIDAgNi43NjEzNSwtNi4wMjU1NCBsIDAsLTEwMS41NDQwMTggNzIuMjE2MjgsMTA0LjY5OTM5OCBhIDYuNzYxMzQyMiw2LjAyNTU0OTUgMCAwIDAgNS43NjAxNSwyLjg3MDE2IGwgNzMuNTU0ODcsMCBhIDYuNzYxMzQyMiw2LjAyNTU0OTUgMCAwIDAgNi43NjEzNSwtNi4wMjU1NCBsIDAsLTE4Ny44NzE0NyBhIDYuNzYxMzQyMiw2LjAyNTU0OTUgMCAwIDAgLTYuNzYxMzUsLTYuMDI1NTUgbCAtNTQuNzE2NDQsMCBhIDYuNzYxMzQyMiw2LjAyNTU0OTUgMCAwIDAgLTYuNzYxMzMsNi4wMjU1NSBsIDAsMTAyLjYxOTM1IEwgMTgzLjc2NDEzLDIuOTA4ODYgYSA2Ljc2MTM0MjIsNi4wMjU1NDk1IDAgMCAwIC01Ljc2MDE0LC0yLjg3MDE3IHoiIC8+DQogIDxwYXRoIGQ9Ik0gNC44NDQ2MzMzLDIyLjEwODc1IEEgMTMuNDEyMDM5LDEyLjUwMTg0MiAwIDAgMSAxMy40Nzc1ODgsMC4wMzkyNCBsIDY2LjExODMxNSwwIGEgNS4zNjQ4MTU4LDUuMDAwNzM3IDAgMCAxIDUuMzY0ODIzLDUuMDAwNzMgbCAwLDc5Ljg3OTMxIHoiIC8+DQogIDxwYXRoIGQ9Im0gNDIwLjE1NTM1LDE3Ny44OTExOSBhIDEzLjQxMjAzOCwxMi41MDE4NDIgMCAwIDEgLTguNjMyOTUsMjIuMDY5NTEgbCAtNjYuMTE4MzIsMCBhIDUuMzY0ODE1Miw1LjAwMDczNyAwIDAgMSAtNS4zNjQ4MiwtNS4wMDA3NCBsIDAsLTc5Ljg3OTMxIHoiIC8+DQo8L3N2Zz4NCjwhLS0gVGhpcyB3b3JrIGlzIGxpY2Vuc2VkIHVuZGVyIGEgQ3JlYXRpdmUgQ29tbW9ucyBBdHRyaWJ1dGlvbi1TaGFyZUFsaWtlIDQuMCBJbnRlcm5hdGlvbmFsIExpY2Vuc2UuIC0tPg0KPCEtLSBodHRwOi8vY3JlYXRpdmVjb21tb25zLm9yZy9saWNlbnNlcy9ieS1zYS80LjAvIC0tPg0K);
   background-size: 70%;
   background-position: center;
   background-repeat: no-repeat;
