@@ -28,11 +28,10 @@ export const Palettes = (props, context) => {
 };
 
 type PaletteProps = {
-  key: any;
   piece: PieceSetupType;
 };
 
-const Palette = ({ key, piece }: PaletteProps, context) => {
+const Palette = ({ piece }: PaletteProps, context) => {
   const { act, data } = useBackend<BoardgameData>(context);
   const { currentUser } = data;
 

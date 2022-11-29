@@ -3,7 +3,6 @@ import { fenCodeRecordFromPieces, fetchPieces } from '../../../games';
 import { useActions, useStates } from '../../../utils/config';
 import { BoardgameData, PieceData } from '../../../utils/types';
 import { Box } from '../../../../../components';
-import { screenToBoard } from '../helpers';
 
 type GridPieceRendererProps = {
   pieces: PieceData[];
@@ -15,10 +14,9 @@ const GridPieceRenderer = ({ pieces }: GridPieceRendererProps, context) => {
   const { currentUser, lastMovedPiece } = data;
   const { isFlipped, tileSize } = useStates(context);
   const { pieceSelect, pieceRemove, piecePlace } = useActions(act);
+  const { width, height } = data.boardInfo;
 
   const pieceRecords = fenCodeRecordFromPieces(fetchPieces());
-  const width = 100 / data.boardInfo.width;
-  const height = 100 / data.boardInfo.height;
 
   // Draw the pieces
   // Offset by 20px to left and top
@@ -29,12 +27,19 @@ const GridPieceRenderer = ({ pieces }: GridPieceRendererProps, context) => {
         const pieceType = pieceRecords[code];
 
         // Is the piece selected by currentUser?
-        const pieceSelected = selected && currentUser !== selected;
+        const pieceSelectedByUser = selected && currentUser !== selected;
 
-        const xDist = Math.abs(x - prevX);
-        const yDist = Math.abs(y - prevY);
+        let left = x * tileSize.width;
+        let top = y * tileSize.height;
 
-        const flipY = data.boardInfo.height - y - 1;
+        if (isFlipped) {
+          // 1 is subtracted from the x and y values to account for the fact that
+          // the board is 0 indexed, but the width and height are not.
+          // aka 1-width, 1-height, not 0-width, 0-height
+          left = (width - x - 1) * tileSize.width;
+          top = (height - y - 1) * tileSize.height;
+        }
+
         return (
           <div
             onmousedown={(e) => {
@@ -43,20 +48,28 @@ const GridPieceRenderer = ({ pieces }: GridPieceRendererProps, context) => {
               }
             }}
             onmouseup={(e) => {
-              const target = e.target as SVGRectElement;
-              const bounds = target.getBoundingClientRect();
-              const [xPos, yPos] = screenToBoard(bounds.left, bounds.top, tileSize);
-              piecePlace(currentUser.ckey, xPos, yPos);
+              let mx = e.clientX - 20;
+              let my = e.clientY - 54;
+              let boardX = Math.floor(mx / tileSize.width);
+              let boardY = Math.floor(my / tileSize.height);
+              if (isFlipped) {
+                // 1 is subtracted from the x and y values to account for the fact that
+                // the board is 0 indexed, but the width and height are not.
+                // aka 1-width, 1-height, not 0-width, 0-height
+                boardX = width - boardX - 1;
+                boardY = height - boardY - 1;
+              }
+              piecePlace(currentUser.ckey, boardX, boardY);
             }}
             ondblclick={(e) => {
               pieceRemove(pieces[val]);
             }}
             style={{
               position: 'absolute',
-              left: x * tileSize.width + 'px',
-              top: y * tileSize.width + 'px',
+              left: left + 'px',
+              top: top + 'px',
               width: tileSize.width + 'px',
-              height: tileSize.width + 'px',
+              height: tileSize.height + 'px',
             }}
             key={index}>
             <img
@@ -66,6 +79,19 @@ const GridPieceRenderer = ({ pieces }: GridPieceRendererProps, context) => {
               }}
               src={pieceType.image}
             />
+            <span
+              // Center text bellow img
+              style={{
+                'position': 'absolute',
+                'left': '50%',
+                'top': '50%',
+                'transform': 'translate(-50%, -50%)',
+                'font-size': '12px',
+                'font-weight': 'bold',
+                'text-shadow': '0 0 2px black',
+              }}>
+              {selected}
+            </span>
           </div>
         );
       })}

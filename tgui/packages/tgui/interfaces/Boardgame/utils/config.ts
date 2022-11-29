@@ -128,7 +128,7 @@ export const useActions = (act) => {
     pieceCreate: (code: string, x: number, y: number) => {
       act('pieceCreate', { code, x, y });
     },
-    pieceRemove: (piece: number | PieceData) => {
+    pieceRemove: (piece: number | PieceData | string) => {
       act('pieceRemove', { piece });
     },
     pieceRemoveHeld: (ckey: string | UserData) => {
@@ -160,6 +160,9 @@ export const useActions = (act) => {
       act('paletteClear', {
         ckey,
       });
+    },
+    boardClear: ({ width, height }: SizeType) => {
+      act('applyGNot', { gnot: (width * height).toString() });
     },
   };
 

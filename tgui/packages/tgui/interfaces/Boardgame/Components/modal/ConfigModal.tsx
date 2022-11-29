@@ -14,9 +14,7 @@ export const ConfigModal = (_props, context) => {
   const { act, data } = useBackend<BoardgameData>(context);
   const { closeModal, isModalOpen, setModalTabIndex, modalTabIndex } = useStates(context);
 
-  const modalTabElements = [<PresetTab />, <ConfigTab />];
-
-  const TabElement = modelTabElements[modalTabIndex] || null;
+  const TabElement = modalTabIndex === 0 ? PresetsTab : ConfigTab;
 
   return isModalOpen ? (
     <Box className="boardgame__modal">

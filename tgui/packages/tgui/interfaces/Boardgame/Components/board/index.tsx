@@ -5,7 +5,6 @@ import { BoardgameData } from '../../utils/types';
 import { useBackend } from '../../../../backend';
 
 export const Board = (props, context) => {
-  const { act, data } = useBackend<BoardgameData>(context);
   return (
     <Flex className="boardgame__wrapper">
       <div className={`boardgame__board-inner`}>

@@ -9,15 +9,6 @@ const presets: PresetType[] = [];
 /* Chess */
 
 presets.push({
-  name: 'Empty Board',
-  game: 'chess',
-  description: 'An empty board.',
-  setup: '64',
-  boardWidth: 8,
-  boardHeight: 8,
-});
-
-presets.push({
   name: 'Chess',
   game: 'chess',
   description: 'The classic game of chess.',

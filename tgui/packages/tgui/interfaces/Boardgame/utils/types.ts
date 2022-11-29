@@ -43,7 +43,7 @@ export type PieceData = {
 export type UserData = {
   ckey: string;
   name: string;
-  selected?: PieceData;
+  selected?: string;
   palette?: string;
 };
 
