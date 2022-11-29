@@ -63,6 +63,7 @@
 		var/message = html_encode(input("Choose something to say:","Enter Message.","") as null|text)
 		if (!message)
 			return
+		logTheThing(LOG_SAY, holder.owner, "[message]")
 
 		.= H.transmit_thrall_msg(message, M)
 

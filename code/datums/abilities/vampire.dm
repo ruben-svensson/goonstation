@@ -342,7 +342,6 @@
 			return
 
 		logTheThing(LOG_DIARY, sender, "(GHOULSPEAK): [message]", "ghoulsay")
-		logTheThing(LOG_SAY, sender, "(GHOULSPEAK): [message]")
 
 		if (sender.client && sender.client.ismuted())
 			boutput(sender, "You are currently muted and may not speak.")

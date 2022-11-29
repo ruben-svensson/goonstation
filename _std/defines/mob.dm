@@ -51,9 +51,9 @@
 /// Burning Lv1 starts at this duration.
 #define BURNING_LV1 0
 /// Burning Lv2 starts at this duration.
-#define BURNING_LV2 30 SECONDS
+#define BURNING_LV2 200
 /// Burning Lv3 starts at this duration.
-#define BURNING_LV3 60 SECONDS
+#define BURNING_LV3 400
 
 //hearing
 #define HEARING_NORMAL 0

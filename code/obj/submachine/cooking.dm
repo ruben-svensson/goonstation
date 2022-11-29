@@ -65,8 +65,6 @@
 			if (H.gloves)
 				playsound(src.loc, 'sound/impact_sounds/Liquid_Slosh_1.ogg', 25, 1)
 				user.visible_message("<span class='notice'>[user] cleans [his_or_her(user)] gloves.</span>")
-				if (H.sims)
-					user.show_text("If you want to improve your hygiene, you need to remove your gloves first.")
 				H.gloves.clean_forensic() // Ditto (Convair880).
 				H.set_clothing_icon_dirty()
 			else
@@ -92,42 +90,41 @@
 	var/mob/living/carbon/human/user
 	var/obj/submachine/chef_sink/sink
 
-	New(usermob,sink)
+	New(usermob,sinkerino)
 		user = usermob
-		src.sink = sink
+		sink = sinkerino
 		..()
-
-	proc/checkStillValid()
-		if(BOUNDS_DIST(user, sink) > 1 || user == null || sink == null || user.l_hand || user.r_hand)
-			interrupt(INTERRUPT_ALWAYS)
-			return FALSE
-		return TRUE
 
 	onUpdate()
-		checkStillValid()
 		..()
+		if(BOUNDS_DIST(user, sink) > 1 || user == null || sink == null || user.l_hand || user.r_hand)
+			interrupt(INTERRUPT_ALWAYS)
+			return
+
 
 	onStart()
 		..()
-		if(BOUNDS_DIST(user, sink) > 1) user.show_text("You're too far from the sink!")
-		if(user.l_hand || user.r_hand) user.show_text("Both your hands need to be free to wash them!")
+		if(BOUNDS_DIST(user, sink) > 1 || user == null || sink == null || user.l_hand || user.r_hand)
+			interrupt(INTERRUPT_ALWAYS)
+			return
 		src.loopStart()
 
 
 	loopStart()
 		..()
-		if(!checkStillValid()) return
 		playsound(get_turf(sink), 'sound/impact_sounds/Liquid_Slosh_1.ogg', 25, 1)
 
 	onEnd()
-		if(!checkStillValid())
+		if(BOUNDS_DIST(user, sink) > 1 || user == null || sink == null || user.l_hand || user.r_hand)
 			..()
+			interrupt(INTERRUPT_ALWAYS)
 			return
 
-		var/cleanup_rate = 2
-		if(user.traitHolder.hasTrait("training_medical") || user.traitHolder.hasTrait("training_chef"))
-			cleanup_rate = 3
-		user.sims.affectMotive("Hygiene", cleanup_rate)
+		if (user.sims)
+			var/cleanup_rate = 2
+			if(user.traitHolder.hasTrait("training_medical") || user.traitHolder.hasTrait("training_chef"))
+				cleanup_rate = 3
+			user.sims.affectMotive("Hygiene", cleanup_rate)
 		user.blood_DNA = null
 		user.blood_type = null
 		user.set_clothing_icon_dirty()

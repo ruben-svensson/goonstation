@@ -5405,10 +5405,7 @@
 	},
 /area/station/hallway/primary/northwest)
 "cCn" = (
-/obj/machinery/recharge_station,
-/obj/landmark/start{
-	name = "Cyborg"
-	},
+/obj/storage/crate/robotparts,
 /turf/simulated/floor/blueblack,
 /area/station/medical/robotics)
 "cCs" = (
@@ -5613,7 +5610,7 @@
 /obj/disposalpipe/segment/food{
 	dir = 4
 	},
-/turf/simulated/wall/auto/supernorn,
+/turf/simulated/wall/auto/reinforced/supernorn,
 /area/station/crew_quarters/catering)
 "cIM" = (
 /turf/simulated/floor/carpet/blue/fancy/edge/sw,
@@ -11666,12 +11663,6 @@
 	dir = 1
 	},
 /area/station/crew_quarters/pool)
-"fDm" = (
-/obj/wingrille_spawn/auto/crystal/reinforced,
-/turf/simulated/floor/plating,
-/area/station/hallway/secondary/entry{
-	name = "Arrival Shuttle Hallway"
-	})
 "fDs" = (
 /obj/table/reinforced/auto,
 /obj/machinery/microwave,
@@ -14218,7 +14209,7 @@
 	},
 /area/station/hallway/secondary/exit)
 "gLY" = (
-/obj/wingrille_spawn/auto/crystal/reinforced,
+/obj/wingrille_spawn/auto/crystal,
 /turf/simulated/floor/plating,
 /area/station/engine/substation/north{
 	name = "North Catalytic Substation"
@@ -15257,12 +15248,6 @@
 /obj/item/sponge,
 /turf/simulated/floor/darkblue,
 /area/station/janitor/office)
-"hiW" = (
-/obj/wingrille_spawn/auto/crystal/reinforced,
-/turf/simulated/floor/plating,
-/area/station/engine/inner{
-	name = "Transception Array Control"
-	})
 "hiY" = (
 /obj/wingrille_spawn/auto/crystal,
 /obj/window_blinds/cog2/right,
@@ -15510,7 +15495,10 @@
 /area/station/crew_quarters/fitness)
 "hmT" = (
 /obj/machinery/light_switch/west,
-/obj/storage/crate/robotparts,
+/obj/machinery/recharge_station,
+/obj/landmark/start{
+	name = "Cyborg"
+	},
 /turf/simulated/floor/blueblack{
 	dir = 8
 	},
@@ -23991,7 +23979,7 @@
 	name = "Head of Personnel's Quarters"
 	})
 "laQ" = (
-/obj/wingrille_spawn/auto/crystal/reinforced,
+/obj/wingrille_spawn/auto/crystal,
 /turf/simulated/floor/plating,
 /area/station/engine/substation/pylon{
 	name = "South Catalytic Substation"
@@ -25013,10 +25001,6 @@
 /obj/item/storage/toilet/goldentoilet,
 /turf/simulated/floor/sanitary,
 /area/station/bridge/captain)
-"lxn" = (
-/obj/wingrille_spawn/auto/crystal/reinforced,
-/turf/simulated/floor/plating,
-/area/station/hallway/secondary/exit)
 "lxp" = (
 /obj/wingrille_spawn/auto/crystal,
 /turf/simulated/floor/plating,
@@ -32025,6 +32009,12 @@
 /turf/simulated/floor/carpet/purple/fancy/innercorner/ne_sw,
 /area/station/science/lobby{
 	name = "Science Lounge"
+	})
+"oNU" = (
+/obj/wingrille_spawn/auto/crystal,
+/turf/simulated/floor/black,
+/area/station/hallway/secondary/entry{
+	name = "Arrival Shuttle Hallway"
 	})
 "oOu" = (
 /obj/table/round/auto,
@@ -78234,7 +78224,7 @@ rSM
 mSi
 gbL
 fzq
-fDm
+gbL
 tEn
 tEn
 xYB
@@ -78254,7 +78244,7 @@ plY
 xYB
 tEn
 tEn
-fDm
+gbL
 oPO
 gbL
 ncz
@@ -79132,7 +79122,7 @@ rJg
 rJg
 rJg
 rJg
-fDm
+gbL
 gfS
 gbL
 hXZ
@@ -79140,7 +79130,7 @@ eMn
 jQa
 gbL
 gfS
-fDm
+gbL
 rJg
 rJg
 xYB
@@ -79160,7 +79150,7 @@ umD
 xYB
 rJg
 rJg
-fDm
+gbL
 gfS
 gbL
 hxY
@@ -79168,7 +79158,7 @@ eMn
 jQa
 gbL
 gfS
-fDm
+gbL
 rJg
 rJg
 rJg
@@ -79434,7 +79424,7 @@ bzS
 bzS
 rJg
 rJg
-fDm
+gbL
 gfS
 gbL
 tNU
@@ -79442,7 +79432,7 @@ eMn
 eTW
 gbL
 gfS
-fDm
+gbL
 rJg
 rJg
 bJL
@@ -79462,7 +79452,7 @@ mDc
 cMR
 rJg
 rJg
-fDm
+gbL
 gfS
 gbL
 kIs
@@ -79470,7 +79460,7 @@ eMn
 mSi
 gbL
 gfS
-fDm
+gbL
 rJg
 rJg
 bzS
@@ -79736,7 +79726,7 @@ bzS
 bzS
 bzS
 rJg
-fDm
+gbL
 gfS
 gbL
 hXZ
@@ -79744,7 +79734,7 @@ eMn
 jQa
 gbL
 gfS
-fDm
+gbL
 rJg
 rJg
 shh
@@ -79764,7 +79754,7 @@ dDw
 mfr
 rJg
 rJg
-fDm
+gbL
 gfS
 gbL
 hxY
@@ -79772,7 +79762,7 @@ eMn
 jQa
 gbL
 gfS
-fDm
+gbL
 rJg
 bzS
 bzS
@@ -80348,7 +80338,7 @@ eMn
 jQa
 gbL
 gfS
-fDm
+gbL
 rJg
 rJg
 rJg
@@ -80368,7 +80358,7 @@ rJg
 rJg
 rJg
 rJg
-fDm
+gbL
 gfS
 gbL
 hxY
@@ -80650,7 +80640,7 @@ eMn
 mSi
 gbL
 gfS
-fDm
+gbL
 rJg
 rJg
 rJg
@@ -80670,7 +80660,7 @@ rJg
 rJg
 rJg
 rJg
-fDm
+gbL
 gfS
 gbL
 ncz
@@ -80952,7 +80942,7 @@ eMn
 jQa
 gbL
 gfS
-fDm
+gbL
 rJg
 rJg
 rJg
@@ -80972,7 +80962,7 @@ rJg
 rJg
 rJg
 rJg
-fDm
+gbL
 gfS
 gbL
 hxY
@@ -81255,25 +81245,25 @@ jSC
 dqY
 tCM
 dqY
-fDm
-fDm
-fDm
+gbL
+gbL
+gbL
 dqY
-fDm
-fDm
-fDm
+gbL
+gbL
+gbL
 dqY
-fDm
-fDm
-fDm
+gbL
+gbL
+gbL
 dqY
-fDm
-fDm
-fDm
+gbL
+gbL
+gbL
 dqY
-fDm
-fDm
-fDm
+oNU
+oNU
+oNU
 dqY
 tCM
 dqY
@@ -96401,11 +96391,11 @@ iPe
 baj
 baj
 baj
-hiW
-hiW
-hiW
-hiW
-hiW
+mvA
+mvA
+mvA
+mvA
+mvA
 baj
 itm
 thj
@@ -96702,13 +96692,13 @@ fBi
 mxa
 gUK
 kST
-hiW
+mvA
 ijH
 auM
 aPz
 yge
 knN
-hiW
+mvA
 xxN
 gti
 mvA
@@ -97004,14 +96994,14 @@ gUd
 eKF
 ukt
 kST
-hiW
+mvA
 aPz
 aPz
 nKt
 mzq
 rld
-hiW
-hiW
+mvA
+mvA
 gfC
 mvA
 jyU
@@ -97306,7 +97296,7 @@ dzl
 tpy
 fjZ
 kST
-hiW
+mvA
 mjt
 aPz
 aPz
@@ -97608,14 +97598,14 @@ nmv
 oln
 ukt
 kST
-hiW
+mvA
 aPz
 aPz
 uob
 aWU
 ijH
-hiW
-hiW
+mvA
+mvA
 gfC
 mvA
 sOI
@@ -97910,13 +97900,13 @@ nQa
 cMA
 dbA
 kST
-hiW
+mvA
 ijH
 nlC
 aPz
 yge
 knN
-hiW
+mvA
 rYl
 vgL
 mvA
@@ -98213,11 +98203,11 @@ ykm
 baj
 baj
 baj
-hiW
-hiW
-hiW
-hiW
-hiW
+mvA
+mvA
+mvA
+mvA
+mvA
 baj
 abk
 sbd
@@ -113267,25 +113257,25 @@ pFB
 uSe
 ndB
 uSe
-lxn
-lxn
-lxn
+nxE
+nxE
+nxE
 uSe
-lxn
-lxn
-lxn
+nxE
+nxE
+nxE
 uSe
-lxn
-lxn
-lxn
+nxE
+nxE
+nxE
 uSe
-lxn
-lxn
-lxn
+nxE
+nxE
+nxE
 uSe
-lxn
-lxn
-lxn
+nxE
+nxE
+nxE
 uSe
 ndB
 uSe
@@ -113568,7 +113558,7 @@ udE
 mbi
 nxE
 wXk
-lxn
+nxE
 rJg
 rJg
 rJg
@@ -113588,7 +113578,7 @@ rJg
 rJg
 rJg
 rJg
-lxn
+nxE
 wXk
 nxE
 mtw
@@ -113870,7 +113860,7 @@ udE
 cEv
 nxE
 wXk
-lxn
+nxE
 rJg
 rJg
 iMT
@@ -113890,7 +113880,7 @@ iMT
 iMT
 rJg
 rJg
-lxn
+nxE
 wXk
 nxE
 hJZ
@@ -114172,7 +114162,7 @@ udE
 mbi
 nxE
 wXk
-lxn
+nxE
 rJg
 rJg
 iMT
@@ -114192,7 +114182,7 @@ iMT
 iMT
 rJg
 rJg
-lxn
+nxE
 wXk
 nxE
 mtw
@@ -114768,7 +114758,7 @@ bzS
 bzS
 bzS
 rJg
-lxn
+nxE
 wXk
 nxE
 ftp
@@ -114776,7 +114766,7 @@ udE
 mbi
 nxE
 wXk
-lxn
+nxE
 rJg
 rJg
 iMT
@@ -114796,7 +114786,7 @@ iMT
 iMT
 rJg
 rJg
-lxn
+nxE
 wXk
 nxE
 mtw
@@ -114804,7 +114794,7 @@ udE
 mbi
 nxE
 wXk
-lxn
+nxE
 bUI
 bUI
 bUI
@@ -115070,7 +115060,7 @@ bzS
 bzS
 bzS
 rJg
-lxn
+nxE
 wXk
 nxE
 fwT
@@ -115078,7 +115068,7 @@ udE
 hpn
 nxE
 wXk
-lxn
+nxE
 rJg
 rJg
 iMT
@@ -115098,7 +115088,7 @@ iMT
 iMT
 rJg
 rJg
-lxn
+nxE
 wXk
 nxE
 rie
@@ -115106,7 +115096,7 @@ udE
 cEv
 nxE
 wXk
-lxn
+nxE
 bUI
 bUI
 bUI
@@ -115372,7 +115362,7 @@ bzS
 bzS
 bzS
 rJg
-lxn
+nxE
 wXk
 nxE
 ftp
@@ -115380,7 +115370,7 @@ udE
 mbi
 nxE
 wXk
-lxn
+nxE
 rJg
 rJg
 iMT
@@ -115400,7 +115390,7 @@ iMT
 iMT
 rJg
 rJg
-lxn
+nxE
 wXk
 nxE
 mtw
@@ -116286,7 +116276,7 @@ nOs
 cEv
 nxE
 kUk
-lxn
+nxE
 uvq
 hpk
 iMT
@@ -116306,7 +116296,7 @@ iMT
 iMT
 hpk
 uvq
-lxn
+nxE
 rSA
 nxE
 hJZ

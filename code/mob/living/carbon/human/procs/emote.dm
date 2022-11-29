@@ -2409,19 +2409,25 @@
 /mob/living/proc/get_targets(range = 1, kind_of_target = "mob")
 	if(!isturf(get_turf(src))) return
 
-	var/list/targets = list()
+	var/list/atom/movable/everything_around = list()
+
+	for(var/atom/movable/AM in view(range, get_turf(src)))
+		if(AM == src)
+			continue
+		everything_around |= AM
+
 	switch(kind_of_target)
 		if("both")
-			for(var/atom/movable/AM in view(range, get_turf(src)))
-				if(AM == src)
-					continue
-				targets += AM
+			return everything_around
 		if("mob")
-			for(var/mob/M in view(range, get_turf(src)))
-				if(M == src || isintangible(M) || isobserver(M))
+			. = list()
+			for(var/mob/M in everything_around)
+				if(M == src)
 					continue
-				targets += M
+				. |= M
 		if("obj")
-			for(var/obj/O in view(range, get_turf(src)))
-				targets += O
-	return targets
+			. = list()
+			for(var/obj/O in everything_around)
+				if(O == src)
+					continue
+				. |= O
