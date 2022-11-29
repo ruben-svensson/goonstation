@@ -14,20 +14,23 @@ export const ConfigModal = (_props, context) => {
   const { act, data } = useBackend<BoardgameData>(context);
   const { closeModal, isModalOpen, setModalTabIndex, modalTabIndex } = useStates(context);
 
+  const modalTabElements = [<PresetTab />, <ConfigTab />];
+
+  const TabElement = modelTabElements[modalTabIndex] || null;
+
   return isModalOpen ? (
     <Box className="boardgame__modal">
       <Box className="boardgame__modal-inner">
         <Tabs fluid className="boardgame__modal-tabs">
-          <Tabs.Tab className="boardgame__modal-tab" selected={modalTabIndex === 1} onClick={() => setModalTabIndex(1)}>
+          <Tabs.Tab className="boardgame__modal-tab" selected={modalTabIndex === 0} onClick={() => setModalTabIndex(0)}>
             Presets
           </Tabs.Tab>
-          <Tabs.Tab className="boardgame__modal-tab" selected={modalTabIndex === 2} onClick={() => setModalTabIndex(2)}>
+          <Tabs.Tab className="boardgame__modal-tab" selected={modalTabIndex === 1} onClick={() => setModalTabIndex(1)}>
             Notation Setup
           </Tabs.Tab>
         </Tabs>
         <Box className="boardgame__modal-config">
-          {modalTabIndex === 1 && <PresetsTab />}
-          {modalTabIndex === 2 && <ConfigTab />}
+          <TabElement />
         </Box>
       </Box>
     </Box>

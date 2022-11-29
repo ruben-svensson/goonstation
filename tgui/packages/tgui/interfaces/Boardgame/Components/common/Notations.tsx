@@ -1,10 +1,10 @@
-import { classes } from 'common/react';
-import { useBackend } from '../../../backend';
-import { Box, Flex } from '../../../components';
-import { BoardgameData } from '../utils/types';
+import { useBackend } from '../../../../backend';
+import { Box, Flex } from '../../../../components';
+import { BoardgameData } from '../../utils/types';
 
-import { generateBoardNotationLetters } from '../utils/notations';
-import { useStates } from '../utils/config';
+import { generateBoardNotationLetters } from '../../utils/notations';
+import { useStates } from '../../utils/config';
+import { classes } from '../../../../../common/react';
 
 export type NotationsProps = {
   direction: 'vertical' | 'horizontal';

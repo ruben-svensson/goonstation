@@ -1,13 +1,15 @@
 import { Window } from '../../layouts';
 import { useBackend } from '../../backend';
 import { BoardgameData } from './utils/types';
-import { ConfigModal, HeldPieceRenderer } from './components';
-import { Component } from 'inferno';
-import { BoardgameContents } from './components/common/BoardgameContents';
 import { adjustSizes, handleEvents } from './utils/window';
-import TitleBar from './components/common/TitleBar';
+import { Component } from 'inferno';
+
 import { Icon, Box, Modal } from '../../components';
 import { useStates } from './utils/config';
+import { ConfigModal } from './Components/modal/ConfigModal';
+import { TitleBar } from './Components/common/TitleBar';
+import { HeldPieceRenderer } from './Components/common/HeldPieceRenderer';
+import { BoardgameContents } from './Components/common/BoardgameContents';
 
 export class Boardgame extends Component<BoardgameData, any> {
   constructor(props) {

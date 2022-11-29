@@ -1,8 +1,8 @@
-import { Box } from '../../../components';
-import { BoardgameData } from '../utils/types';
-import { useBackend } from '../../../backend';
-import { useStates } from '../utils/config';
-import { fenCodeRecordFromPieces, fetchPieces } from '../games';
+import { Box } from '../../../../components';
+import { BoardgameData } from '../../utils/types';
+import { useBackend } from '../../../../backend';
+import { useStates } from '../../utils/config';
+import { fenCodeRecordFromPieces, fetchPieces } from '../../games';
 
 export const HeldPieceRenderer = (_, context) => {
   const { act, data } = useBackend<BoardgameData>(context);

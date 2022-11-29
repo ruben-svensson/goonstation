@@ -1,6 +1,6 @@
-import { useBackend } from '../../../backend';
-import { BoardgameData } from '../utils/types';
-import { PieceSetupType } from '../games';
+import { useBackend } from '../../../../backend';
+import { BoardgameData } from '../../utils/types';
+import { PieceSetupType } from '../../games';
 
 export type PieceProps = {
   piece: PieceSetupType;

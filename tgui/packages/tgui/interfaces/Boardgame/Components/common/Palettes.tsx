@@ -1,10 +1,9 @@
-import { useBackend } from '../../../backend';
-import { BoardgameData } from '../utils/types';
+import { BoardgameData } from '../../utils/types';
 import { Piece } from '..';
-import { fetchPalettes, PieceSetupType } from '../games';
-import { Box, Button, Flex } from '../../../components';
-import { useActions, useStates } from '../utils/config';
-import { classes } from 'common/react';
+import { useBackend } from '../../../../backend';
+import { fetchPalettes, PieceSetupType } from '../../games';
+import { useActions, useStates } from '../../utils/config';
+import { Box, Button, Flex } from '../../../../components';
 
 export const Palettes = (props, context) => {
   const { act, data } = useBackend<BoardgameData>(context);
@@ -18,8 +17,8 @@ export const Palettes = (props, context) => {
           </Box>
 
           <Flex className={`boardgame__palettes-set ${isExpanded(i) ? '' : 'boardgame__palettes-set-minimized'}`}>
-            {set.pieces.map((piece) => (
-              <Palette key={piece.name} piece={piece} />
+            {set.pieces.map((piece, index) => (
+              <Palette key={index} piece={piece} />
             ))}
           </Flex>
         </Box>
@@ -29,10 +28,11 @@ export const Palettes = (props, context) => {
 };
 
 type PaletteProps = {
+  key: any;
   piece: PieceSetupType;
 };
 
-const Palette = ({ piece }: PaletteProps, context) => {
+const Palette = ({ key, piece }: PaletteProps, context) => {
   const { act, data } = useBackend<BoardgameData>(context);
   const { currentUser } = data;
 
@@ -57,7 +57,7 @@ const PaletteExpandButton = ({ index, setId }: PaletteExpandButtonProps, context
   const { isExpanded, togglePalette } = useStates(context);
   return (
     <Button.Checkbox
-      className={classes(['boardgame__palettes-set-toggle'])}
+      className={'boardgame__palettes-set-toggle'}
       checked={isExpanded(index)}
       onClick={() => togglePalette(index)}>
       {setId}
