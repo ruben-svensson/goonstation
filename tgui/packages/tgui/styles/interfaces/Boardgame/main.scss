@@ -9,6 +9,10 @@
     right: 50px;
     padding: 2px;
     z-index: 20;
+
+    & > * {
+      margin: 0 4px;
+    }
   }
 }
 

@@ -1,22 +1,32 @@
-import CheckerBoard from './styles/checkerboard';
-import { Notations } from '../';
+import { HorizontalNotations, VerticalNotations } from '../';
 import { Flex } from '../../../../components';
 import { BoardgameData } from '../../utils/types';
 import { useBackend } from '../../../../backend';
+import { useActions } from '../../utils/config';
+import CheckerBoard from './styles/checkerboard';
 
 export const Board = (props, context) => {
+  const { act, data } = useBackend<BoardgameData>(context);
+  const { pieceDeselect } = useActions(act);
+
   return (
     <Flex className="boardgame__wrapper">
       <div className={`boardgame__board-inner`}>
-        <Notations direction={'horizontal'} />
+        <HorizontalNotations />
         <Flex className={`boardgame__board`}>
-          <Notations direction={'vertical'} />
-          <Flex.Item grow>
+          <VerticalNotations />
+          <Flex.Item
+            grow
+            onmouseleave={() => {
+              if (data.currentUser?.selected) {
+                pieceDeselect(data.currentUser.ckey);
+              }
+            }}>
             <DesignSelector />
           </Flex.Item>
-          <Notations direction={'vertical'} />
+          <VerticalNotations />
         </Flex>
-        <Notations direction={'horizontal'} />
+        <HorizontalNotations />
       </div>
     </Flex>
   );

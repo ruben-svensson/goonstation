@@ -4,16 +4,21 @@ import { BoardgameData } from '../../../../utils/types';
 import GridGuideRenderer from '../../common/GridGuideRenderer';
 import GridPieceRenderer from '../../common/GridPieceRenderer';
 import CheckerBoardPattern from './CheckerBoardPattern';
-import ImageBoard from './ImageBoard';
 
 export const CheckerBoard = (props, context) => {
   const { act, data } = useBackend<BoardgameData>(context);
   const { pieces, currentUser } = data;
-  const { tileSize, isFlipped } = useStates(context);
+  const { tileSize, isFlipped, mouseCoords } = useStates(context);
   const { width, height } = tileSize;
   const { piecePlace, pieceRemove } = useActions(act);
 
-  const onPlace = (mx: number, my: number) => {
+  const boardPos = (e) => {
+    const { x, y } = mouseCoords;
+    const mx = x - 20;
+    const my = y - 54;
+    // alert(mx + ' ' + width);
+    // alert(Math.floor(mx / width));
+
     let boardX = Math.floor(mx / width);
     let boardY = Math.floor(my / height);
 
@@ -25,6 +30,12 @@ export const CheckerBoard = (props, context) => {
       boardY = data.boardInfo.height - boardY - 1;
     }
 
+    return [boardX, boardY];
+  };
+
+  const onPlace = (e) => {
+    const [boardX, boardY] = boardPos(e);
+
     piecePlace(currentUser.ckey, boardX, boardY);
   };
 
@@ -35,26 +46,32 @@ export const CheckerBoard = (props, context) => {
         width: '100%',
         height: '100%',
       }}
-      onClick={(e) => {
+      onMouseDown={(e) => {
         if (e.button === 0) {
-          const target = e.target as SVGRectElement;
-          const bounds = target.getBoundingClientRect();
-          onPlace(e.clientX - bounds.left, e.clientY - bounds.top);
+          if (currentUser.palette || currentUser.selected) {
+            onPlace(e);
+          }
         }
       }}
       onMouseUp={(e) => {
         if (e.button === 0) {
-          const target = e.target as SVGRectElement;
-          const bounds = target.getBoundingClientRect();
-          onPlace(e.clientX - bounds.left, e.clientY - bounds.top);
+          if (currentUser.palette) {
+            onPlace(e);
+          }
+          if (currentUser.selected) {
+            const [boardX, boardY] = boardPos(e);
+            const piece = pieces[currentUser.selected];
+            // alert(piece.x + ' ' + piece.y + ' ' + boardX + ' ' + boardY);
+            if (piece.x !== boardX && piece.y !== boardY) {
+              onPlace(e);
+            }
+          }
         }
       }}
       onDblClick={(e) => {
         if (currentUser.selected) {
-          pieceRemove(currentUser.selected);
         }
       }}>
-      <ImageBoard />
       <CheckerBoardPattern />
       <GridGuideRenderer />
       <GridPieceRenderer pieces={pieces} />

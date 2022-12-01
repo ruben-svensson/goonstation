@@ -1,14 +1,38 @@
+import { useBackend, useLocalState } from '../../../../backend';
 import { Box, Button } from '../../../../components';
-import { useStates } from '../../utils/config';
+import { useActions, useStates } from '../../utils/config';
+import { BoardgameData } from '../../utils/types';
 
 export const TitleBar = (props, context) => {
-  const { isFlipped, toggleFlip, openModal, closeModal, isModalOpen, helpModalOpen } = useStates(context);
+  const { act, data } = useBackend<BoardgameData>(context);
+  const { width, height } = data.boardInfo;
+  const { isFlipped, toggleFlip, helpModalOpen, isHelpModalOpen } = useStates(context);
+  const { boardClear } = useActions(act);
+
+  const [clearConfirm, setClearConfirm] = useLocalState(context, 'clearConfirm', false);
 
   return (
     <Box className="boardgame__titlebar">
-      <Button icon="question" onClick={() => helpModalOpen()} />
-      <Button onClick={toggleFlip}>Flip board</Button>
-      <Button>Clear board</Button>
+      <Button color={isHelpModalOpen ? 'orange' : 'default'} icon="question" onClick={() => helpModalOpen()}>
+        Help
+      </Button>
+      <Button color={isFlipped ? 'orange' : 'default'} icon="repeat" onClick={toggleFlip}>
+        Flip board
+      </Button>
+      <Button
+        onMouseOut={() => setClearConfirm(false)}
+        color={clearConfirm ? 'orange' : 'default'}
+        icon="trash"
+        onClick={() => {
+          if (clearConfirm) {
+            boardClear({ width, height });
+            setClearConfirm(false);
+          } else {
+            setClearConfirm(true);
+          }
+        }}>
+        {clearConfirm ? 'Confirm' : 'Clear board'}
+      </Button>
       <SetupButton />
     </Box>
   );
@@ -16,7 +40,7 @@ export const TitleBar = (props, context) => {
 
 type SetupButtonProps = {};
 const SetupButton = (props, context) => {
-  const { isFlipped, toggleFlip, openModal, closeModal, isModalOpen } = useStates(context);
+  const { openModal, closeModal, isModalOpen } = useStates(context);
 
   const bgColor = isModalOpen ? '#f2711c' : 'default';
   const textColor = isModalOpen ? 'white' : 'white';

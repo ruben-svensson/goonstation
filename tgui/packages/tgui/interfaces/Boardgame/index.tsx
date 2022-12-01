@@ -64,7 +64,3 @@ const HelpModal = (props, context) => {
     </Modal>
   );
 };
-
-HelpModal.defaultHooks = {
-  shouldComponentUpdate: () => false,
-};

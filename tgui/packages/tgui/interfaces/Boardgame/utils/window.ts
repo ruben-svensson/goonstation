@@ -92,8 +92,5 @@ export const handleEvents = (context) => {
     if (data.currentUser?.palette) {
       paletteClear(data.currentUser.ckey);
     }
-    if (data.currentUser?.selected) {
-      pieceDeselect(data.currentUser.ckey);
-    }
   };
 };

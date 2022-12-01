@@ -123,7 +123,7 @@
 	)
 
 	/**
-	 * # Gameboard Data and State
+	 * # Boardgame Data and State
 	 */
 	var/list/active_users = list()
 	// Pieces layer
@@ -268,7 +268,9 @@
 			var/pieceId = src.active_users[ckey]["selected"]
 			src.active_users[ckey]["selected"] = null
 			if (pieceId)
-				src.pieces[pieceId]["selected"] = null
+				// Double check that the piece exists
+				if (src.pieces[pieceId])
+					src.pieces[pieceId]["selected"] = null
 
 
 	proc/getPieceAt(x, y)

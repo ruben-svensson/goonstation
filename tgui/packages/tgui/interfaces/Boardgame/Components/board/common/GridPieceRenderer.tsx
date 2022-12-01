@@ -43,27 +43,35 @@ const GridPieceRenderer = ({ pieces }: GridPieceRendererProps, context) => {
         return (
           <div
             onmousedown={(e) => {
-              if (!selected) {
-                pieceSelect(currentUser.ckey, val);
+              if (e.button === 0 && !selected) {
+                if (currentUser.palette) {
+                  piecePlace(currentUser.ckey, x, y);
+                }
+
+                if (currentUser.selected && !pieceSelectedByUser) {
+                  piecePlace(currentUser.ckey, x, y);
+                }
+
+                if (!currentUser.selected) {
+                  pieceSelect(currentUser.ckey, val);
+                }
+              }
+              if (e.button === 2) {
+                if (!selected) {
+                  pieceRemove(val);
+                }
               }
             }}
             onmouseup={(e) => {
-              let mx = e.clientX - 20;
-              let my = e.clientY - 54;
-              let boardX = Math.floor(mx / tileSize.width);
-              let boardY = Math.floor(my / tileSize.height);
-              if (isFlipped) {
-                // 1 is subtracted from the x and y values to account for the fact that
-                // the board is 0 indexed, but the width and height are not.
-                // aka 1-width, 1-height, not 0-width, 0-height
-                boardX = width - boardX - 1;
-                boardY = height - boardY - 1;
+              if (currentUser.palette) {
+                piecePlace(currentUser.ckey, x, y);
               }
-              piecePlace(currentUser.ckey, boardX, boardY);
+              if (currentUser.selected && !pieceSelectedByUser) {
+                piecePlace(currentUser.ckey, x, y);
+              }
             }}
-            ondblclick={(e) => {
-              pieceRemove(pieces[val]);
-            }}
+            onmouseclick={(e) => {}}
+            ondblclick={(e) => {}}
             style={{
               position: 'absolute',
               left: left + 'px',
