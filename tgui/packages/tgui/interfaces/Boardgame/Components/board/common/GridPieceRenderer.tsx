@@ -70,8 +70,6 @@ const GridPieceRenderer = ({ pieces }: GridPieceRendererProps, context) => {
                 piecePlace(currentUser.ckey, x, y);
               }
             }}
-            onmouseclick={(e) => {}}
-            ondblclick={(e) => {}}
             style={{
               position: 'absolute',
               left: left + 'px',
