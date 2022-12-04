@@ -6,10 +6,10 @@
 $boardgame-layers: (
   'board': 1,
   'pieces': 2,
-  'notations': 3,
-  'overlay': 4,
-  'modal': 5,
-  'modal_presetinfo': 6,
+  'notations': 1,
+  'overlay': 2,
+  'modal': 3,
+  'modal_presetinfo': 4,
 );
 
 $notations-size: 20px; // Applies to both horizontal and vertical notations
