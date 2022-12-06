@@ -1,0 +1,40 @@
+@use '../base.scss';
+
+.Marquee {
+  overflow: hidden;
+}
+
+.Marquee__grid {
+  height: 50%;
+  overflow: hidden;
+}
+
+.Marquee__row {
+  display: flex;
+  flex-direction: row;
+  width: 200%;
+  height: 50%;
+  overflow: hidden;
+}
+
+.Marquee__child {
+  width: 50%;
+}
+
+@keyframes Marquee__anim-west {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes Marquee__anim-east {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
