@@ -15,6 +15,7 @@ export { Chart } from './Chart';
 export { Collapsible } from './Collapsible';
 export { ColorBox } from './ColorBox';
 export { ColorButton } from './goonstation/ColorButton';
+export { ConfirmButton } from './goonstation/ConfirmButton';
 export { Dimmer } from './Dimmer';
 export { Divider } from './Divider';
 export { DraggableControl } from './DraggableControl';
