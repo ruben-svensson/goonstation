@@ -1,0 +1,4 @@
+vesion: 3.6
+services:
+  goonstation:
+    build: .
