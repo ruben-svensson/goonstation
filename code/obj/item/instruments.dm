@@ -278,8 +278,45 @@
 	pick_random_note = 1
 	volume = 40
 
+	var/list/songs = list(
+		"Neosoul" = 'sound/musical_instruments/jukebox/neosoul.ogg',
+		"Vintage" = 'sound/musical_instruments/jukebox/vintage.ogg',
+		"Ultralounge" = 'sound/musical_instruments/jukebox/ultralounge.ogg',
+		"Jazz Piano" = 'sound/musical_instruments/jukebox/jazzpiano.ogg',
+		"Midnight in Moscow" = 'sound/radio_station/music/moscow.mid',
+		"The Final Countdown" = 'sound/radio_station/music/The-Final-Countdown.mid'
+	)
+
 	show_play_message(mob/user as mob)
 		return
+
+	ui_interact(mob/user, datum/tgui/ui)
+		ui = tgui_process.try_update_ui(user, src, ui)
+		if(!ui)
+			ui = new(user, src, "Jukebox")
+			ui.open()
+
+	ui_data(mob/user)
+		. = list()
+
+		.["songs"] = src.songs
+
+	ui_act(action, list/params, datum/tgui/ui, datum/ui_state/state)
+		. = ..()
+		if(.)
+			return
+
+		switch(action)
+			if("playSong")
+				var/songId = params["id"]
+				if(!songId)
+					return
+				var/turf/T = get_turf(src)
+				playsound(T, src.songs[songId], 20, 1)
+
+	attack_hand(mob/user)
+		src.ui_interact(user)
+
 
 /* -------------------- Saxophone -------------------- */
 
