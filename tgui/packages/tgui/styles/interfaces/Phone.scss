@@ -1,7 +1,110 @@
-.Button__content-ellipsis {
+@use 'sass:math';
+
+.Phone__phonebook-Button > div {
   // elipsis if text is too long
   overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
-  -ms-text-overflow: ellipsis;
+  text-overflow: ellipsis;
+}
+
+$color-phone-rotary: #727272;
+
+$phone-rotary-width: 250px;
+$phone-rotary-height: 250px;
+// Dial size, relative to rotary phone
+$phone-dial-width: 0.15;
+$phone-dial-height: 0.15;
+
+@mixin Phone__getKeyPosition($index: 1) {
+  $radius: 80px;
+  $dials: 10; // 0-9
+  $angle: 290deg / $dials;
+  $angleOffset: 110deg;
+
+  // Place dial in the middle of the rotary phone
+  // and rotate it to the correct position
+  // place it on the edge of the rotary phone
+  // and rotate it to the correct position
+  // Base from center of rotary phone
+
+  $x: $radius - ($phone-rotary-width * $phone-dial-width / 2) + $radius * math.sin($angle * $index + $angleOffset);
+  $y: $radius - ($phone-rotary-height * $phone-dial-height / 2) - $radius * math.cos($angle * $index + $angleOffset);
+
+  top: $y + 30px;
+  left: $x + 30px;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes anti-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(-360deg);
+  }
+}
+
+// Simulate a rotary phone
+.Phone__rotary {
+  width: $phone-rotary-width;
+  height: $phone-rotary-height;
+  border-radius: 50%;
+  background-color: $color-phone-rotary;
+  position: relative;
+
+  animation: spin 10s linear infinite;
+
+  &-dials-dial {
+    animation: anti-spin 10s linear infinite;
+    height: 100%;
+    text-align: center;
+
+    font-size: 28px;
+    width: $phone-rotary-width * $phone-dial-width;
+    height: $phone-rotary-height * $phone-dial-height;
+    position: absolute;
+    background: black;
+    border-radius: 50%;
+
+    &:nth-child(1) {
+      @include Phone__getKeyPosition(1);
+    }
+
+    &:nth-child(2) {
+      @include Phone__getKeyPosition(2);
+    }
+
+    &:nth-child(3) {
+      @include Phone__getKeyPosition(3);
+    }
+    &:nth-child(4) {
+      @include Phone__getKeyPosition(4);
+    }
+    &:nth-child(5) {
+      @include Phone__getKeyPosition(5);
+    }
+    &:nth-child(6) {
+      @include Phone__getKeyPosition(6);
+    }
+    &:nth-child(7) {
+      @include Phone__getKeyPosition(7);
+    }
+    &:nth-child(8) {
+      @include Phone__getKeyPosition(8);
+    }
+    &:nth-child(9) {
+      @include Phone__getKeyPosition(9);
+    }
+    &:nth-child(10) {
+      @include Phone__getKeyPosition(10);
+    }
+  }
 }

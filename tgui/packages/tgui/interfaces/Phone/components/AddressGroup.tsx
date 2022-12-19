@@ -18,7 +18,7 @@ export const AddressGroup = (props, context) => {
               key={currentPhone.id}
               onClick={() => act('call', { target: currentPhone.id })}
               textAlign="center"
-              ellipsis
+              className="Phone__phonebook-Button"
             />
           )
       )}
