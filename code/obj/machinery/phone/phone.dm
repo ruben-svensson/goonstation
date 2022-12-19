@@ -23,12 +23,12 @@ TYPEINFO(/obj/machinery/phone)
 	var/labelling = 0
 	var/unlisted = FALSE
 	var/obj/item/phone_handset/handset = null
-	var/chui/window/phonecall/phonebook
 	var/phoneicon = "phone"
 	var/ringingicon = "phone_ringing"
 	var/answeredicon = "phone_answered"
 	var/dialicon = "phone_dial"
 	var/stripe_color = null
+	var/phone_category = null
 
 	New()
 		..() // Set up power usage, subscribe to loop, yada yada yada
@@ -39,16 +39,24 @@ TYPEINFO(/obj/machinery/phone)
 		if(isnull(stripe_color)) // maps can override it now
 			if(istype(location,/area/station/security))
 				stripe_color = "#ff0000"
+				phone_category = "security"
 			else if(istype(location,/area/station/bridge))
 				stripe_color = "#00ff00"
+				phone_category = "bridge"
 			else if(istype(location, /area/station/engine) || istype(location, /area/station/quartermaster) || istype(location, /area/station/mining))
 				stripe_color = "#ffff00"
+				phone_category = "engineering"
 			else if(istype(location, /area/station/science))
 				stripe_color = "#8409ff"
+				phone_category = "research"
 			else if(istype(location, /area/station/medical))
 				stripe_color = "#3838ff"
+				phone_category = "medical"
 			else
 				stripe_color = "#b65f08"
+				phone_category = "uncategorized"
+		else
+			phone_category = "uncategorized"
 		src.UpdateOverlays(image('icons/obj/machines/phones.dmi',"[dialicon]"), "dial")
 		var/image/stripe_image = image('icons/obj/machines/phones.dmi',"[src.icon_state]-stripe")
 		stripe_image.color = stripe_color
@@ -110,9 +118,7 @@ TYPEINFO(/obj/machinery/phone)
 		if(!src.ringing) // we are making an outgoing call
 			if(src.connected)
 				if(user)
-					if(!src.phonebook)
-						src.phonebook = new /chui/window/phonecall(src)
-					phonebook.Subscribe(user.client)
+					ui_interact(user)
 			else
 				if(user)
 					boutput(user,"<span class='alert'>As you pick up the phone you notice that the cord has been cut!</span>")
@@ -208,9 +214,49 @@ TYPEINFO(/obj/machinery/phone)
 					UpdateIcon()
 					src.last_ring = 0
 
+	ui_interact(mob/user, datum/tgui/ui)
+		ui = tgui_process.try_update_ui(user, src, ui)
+		if(!ui)
+			ui = new(user, src, "Phone")
+			ui.open()
+
+	ui_data(mob/user)
+		var/list/phonebook = list()
+		for_by_tcl(P, /obj/machinery/phone)
+			if (P.unlisted) continue
+			var/list/this_phone_data = list(
+				"category" = P.phone_category,
+				"id" = P.phone_id
+			)
+			phonebook += list(this_phone_data)
+		sortList(phonebook, /proc/cmp_phone_data)
+
+		. = list(
+			"answered" = src.answered,
+			"dialing" = src.dialing,
+			"name" = src.name,
+			"phonebook" = phonebook,
+		)
+
+	ui_act(action, params)
+		. = ..()
+		if (.)
+			return
+		switch (action)
+			if ("call")
+				if(src.dialing == 1 || src.linked)
+					return
+				var/id = params["target"]
+				for_by_tcl(P, /obj/machinery/phone)
+					if(P.phone_id == id)
+						src.call_other(P)
+						. = TRUE
+						return
+				boutput(usr, "<span class='alert'>Unable to connect!</span>")
+		src.add_fingerprint(usr)
+
 	proc/explode()
 		src.blowthefuckup(strength = 2.5, delete = TRUE)
-
 
 	proc/hang_up()
 		src.answered = 0
@@ -260,36 +306,6 @@ TYPEINFO(/obj/machinery/phone)
 		user.visible_message("<span class='alert'><b>[user] bashes the [src] into their head repeatedly!</b></span>")
 		user.TakeDamage("head", 150, 0)
 		return 1
-
-
-
-// Interface for placing a call
-/chui/window/phonecall
-	name = "phonebook"
-	windowSize = "250x500"
-	var/obj/machinery/phone/owner = null
-
-	New(var/obj/machinery/phone/creator)
-		..()
-		src.owner = creator
-
-	GetBody()
-		var/html = ""
-		for_by_tcl(P, /obj/machinery/phone)
-			if (P.unlisted) continue
-			html += "[theme.generateButton(P.phone_id, "[P.phone_id]")] <br/>"
-		return html
-
-	OnClick(var/client/who, var/id, var/data)
-		if(src.owner.dialing == 1 || src.owner.linked)
-			return
-		if(owner)
-			for_by_tcl(P, /obj/machinery/phone)
-				if(P.phone_id == id)
-					owner.call_other(P)
-					return
-		Unsubscribe(who)
-
 
 // Item generated when someone picks up a phone
 /obj/item/phone_handset

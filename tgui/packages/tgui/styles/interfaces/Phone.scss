@@ -1,0 +1,7 @@
+.Button__content-ellipsis {
+  // elipsis if text is too long
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  -ms-text-overflow: ellipsis;
+}
