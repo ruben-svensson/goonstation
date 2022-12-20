@@ -1,15 +1,15 @@
-import { Section } from '../../../components';
 import { AddressGroup } from '.';
+import { Box } from '../../../components';
 
 export const Phonebook = () => {
   return (
-    <Section title="Phonebook" fill scrollable>
-      <AddressGroup category="bridge" name="Bridge" depColour="green" />
-      <AddressGroup category="engineering" name="Engineering" depColour="yellow" />
-      <AddressGroup category="medical" name="Medical" depColour="blue" />
-      <AddressGroup category="research" name="Research" depColour="purple" />
-      <AddressGroup category="security" name="Security" depColour="red" />
-      <AddressGroup category="uncategorized" name="Uncategorized" depColour="brown" />
-    </Section>
+    <Box className="Phone__book">
+      <AddressGroup id={1} category="bridge" name="Bridge" depColour="green" />
+      <AddressGroup id={2} category="engineering" name="Engineering" depColour="yellow" />
+      <AddressGroup id={3} category="medical" name="Medical" depColour="blue" />
+      <AddressGroup id={4} category="research" name="Research" depColour="purple" />
+      <AddressGroup id={5} category="security" name="Security" depColour="red" />
+      <AddressGroup id={6} category="uncategorized" name="Uncategorized" depColour="brown" />
+    </Box>
   );
 };

@@ -1,110 +1,176 @@
 @use 'sass:math';
 
-.Phone__phonebook-Button > div {
-  // elipsis if text is too long
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
+$phone-color-bright: #c7f0d8;
+$phone-color-dark: #43523d;
+$phone-color-text: #000000;
+// case and border colors
+$phone-color-case: #575757;
+$phone-color-border: #414141;
 
-$color-phone-rotary: #727272;
-
-$phone-rotary-width: 250px;
-$phone-rotary-height: 250px;
-// Dial size, relative to rotary phone
-$phone-dial-width: 0.15;
-$phone-dial-height: 0.15;
-
-@mixin Phone__getKeyPosition($index: 1) {
-  $radius: 80px;
-  $dials: 10; // 0-9
-  $angle: 290deg / $dials;
-  $angleOffset: 110deg;
-
-  // Place dial in the middle of the rotary phone
-  // and rotate it to the correct position
-  // place it on the edge of the rotary phone
-  // and rotate it to the correct position
-  // Base from center of rotary phone
-
-  $x: $radius - ($phone-rotary-width * $phone-dial-width / 2) + $radius * math.sin($angle * $index + $angleOffset);
-  $y: $radius - ($phone-rotary-height * $phone-dial-height / 2) - $radius * math.cos($angle * $index + $angleOffset);
-
-  top: $y + 30px;
-  left: $x + 30px;
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
+.Phone__phonebook-Button {
+  margin: 2px 10px;
+  & > div {
+    // elipsis if text is too long
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
 }
 
-@keyframes anti-spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(-360deg);
+.Phone__book {
+  padding: 10px 10px;
+  max-height: 90%;
+
+  &-entry {
+    padding: 2px;
+    font-size: 11px;
+
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+
+    &-number {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+
+      & > div {
+        padding-left: 2px;
+      }
+    }
   }
 }
 
-// Simulate a rotary phone
-.Phone__rotary {
-  width: $phone-rotary-width;
-  height: $phone-rotary-height;
-  border-radius: 50%;
-  background-color: $color-phone-rotary;
-  position: relative;
+.Phone__bookcat {
+  width: 100%;
+  margin: 2px;
+}
 
-  animation: spin 10s linear infinite;
+// Old nokia phone style display
 
-  &-dials-dial {
-    animation: anti-spin 10s linear infinite;
+.Phone__ {
+  background: $phone-color-case;
+
+  &dial {
+    // 4 rows, 3 columns
+
+    font-family: monospace;
+    font-size: 14px;
+
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    align-items: center;
+
+    width: 190px;
+    padding-bottom: 5px;
+
+    & > div {
+      cursor: pointer;
+      color: $phone-color-dark;
+      border: 2px solid $phone-color-dark;
+      margin: 2px;
+
+      width: 50px;
+      height: 30px;
+
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+  }
+
+  &book {
+    width: 100%;
+    margin: 4px;
+    flex-grow: 1;
+
+    overflow-y: hidden;
+  }
+
+  &content {
+    display: flex;
+    flex-direction: column;
     height: 100%;
-    text-align: center;
 
-    font-size: 28px;
-    width: $phone-rotary-width * $phone-dial-width;
-    height: $phone-rotary-height * $phone-dial-height;
-    position: absolute;
-    background: black;
-    border-radius: 50%;
+    &-display {
+      background-color: $phone-color-bright;
+      border: 5px solid $phone-color-dark;
+      color: $phone-color-dark;
+      font-size: 12px;
+      font-family: monospace;
 
-    &:nth-child(1) {
-      @include Phone__getKeyPosition(1);
+      text-align: center;
+      flex-grow: 1;
+
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+      align-items: center;
+      padding: 5px;
+
+      max-height: 100%;
+      overflow: hidden;
+
+      &-button {
+        font-size: 20px;
+        font-weight: bold;
+        width: 40px;
+        height: 40px;
+        border: 2px solid $phone-color-dark;
+        color: $phone-color-dark;
+
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      }
+
+      &-number {
+        margin-top: 2px;
+        padding: 2px;
+        height: 30px;
+        width: 80%;
+      }
     }
 
-    &:nth-child(2) {
-      @include Phone__getKeyPosition(2);
-    }
+    &-case {
+      background-color: $phone-color-case;
+      height: 40px;
+      padding: 0px 10px;
 
-    &:nth-child(3) {
-      @include Phone__getKeyPosition(3);
-    }
-    &:nth-child(4) {
-      @include Phone__getKeyPosition(4);
-    }
-    &:nth-child(5) {
-      @include Phone__getKeyPosition(5);
-    }
-    &:nth-child(6) {
-      @include Phone__getKeyPosition(6);
-    }
-    &:nth-child(7) {
-      @include Phone__getKeyPosition(7);
-    }
-    &:nth-child(8) {
-      @include Phone__getKeyPosition(8);
-    }
-    &:nth-child(9) {
-      @include Phone__getKeyPosition(9);
-    }
-    &:nth-child(10) {
-      @include Phone__getKeyPosition(10);
+      display: flex;
+      flex-direction: row;
+
+      &-button {
+        background-color: #b3b3b3;
+        border: 2px solid $phone-color-border;
+        color: $phone-color-text;
+        flex-grow: 1;
+        font-size: 13px;
+        font-family: monospace;
+        text-align: center;
+        padding: 5px;
+        margin: 5px;
+        cursor: pointer;
+
+        &:nth-child(1) {
+          border-top-left-radius: 5px;
+          border-bottom-left-radius: 5px;
+          color: green;
+        }
+
+        &:nth-child(3) {
+          border-top-left-radius: 5px;
+          border-bottom-left-radius: 5px;
+          color: red;
+          // Flip icon
+          transform: rotateY(180deg);
+        }
+      }
     }
   }
 }
