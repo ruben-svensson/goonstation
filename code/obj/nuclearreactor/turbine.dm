@@ -50,6 +50,9 @@
 	var/_last_rpm_icon_update = 0
 	/// INTERNAL: ref to the turf the turbine light is stored on, because you can't center simple lights
 	var/turf/_light_turf
+	/// Turbine RPM/powergen/stator load history
+	var/list/history
+	var/const/history_max = 50
 
 	New()
 		. = ..()
@@ -62,6 +65,7 @@
 		AddComponent(/datum/component/mechanics_holder)
 		SEND_SIGNAL(src,COMSIG_MECHCOMP_ADD_INPUT,"Set Stator Load", .proc/_set_statorload_mechchomp)
 		SEND_SIGNAL(src,COMSIG_MECHCOMP_ADD_INPUT,"Set Flow Rate", .proc/_set_flowrate_mechchomp)
+		src.history = list()
 
 	disposing()
 		src._light_turf?.remove_medium_light("turbine_light")
@@ -112,7 +116,15 @@
 
 	process()
 		. = ..()
-
+		if (length(src.history) > src.history_max)
+			src.history.Cut(1, 2) //drop the oldest entry
+		history += list(
+					list(
+						src.RPM,
+						src.stator_load,
+						src.lastgen
+						)
+					)
 		if(src.RPM < 1)
 			src._last_rpm_icon_update = -100 //force an update as soon as it starts moving
 			if(src.icon_state != "turbine_main")
@@ -208,7 +220,7 @@
 					user.visible_message("<span class='alert'>...but the blades of \the [src] aren't moving, so [user] just looks like an idiot.</span>")
 				return FALSE
 			if(0 to 60)
-				user.visible_message("<span class='alert'>...but the blades of \the [src] are barely moving, so [user] just recieves a bonk on the head.</span>")
+				user.visible_message("<span class='alert'>...but the blades of \the [src] are barely moving, so [user] just receives a bonk on the head.</span>")
 				user.TakeDamageAccountArmor("head", ceil(src.RPM/6), 0, 0, DAMAGE_BLUNT)
 				user.changeStatus("stunned", 3 SECONDS)
 				return FALSE
@@ -228,3 +240,37 @@
 				else
 					user.TakeDamage("head", 200, 0, 0, DAMAGE_CRUSH)
 				return TRUE
+
+	ui_interact(mob/user, datum/tgui/ui)
+		ui = tgui_process.try_update_ui(user, src, ui)
+		if (!ui)
+			ui = new(user, src, "TurbineControl", src.name)
+			ui.open()
+
+	ui_static_data(mob/user)
+		. = list(
+		)
+
+	ui_data(mob/user)
+		. = list(
+			"rpm" = src.RPM,
+			"load" = src.stator_load,
+			"power" = src.lastgen,
+			"volume" = src.flow_rate,
+			"history" = src.history,
+			"overspeed" = src.overspeed,
+			"overtemp" = src.overtemp,
+		)
+
+	ui_act(action, list/params, datum/tgui/ui, datum/ui_state/state)
+		if(..()) return
+
+		switch(action)
+			if("loadChange")
+				var/x = params["newVal"]
+				src.stator_load = min(max(x,1),10e30)
+				logTheThing("station", src, null, "[src] stator load configured to [x] by [ui.user]")
+			if("volChange")
+				var/x = params["newVal"]
+				src.flow_rate = min(max(x,1),10e5)
+				logTheThing("station", src, null, "[src] flow rate configured to [x] by [ui.user]")

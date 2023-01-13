@@ -63,7 +63,8 @@
 		else
 			emote("beep")
 			say(pick_string("flockmind.txt", "flockdrone_created"), TRUE)
-		src.flock?.drones_made++
+		if (src.flock) //can't do flock?.stats due to http://www.byond.com/forum/post/2841585
+			src.flock.stats.drones_made++
 	APPLY_ATOM_PROPERTY(src, PROP_MOB_EXAMINE_ALL_NAMES, src)
 	APPLY_ATOM_PROPERTY(src, PROP_ATOM_FLOCK_THING, src)
 	src.AddComponent(/datum/component/flock_protection, FALSE, TRUE, FALSE, FALSE)
@@ -492,7 +493,7 @@
 	HH.can_hold_items = FALSE
 
 	HH = hands[3]
-	HH.limb = new /datum/limb/gun/flock_stunner
+	HH.limb = new /datum/limb/gun/flock_stunner(hands[3])
 	HH.name = "incapacitor"
 	HH.icon = 'icons/mob/flock_ui.dmi'
 	HH.icon_state = "incapacitor"
@@ -648,8 +649,9 @@
 
 /mob/living/critter/flock/drone/proc/add_resources(amount)
 	src.resources += amount
-	src.flock?.flockmind.tutorial?.PerformSilentAction(FLOCK_ACTION_GAIN_RESOURCES, src.resources)
-	src.flock?.resources_gained += amount
+	if (src.flock)
+		src.flock.flockmind.tutorial?.PerformSilentAction(FLOCK_ACTION_GAIN_RESOURCES, src.resources)
+		src.flock.stats.resources_gained += amount
 	var/datum/abilityHolder/composite/composite = src.abilityHolder
 	var/datum/abilityHolder/critter/flockdrone/aH = composite.getHolder(/datum/abilityHolder/critter/flockdrone)
 	aH.updateResources(src.resources)
@@ -1175,6 +1177,7 @@
 
 /datum/limb/gun/flock_stunner/New()
 	..()
+	src.cell.set_loc(src.holder.holder)
 	RegisterSignal(src.cell, COMSIG_UPDATE_ICON, .proc/update_overlay)
 
 /datum/limb/gun/flock_stunner/proc/update_overlay()
@@ -1204,10 +1207,10 @@
 	icon = 'icons/misc/featherzone.dmi'
 	icon_state = "stunbolt"
 	cost = 20
-	stun = 40
+	stun = 25
 	damage = 4
-	dissipation_rate = 1
-	dissipation_delay = 3
+	dissipation_rate = 3
+	dissipation_delay = 4
 	sname = "stunbolt"
 	shot_sound = 'sound/weapons/laser_f.ogg'
 	shot_number = 1

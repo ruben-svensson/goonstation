@@ -257,6 +257,7 @@
 	for(var/turf/T in landmarks[LANDMARK_SYNDICATE_BREACHING_CHARGES])
 		for(var/i = 1 to 5)
 			new /obj/item/breaching_charge/thermite(T)
+	src.create_plant_location_markers()
 
 	SPAWN(rand(waittime_l, waittime_h))
 		send_intercept()
@@ -392,28 +393,7 @@
 	else return 0
 
 /datum/game_mode/nuclear/send_intercept()
-	var/intercepttext = "Cent. Com. Update Requested staus information:<BR>"
-	intercepttext += " Cent. Com has recently been contacted by the following syndicate affiliated organisations in your area, please investigate any information you may have:"
-
-	var/list/possible_modes = list()
-	possible_modes.Add("revolution", "wizard", "nuke", "traitor", "changeling")
-	possible_modes -= "[ticker.mode]"
-	var/number = pick(2, 3)
-	var/i = 0
-	for(i = 0, i < number, i++)
-		possible_modes.Remove(pick(possible_modes))
-	possible_modes.Insert(rand(possible_modes.len), "[ticker.mode]")
-
-	var/datum/intercept_text/i_text = new /datum/intercept_text
-	for(var/A in possible_modes)
-		intercepttext += i_text.build(A, pick(ticker.minds))
-
-	for_by_tcl(C, /obj/machinery/communications_dish)
-		C.add_centcom_report("Cent. Com. Status Summary", intercepttext)
-
-	command_alert("Summary downloaded and printed out at all communications consoles.", "Enemy communication intercept. Security Level Elevated.")
-
-
+	..(ticker.minds)
 /datum/game_mode/nuclear/proc/random_radio_frequency()
 	. = 0
 	var/list/blacklisted = list(0, 1451, 1457) // The old blacklist was rather incomplete and thus ineffective (Convair880).
@@ -423,6 +403,29 @@
 		. = rand(1352, 1439)
 
 	while (. in blacklisted)
+
+/datum/game_mode/nuclear/proc/create_plant_location_markers()
+	// Find the centres of the plant sites.
+	for (var/area_type in src.target_location_type)
+		var/max_x = 1
+		var/min_x = world.maxx
+		var/max_y = 1
+		var/min_y = world.maxy
+		var/list/area/areas = get_areas(area_type)
+		for (var/area/area in areas)
+			if (area.z != Z_LEVEL_STATION)
+				continue
+			for (var/turf/T in area)
+				max_x = max(max_x, T.x)
+				min_x = min(min_x, T.x)
+				max_y = max(max_y, T.y)
+				min_y = min(min_y, T.y)
+		var/target_x = (max_x + min_x) / 2
+		var/target_y = (max_y + min_y) / 2
+
+		var/turf/plant_location = locate(target_x, target_y, Z_LEVEL_STATION)
+		var/area/A = plant_location.loc
+		plant_location.AddComponent(/datum/component/minimap_marker, MAP_SYNDICATE, "nuclear_bomb_pin", 'icons/obj/minimap/minimap_markers.dmi', "[capitalize(A.name)] Plant Site")
 
 /datum/game_mode/nuclear/process()
 	set background = 1

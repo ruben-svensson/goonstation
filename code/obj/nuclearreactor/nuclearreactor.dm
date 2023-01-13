@@ -23,6 +23,7 @@
 	mat_changename = FALSE
 	dir = EAST
 	custom_suicide = TRUE
+	pixel_point = TRUE
 	/// 2D grid of reactor components, or null where there are no components. Size is REACTOR_GRID_WIDTH x REACTOR_GRID_HEIGHT
 	var/list/obj/item/reactor_component/component_grid[REACTOR_GRID_WIDTH][REACTOR_GRID_HEIGHT]
 	/// 2D grid of lists of neutrons in each grid slot of the component grid. Lists can be empty.
@@ -47,7 +48,8 @@
 	var/_comp_grid_overlay_update = TRUE
 	/// ref to the turf the reactor light is stored on, because you can't center simple lights
 	var/turf/_light_turf
-
+	/// INTERNAL: count of old pending grid updates, for the flicker prevention code
+	var/_pending_grid_updates = 0
 	New()
 		. = ..()
 		terminal = new /obj/machinery/power/terminal/netlink(src.loc)
@@ -103,11 +105,24 @@
 		//and finally, component grid
 		if(_comp_grid_overlay_update)
 			//base
-			var/icon/base_grid = icon(icon, "reactor_empty")//image(icon, "reactor_empty")
+			var/icon/base_grid = icon(icon, "reactor_empty")
 			for(var/x=1 to REACTOR_GRID_WIDTH)
 				for(var/y=1 to REACTOR_GRID_HEIGHT)
 					if(src.component_grid[x][y])
 						base_grid.Blend(src.component_grid[x][y].cap_icon, ICON_OVERLAY, ((y-1)*18)+11, (124-x*15)-4)
+			//The following code is intended to prevent flicker when updating the reactor grid
+			//it seems like byond will delete the old image before it finishes sending the new one, so you got flicker
+			//this preserves the old image while sending the new one for half a second, which should hopefully prevent that
+			var/image/old_grid = src.GetOverlayImage("reactor_grid")
+			if(old_grid)
+				old_grid.layer = old_grid.layer+0.1
+				src.UpdateOverlays(old_grid, "old_grid")
+				_pending_grid_updates++
+				SPAWN(0.5 SECONDS)
+					if(_pending_grid_updates <= 1)
+						src.UpdateOverlays(null, "old_grid")
+					_pending_grid_updates--
+
 			src.UpdateOverlays(image(base_grid), "reactor_grid")
 			_comp_grid_overlay_update = FALSE
 
@@ -262,8 +277,8 @@
 		if(rads <= 0)
 			return
 
-		for(var/i = min(round(rads/2),20),i>0,i--)
-			shoot_projectile_XY(src, new /datum/projectile/neutron(min(rads*5,100)), rand(-10,10), rand(-10,10)) //for once, rand(range) returning int is useful
+		for(var/i = min(round(rads/2),50),i>0,i--)
+			shoot_projectile_XY(src, new /datum/projectile/neutron(min(rads*2,100)), rand(-10,10), rand(-10,10)) //for once, rand(range) returning int is useful
 
 	proc/catastrophicOverload()
 		var/sound/alarm = sound('sound/misc/airraid_loop.ogg')
@@ -524,8 +539,8 @@
 					src.component_grid[chosen_slot[1]][chosen_slot[2]] = meat_rod //hehe
 				else
 					meat_rod.throw_at(get_ranged_target_turf(get_turf(src),pick(alldirs),rand(1,20)),rand(1,20),rand(1,20))
-				user.visible_message("<span class='alert'><b>The bits of [user] that didn't fit spray everywhere!</b></span>")
 				user.set_loc(get_turf(src))
+				user.visible_message("<span class='alert'><b>The bits of [user] that didn't fit spray everywhere!</b></span>")
 				user.gib()
 				_comp_grid_overlay_update = TRUE
 				UpdateIcon()
@@ -588,11 +603,7 @@
 	icon_state = ""
 	icon = null
 	power = 100
-	cost = 0
-//How fast the power goes away
-	dissipation_rate = 1
-//How many tiles till it starts to lose power
-	dissipation_delay = 4
+	cost = 20
 //Kill/Stun ratio
 	ks_ratio = 1.0
 //name of the projectile setting, used when you change a guns setting
@@ -609,37 +620,51 @@
 	New(power)
 		..()
 		src.power = power
+		src.ks_ratio = 1
+		generate_inverse_stats()
 
 	on_pre_hit(atom/hit, angle, var/obj/projectile/O)
-		. = FALSE //default to doing normal hit behaviour
-
 		if(isintangible(hit) || isobserver(hit))
-			return TRUE
+			return TRUE //don't irradiate ghosts
 
 		var/multiplier = istype(hit,/turf/simulated/wall/auto/reinforced) ? 5 : 10
-		if((hit.material && !prob(hit.material.getProperty("density")*multiplier)) || (isnull(hit.material) && prob(5*multiplier)))
-			O.initial_power /= 2 //initial power because projectile.collide() uses it to calculate power, rather than direct use of .power
-			if(O.initial_power < 1)
-				O.initial_power = 0
-			return TRUE //don't hit this, lose power and pass through it
+		var/density = (hit.material ? hit.material.getProperty("density") : 3) //3 is default density
 
-		if(hit.material)
-			if(prob(hit.material.getProperty("hard")*10))
+		//first are we colliding with this or ignoring it?
+		if(prob(density*multiplier))
+			//we hit it! now decide what that hit means
+			//first, reflection
+			if(hit.material && prob(hit.material.getProperty("hard")*10))
 				//reflect
-				shoot_reflected_bounce(O, hit)
-				return TRUE
+				var/obj/projectile/reflected = shoot_reflected_bounce(O, hit)
+				reflected.power = O.power
+				return FALSE
 
-			if(prob(hit.material.getProperty("n_radioactive")*10))
-				hit.AddComponent(/datum/component/radioactive, 50, TRUE, TRUE, 1)
-			if(prob(hit.material.getProperty("radioactive")*10))
-				hit.AddComponent(/datum/component/radioactive, 50, TRUE, FALSE, 1)
-		hit.AddComponent(/datum/component/radioactive, min(O.proj_data.power,25), TRUE, FALSE, 1)
+			//then fission
+			//fission basically hits like an AoE contamination effect
+			if(hit.material && prob(hit.material.getProperty("n_radioactive")*10))
+				for(var/turf/T in range(1, hit))
+					T.AddComponent(/datum/component/radioactive, 50, TRUE, TRUE, 1)
+				return FALSE
+			if(hit.material && prob(hit.material.getProperty("radioactive")*10))
+				for(var/turf/T in range(1, hit))
+					T.AddComponent(/datum/component/radioactive, 50, TRUE, FALSE, 1)
+				return FALSE
+			//finally, moderation
+			hit.AddComponent(/datum/component/radioactive, min(O.power, density*multiplier), TRUE, FALSE, 1) //make it all glowy
+			O.power -= density*multiplier
+			if(O.power < 1)
+				O.power = 0
+			return TRUE //don't hit this, lose power and pass through it
+		return TRUE
 
-		if(ismob(hit))
-			var/mob/hitmob = hit
-			hitmob.take_radiation_dose(power/200)
-			O.initial_power = 0
+	tick(var/obj/projectile/P)
+		if(P.power <= 0)
+			P.die()
+			return
 
+	get_power(obj/projectile/P, atom/A)
+		return P.power
 
 /particles/nuke_overheat_smoke
 	icon = 'icons/effects/effects.dmi'
