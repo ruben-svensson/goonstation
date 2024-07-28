@@ -1,0 +1,67 @@
+
+
+.slot-machine {
+  height: 100vh;
+  background-color: #003569;
+  border-left: 5px solid #004285;
+  border-right: 5px solid #004488;
+
+  display: flex;
+  flex-direction: column;
+
+
+  .top {
+    height: 10%;
+    background-color: #0358AE;
+  }
+
+  .front {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    .slots {
+      flex: 1;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      border: 5px solid #3a3a3b;
+
+
+      margin-left:10px;
+      min-height: 90%;
+
+      display: flex;
+
+      .slot {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+
+        height:100%;
+        font-size:3em;
+        background-color: #d9d9d9;
+        flex: 1;
+      }
+    }
+
+    .lever {
+      height: 100px;
+      width: 50px;
+      margin: 0 20px;
+      border: 5px solid #3a3a3b;
+      background-color: rgb(24, 24, 24);
+    }
+  }
+
+  .bottom {
+    height: 20%;
+    //background-color: #0358AE;
+
+    // Make it linear
+    border-top: 10px solid #0358AE;
+    background: linear-gradient(0deg, #284a6d 0%, #386592 100%);
+  }
+}
